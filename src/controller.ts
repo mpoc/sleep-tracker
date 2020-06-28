@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
-import moment from 'moment';
-import axios from 'axios';
+import moment from 'moment-timezone';
+import axios, { AxiosResponse } from 'axios';
 import { getSheetsObj, getObjectArray, getArray, append } from './sheets';
 
 type GeolocationPosition = {
@@ -28,17 +28,17 @@ export const logSleep = async (req: Request, res: Response) => {
   try {
     const data: GeolocationPosition = req.body;
     
-    const timezoneData: TimezoneDBResponse = await getTimezoneFromCoords(data.coords.latitude, data.coords.longitude);
+    const timezoneName = await getTimezoneFromCoords(data.coords.latitude, data.coords.longitude);
 
-    const time = moment(data.timestamp).utc();
+    const utcTime = moment.utc(data.timestamp);
+    const localTime = utcTime.clone().tz(timezoneName);
+    console.log({utcTime, localTime});
     const entry: SleepEntry = {
-      utcTime: time.format('YYYY-MM-DD HH:mm:ss'),
-      localTime: time
-        .utcOffset(timezoneData.gmtOffsetMinutes)
-        .format('YYYY-MM-DD HH:mm:ss'),
+      localTime: localTime.format('YYYY-MM-DD HH:mm:ss'),
       latitude: String(data.coords.latitude),
       longitude: String(data.coords.longitude),
-      timezone: timezoneData.zoneName,
+      timezone: timezoneName,
+      utcTime: utcTime.format('YYYY-MM-DD HH:mm:ss'),
     };
 
     const values = [ Object.values(entry) ];
@@ -67,19 +67,20 @@ type TimezoneDBResponse = {
   gmtOffset: string,
   dst: string,
   timestamp: number
-  gmtOffsetMinutes: number
 }
 
-const getTimezoneFromCoords = async (lat: number, lng: number) => {
+const getTimezoneFromCoords = async (lat: number, lng: number): Promise<string> => {
   const TIMEZONEDB_API_KEY = '';
   const url = `http://api.timezonedb.com?key=${TIMEZONEDB_API_KEY}&format=json&by=position&lat=${lat}&lng=${lng}`;
   try {
-    const response = await axios.get(url);
-    const data: TimezoneDBResponse = response.data;
-    data.gmtOffsetMinutes = Number(data.gmtOffset) / 60;
-    return data;
+    const response: AxiosResponse<TimezoneDBResponse> = await axios.get(url);
+    if (response.data.status == "OK") {
+      return response.data.zoneName;
+    } else {
+      return "";
+    }
   } catch (error) {
     console.error(error);
-    return {} as TimezoneDBResponse;
+    return "";
   }
 };

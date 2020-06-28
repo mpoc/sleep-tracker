@@ -22,7 +22,10 @@ const submit = position => {
 
   fetch('/api/sleep', options)
     .then(res => res.json())
-    .then(data => {})
+    .then(data => {
+      document.getElementById('text').innerHTML =
+        `Updated range: ${data.data.updatedRange}`;
+    })
     .catch(err => {
       console.error(err);
     });
@@ -31,7 +34,9 @@ const submit = position => {
 const positionSuccess = position => {
   const crd = position.coords;
 
-  console.log(`Timestamp: ${new Date(position.timestamp)}`);
+  console.log(
+    `Timestamp: ${new Date(position.timestamp)} (${position.timestamp})`
+  );
   console.log('Your current position is:');
   console.log(`Latitude: ${crd.latitude}`);
   console.log(`Longitude: ${crd.longitude}`);
