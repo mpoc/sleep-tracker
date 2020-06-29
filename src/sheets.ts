@@ -30,6 +30,15 @@ export const getObjectArray = async (
   range: string
 ): Promise<any[]> => toObjectArray(await getArray(sheetsObj, spreadsheetId, range));
 
+export const getObjectArrayHeader = async (
+  sheetsObj: any,
+  spreadsheetId: string,
+  range: string
+): Promise<any[]> => toObjectArray(
+  await getArray(sheetsObj, spreadsheetId, range),
+  (await getArray(sheetsObj, spreadsheetId, '1:1'))[0]
+);
+
 export type GoogleSheetsAppendUpdates = {
   spreadsheetId: string,
   updatedRange: string,
@@ -58,8 +67,10 @@ export const append = async (
   });
 }
 
-const toObjectArray = (array: any[][]): any[] => {
-  const header = array.splice(0, 1)[0];
+const toObjectArray = (array: any[][], header?: any[]): any[] => {
+  if (!header) {
+    return toObjectArray(array, array.splice(0, 1)[0]);
+  }
   const output = [] as any[];
 
   array.forEach(el => {

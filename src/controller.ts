@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from "express";
 import moment from 'moment-timezone';
 import axios, { AxiosResponse } from 'axios';
-import { getSheetsObj, getObjectArray, getArray, append, GoogleSheetsAppendUpdates } from './sheets';
+import { getSheetsObj, getObjectArrayHeader, getArray, append, GoogleSheetsAppendUpdates } from './sheets';
 import { successResponse, errorResponse } from './utils';
 import { ApiError } from "./error";
 
@@ -29,6 +29,11 @@ type SleepEntry = {
 export const logSleep = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const data: GeolocationPosition = req.body;
+    const apiKey = req.query.apiKey;
+
+    if (apiKey != process.env.API_KEY) {
+      throw new ApiError('Invalid API key');
+    }
 
     // console.time('Get timezone name');
     const timezoneName =
@@ -76,16 +81,18 @@ export const logSleep = async (req: Request, res: Response, next: NextFunction) 
     // console.timeEnd('Write to Google Sheets');
 
     // console.time('Read from Google Sheets');
-    const updatedRows =
-      await getArray(sheetsObj, process.env.SPREADSHEET_ID, result.updatedRange).catch(error => {
-        throw new ApiError("Failed to retrieve row after writing", error);
-      });
+    const updatedRows = await getObjectArrayHeader(
+      sheetsObj,
+      process.env.SPREADSHEET_ID,
+      result.updatedRange
+    ).catch(error => {
+      throw new ApiError('Failed to retrieve row after writing', error);
+    });
     // console.timeEnd('Read from Google Sheets');
 
     const response = {
       updatedRow: updatedRows[0]
     }
-    console.log({response});
 
     successResponse(res, response, "Successfully logged sleep")
   } catch (error) {

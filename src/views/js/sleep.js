@@ -20,11 +20,18 @@ const submit = position => {
     },
   };
 
-  fetch('/api/sleep', options)
+  const searchParams = new URLSearchParams(window.location.search);
+  const apiKey = searchParams.get('apiKey');
+  fetch('/api/sleep?apiKey=' + apiKey, options)
     .then(res => res.json())
     .then(data => {
-      document.getElementById('text').innerHTML =
-        `Updated row: ${data.data.updatedRow.join(", ")}`;
+      if (data.success) {
+        const entries = Object.entries(data.data.updatedRow).map(([key, value]) => `${key}: ${value}`);
+        document.getElementById('text').innerHTML =
+          `Inserted row:<br>${entries.join(",<br>")}`;
+        const timeDiff = new Date() - new Date(data.data.updatedRow['Timezone local time']);
+        console.log(`${timeDiff / 1000} seconds ago.`)
+      }
     })
     .catch(err => {
       console.error(err);
@@ -70,4 +77,6 @@ const getPosition = () => {
   }
 }
 
-getPosition();
+window.onload = () => {
+  getPosition();
+};
