@@ -11,7 +11,9 @@
     "check": "gts check",
     "clean": "gts clean",
     "fix": "gts fix",
-    "compile": "tsc",
+    "pre-compile": "yarn clean",
+    "post-compile": "cp -r src/views build/src && cp -r secret build",
+    "compile": "yarn pre-compile && tsc && yarn post-compile",
     "start": "node build/src/index.js",
     "dev": "nodemon --watch 'src/**/*.ts' --exec 'ts-node' src/index.ts"
   },
@@ -24,6 +26,7 @@
   },
   "dependencies": {
     "axios": "^0.19.2",
+    "dotenv": "^8.2.0",
     "express": "^4.17.1",
     "googleapis": "^52.1.0",
     "moment": "^2.27.0",

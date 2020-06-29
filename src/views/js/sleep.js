@@ -24,7 +24,7 @@ const submit = position => {
     .then(res => res.json())
     .then(data => {
       document.getElementById('text').innerHTML =
-        `Updated range: ${data.data.updatedRange}`;
+        `Updated row: ${data.data.updatedRow.join(", ")}`;
     })
     .catch(err => {
       console.error(err);
