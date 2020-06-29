@@ -1,7 +1,7 @@
 FROM node:14-alpine as builder
 WORKDIR /usr/src/sleep-tracker
 COPY package.json yarn.lock ./
-RUN yarn install --pure-lockfile
+RUN yarn install
 COPY . .
 RUN yarn compile
 
