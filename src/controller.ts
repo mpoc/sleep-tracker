@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from "express";
 import moment from 'moment-timezone';
-import axios, { AxiosResponse } from 'axios';
+import got from 'got';
 import { getSheetsObj, getObjectArrayHeader, getArray, append, GoogleSheetsAppendUpdates } from './sheets';
 import { successResponse, errorResponse } from './utils';
 import { ApiError } from "./error";
@@ -117,11 +117,11 @@ const getTimezoneFromCoords = async (lat: number, lng: number): Promise<string> 
   }
   const url = `http://api.timezonedb.com?key=${process.env.TIMEZONEDB_API_KEY}&format=json&by=position&lat=${lat}&lng=${lng}`;
   try {
-    const response: AxiosResponse<TimezoneDBResponse> = await axios.get(url);
-    if (response.data.status == "OK") {
-      return response.data.zoneName;
+    const response: TimezoneDBResponse = await got(url).json();
+    if (response.status == "OK") {
+      return response.zoneName;
     } else {
-      throw new ApiError('Error receiving data from TimezoneDB API', response.data);
+      throw new ApiError('Error receiving data from TimezoneDB API', response);
     }
   } catch (error) {
     throw new ApiError('Error calling TimezoneDB API', error);
