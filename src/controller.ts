@@ -1,7 +1,9 @@
-import { Request, Response } from "express";
+import { Request, Response, NextFunction } from "express";
 import moment from 'moment-timezone';
 import axios, { AxiosResponse } from 'axios';
-import { getSheetsObj, getObjectArray, getArray, append } from './sheets';
+import { getSheetsObj, getObjectArray, getArray, append, GoogleSheetsAppendUpdates } from './sheets';
+import { successResponse, errorResponse } from './utils';
+import { ApiError } from "./error";
 
 type GeolocationPosition = {
   coords: {
@@ -24,24 +26,21 @@ type SleepEntry = {
   timezone: string
 }
 
-type GoogleSheetsAppendUpdates = {
-  spreadsheetId: string,
-  updatedRange: string,
-  updatedRows: number,
-  updatedColumns: number,
-  updatedCells: number
-}
-
-export const logSleep = async (req: Request, res: Response) => {
+export const logSleep = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const data: GeolocationPosition = req.body;
 
-    console.time('Get timezone name');
-    const timezoneName = await getTimezoneFromCoords(data.coords.latitude, data.coords.longitude);
-    console.timeEnd('Get timezone name');
+    // console.time('Get timezone name');
+    const timezoneName =
+      await getTimezoneFromCoords(data.coords.latitude, data.coords.longitude)
+        .catch(error => {
+          throw new ApiError("Failed to retrieve timezone from TimezoneDB", error);
+        });
+    // console.timeEnd('Get timezone name');
 
     const utcTime = moment.utc(data.timestamp);
     const localTime = utcTime.clone().tz(timezoneName);
+
     const entry: SleepEntry = {
       localTime: localTime.format('YYYY-MM-DD HH:mm:ss'),
       latitude: String(data.coords.latitude),
@@ -50,37 +49,47 @@ export const logSleep = async (req: Request, res: Response) => {
       utcTime: utcTime.format('YYYY-MM-DD HH:mm:ss'),
     };
 
-    const values = [ Object.values(entry) ];
+    const valuesToAppend = [ Object.values(entry) ];
 
     if (!process.env.SPREADSHEET_ID) {
-      throw Error("Spreadsheet ID not defined");
+      throw new ApiError("Spreadsheet ID not defined");
     }
-    const RANGE = 'Sheet1';
+    if (!process.env.RANGE) {
+      throw new ApiError('Range not defined');
+    }
 
-    console.time('Write to Google Sheets');
-    const sheetsObj = await getSheetsObj();
+    // console.time('Get sheetsObj');
+    const sheetsObj = await getSheetsObj().catch(error => {
+      throw new ApiError("Failed to login to Google", error);
+    });
+    // console.timeEnd('Get sheetsObj');
+    
+    // console.time('Write to Google Sheets');
     const result: GoogleSheetsAppendUpdates = await append(
       sheetsObj,
       process.env.SPREADSHEET_ID,
-      RANGE,
-      values
-    );
-    console.timeEnd('Write to Google Sheets');
-
-    console.time('Read from Google Sheets');
-    const updatedRows = await getArray(sheetsObj, process.env.SPREADSHEET_ID, result.updatedRange);
-    console.timeEnd('Read from Google Sheets');
-
-    console.log({ updatedRows });
-
-    res.json({
-      success: true,
-      data: {
-        updatedRow: updatedRows[0]
-      }
+      process.env.RANGE,
+      valuesToAppend
+    ).catch(error => {
+      throw new ApiError("Failed to append rows to Google Sheet", error);
     });
+    // console.timeEnd('Write to Google Sheets');
+
+    // console.time('Read from Google Sheets');
+    const updatedRows =
+      await getArray(sheetsObj, process.env.SPREADSHEET_ID, result.updatedRange).catch(error => {
+        throw new ApiError("Failed to retrieve row after writing", error);
+      });
+    // console.timeEnd('Read from Google Sheets');
+
+    const response = {
+      updatedRow: updatedRows[0]
+    }
+    console.log({response});
+
+    successResponse(res, response, "Successfully logged sleep")
   } catch (error) {
-    console.log(error);
+    next(error);
   }
 };
 
@@ -97,7 +106,7 @@ type TimezoneDBResponse = {
 
 const getTimezoneFromCoords = async (lat: number, lng: number): Promise<string> => {
   if (!process.env.TIMEZONEDB_API_KEY) {
-    throw Error('TimezoneDB API key not defined');
+    throw new ApiError('TimezoneDB API key not defined');
   }
   const url = `http://api.timezonedb.com?key=${process.env.TIMEZONEDB_API_KEY}&format=json&by=position&lat=${lat}&lng=${lng}`;
   try {
@@ -105,11 +114,9 @@ const getTimezoneFromCoords = async (lat: number, lng: number): Promise<string> 
     if (response.data.status == "OK") {
       return response.data.zoneName;
     } else {
-      console.log(response.data);
-      return "";
+      throw new ApiError('Error receiving data from TimezoneDB API', response.data);
     }
   } catch (error) {
-    console.error(error);
-    return "";
+    throw new ApiError('Error calling TimezoneDB API', error);
   }
 };

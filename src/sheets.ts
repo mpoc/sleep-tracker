@@ -30,6 +30,14 @@ export const getObjectArray = async (
   range: string
 ): Promise<any[]> => toObjectArray(await getArray(sheetsObj, spreadsheetId, range));
 
+export type GoogleSheetsAppendUpdates = {
+  spreadsheetId: string,
+  updatedRange: string,
+  updatedRows: number,
+  updatedColumns: number,
+  updatedCells: number
+}
+
 export const append = async (
   sheetsObj: any,
   spreadsheetId: string,

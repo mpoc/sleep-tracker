@@ -1,6 +1,7 @@
-import express from 'express';
+import express, { Request, Response, NextFunction } from 'express';
 import dotenv from 'dotenv';
 import { logSleep } from './controller';
+import { handleError } from './error';
 
 dotenv.config({ path: __dirname + '/../secret/.env' });
 
@@ -15,6 +16,10 @@ app.use('/js', express.static(__dirname + '/views/js'));
 
 app.post('/api/sleep', logSleep);
 app.get('/sleep', async (req, res) => res.render('sleep.pug'));
+
+app.use((error: Error, req: Request, res: Response, next: NextFunction) => {
+  handleError(res, error);
+});
 
 const PORT = '8000';
 app.listen(PORT, async (err: Error) => {
