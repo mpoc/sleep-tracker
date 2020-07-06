@@ -4,7 +4,7 @@ services:
   sleep-tracker:
     build: .
     restart: always
-    env_file:
-      - secret/.env
     ports:
-      - "8001:8000"
+      - "8002:8000"
+    volumes:
+        - "./secret:/usr/src/sleep-tracker/build/secret"

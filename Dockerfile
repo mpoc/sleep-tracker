@@ -3,7 +3,8 @@ WORKDIR /usr/src/sleep-tracker
 COPY package.json yarn.lock ./
 RUN yarn install
 COPY . .
-RUN yarn compile
+ENV NODE_OPTIONS="--max-old-space-size=8192"
+RUN yarn docker-compile
 
 FROM node:14-alpine
 WORKDIR /usr/src/sleep-tracker
