@@ -18,9 +18,9 @@ export const successResponse = (res: Response, data: object, message: string) =>
 
 export const errorResponse = (res: Response, error: ApiError) => {
   if (error.errorLogData instanceof Error) {
-    console.error(error.message + (error.errorLogData ? (':\n' + error.errorLogData.toString()) : ""));
+    console.error(error.message + (error.errorLogData ? (':\n\t' + error.errorLogData.toString()) : ""));
   } else {
-    console.error(error.message + (error.errorLogData ? (':\n' + JSON.stringify(error.errorLogData)) : ""));
+    console.error(error.message + (error.errorLogData ? (':\n\t' + JSON.stringify(error.errorLogData)) : ""));
   }
   const response: ApiResponse = {
     success: false,

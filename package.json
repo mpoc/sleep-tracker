@@ -1,22 +1,19 @@
 {
   "name": "sleep-tracker",
-  "main": "build/src/index.js",
-  "types": "build/src/index.d.ts",
-  "files": [
-    "build/src"
-  ],
+  "main": "build/index.js",
+  "types": "build/index.d.ts",
+  "files": [ "build" ],
   "license": "Apache-2.0",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "check": "gts check",
     "clean": "gts clean",
     "fix": "gts fix",
-    "copy-views": "cp -r src/views build/src",
+    "copy-views": "cp -r src/views build",
     "precompile": "yarn clean",
-    "postcompile": "yarn copy-views && cp -r secret build",
-    "compile": "yarn precompile && tsc && yarn postcompile",
-    "docker-compile": "tsc && yarn copy-views",
-    "start": "node build/src/index.js",
+    "postcompile": "yarn copy-views",
+    "compile": "tsc",
+    "start": "node build/index.js",
     "dev": "nodemon --watch 'src/**/*.ts' --exec 'ts-node' src/index.ts"
   },
   "devDependencies": {
@@ -24,7 +21,7 @@
     "@types/node": "^13.11.1",
     "gts": "^2.0.2",
     "ts-node": "^8.10.2",
-    "typescript": "^3.8.3"
+    "typescript": "^3.9.6"
   },
   "dependencies": {
     "dotenv": "^8.2.0",
