@@ -2,6 +2,9 @@ import { Request, Response, NextFunction } from "express";
 import moment from 'moment-timezone';
 //@ts-ignore
 import geoTz from 'geo-tz';
+// @ts-ignore
+import PushBullet from 'pushbullet';
+
 import { getSheetsObj, getObjectArrayHeader, getArray, append, GoogleSheetsAppendUpdates } from './sheets';
 import { successResponse, errorResponse } from './utils';
 import { ApiError } from "./error";
@@ -90,6 +93,16 @@ export const logSleep = async (req: Request, res: Response, next: NextFunction) 
     const response = {
       updatedRow: updatedRows[0]
     }
+
+    if (!process.env.PUSHBULLET_API_KEY) {
+      throw new ApiError('PushBullet API key not defined');
+    }
+    const pusher = new PushBullet(process.env.PUSHBULLET_API_KEY);
+
+    const notificationBody = Object.entries(response.updatedRow).map(([key, value]) => `${key}: ${value}`).join(",\n");
+    await pusher
+      .note(process.env.PUSHBULLET_EMAIL, 'Sleep logged', notificationBody)
+      .catch((error: Error) => { throw new ApiError('Failed to send notification', error) });
 
     successResponse(res, response, "Successfully logged sleep")
   } catch (error) {
