@@ -1,6 +1,7 @@
 import fs from 'fs';
 import readline from 'readline';
-import { google } from 'googleapis';
+// https://github.com/googleapis/google-api-nodejs-client/issues/2187
+import { sheets } from 'googleapis/build/src/apis/sheets';
 import { OAuth2Client } from 'google-auth-library';
 
 const CRED_PATH = 'secret/credentials.json';
@@ -10,7 +11,7 @@ const SCOPES = ['https://www.googleapis.com/auth/spreadsheets'];
 export const getSheetsObj = async () => {
   const cred = JSON.parse(fs.readFileSync(CRED_PATH, 'utf8'));
   const auth = await authorize(cred);
-  return google.sheets({version: 'v4', auth});
+  return sheets({version: 'v4', auth});
 }
 
 export const getArray = async (
@@ -86,7 +87,7 @@ const toObjectArray = (array: any[][], header?: any[]): any[] => {
 
 const authorize = async (cred: any): Promise<OAuth2Client> => {
   const {client_secret, client_id, redirect_uris} = cred.installed;
-  const oAuth2Client = new google.auth.OAuth2(
+  const oAuth2Client = new OAuth2Client(
     client_id,
     client_secret,
     redirect_uris[0]
