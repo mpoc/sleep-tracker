@@ -2,7 +2,7 @@ import { Request, Response, NextFunction } from "express";
 import moment from 'moment-timezone';
 //@ts-ignore
 import geoTz from 'geo-tz';
-// @ts-ignore
+//@ts-ignore
 import PushBullet from 'pushbullet';
 
 import { getSheetsObj, getObjectArrayHeader, getArray, append, GoogleSheetsAppendUpdates } from './sheets';
@@ -35,13 +35,15 @@ export const logSleep = async (req: Request, res: Response, next: NextFunction) 
     const data: GeolocationPosition = req.body;
     const apiKey = req.query.apiKey;
 
+    if (!process.env.API_KEY) {
+      throw new ApiError('No API key provided in environment');
+    }
+
     if (apiKey != process.env.API_KEY) {
       throw new ApiError('Invalid API key');
     }
 
-    // console.time('Get timezone name');
     const timezoneName = getTimezoneFromCoords(data.coords.latitude, data.coords.longitude);
-    // console.timeEnd('Get timezone name');
 
     const utcTime = moment.utc(data.timestamp);
     const localTime = utcTime.clone().tz(timezoneName);
@@ -63,13 +65,10 @@ export const logSleep = async (req: Request, res: Response, next: NextFunction) 
       throw new ApiError('Range not defined');
     }
 
-    // console.time('Get sheetsObj');
     const sheetsObj = await getSheetsObj().catch(error => {
       throw new ApiError("Failed to login to Google", error);
     });
-    // console.timeEnd('Get sheetsObj');
     
-    // console.time('Write to Google Sheets');
     const result: GoogleSheetsAppendUpdates = await append(
       sheetsObj,
       process.env.SPREADSHEET_ID,
@@ -78,9 +77,7 @@ export const logSleep = async (req: Request, res: Response, next: NextFunction) 
     ).catch(error => {
       throw new ApiError("Failed to append rows to Google Sheet", error);
     });
-    // console.timeEnd('Write to Google Sheets');
 
-    // console.time('Read from Google Sheets');
     const updatedRows = await getObjectArrayHeader(
       sheetsObj,
       process.env.SPREADSHEET_ID,
@@ -88,7 +85,6 @@ export const logSleep = async (req: Request, res: Response, next: NextFunction) 
     ).catch(error => {
       throw new ApiError('Failed to retrieve row after writing', error);
     });
-    // console.timeEnd('Read from Google Sheets');
 
     const response = {
       updatedRow: updatedRows[0]

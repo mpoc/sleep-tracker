@@ -22,7 +22,11 @@ const submit = position => {
 
   const searchParams = new URLSearchParams(window.location.search);
   const apiKey = searchParams.get('apiKey');
-  fetch('/api/sleep?apiKey=' + apiKey, options)
+
+  const url = new URL('api/sleep', window.location.href + '/');
+  url.searchParams.append('apiKey', apiKey);
+
+  fetch(url, options)
     .then(res => res.json())
     .then(data => {
       if (data.success) {
@@ -31,6 +35,8 @@ const submit = position => {
           `Inserted row:<br>${entries.join(",<br>")}`;
         const timeDiff = new Date() - new Date(data.data.updatedRow['Timezone local time']);
         console.log(`${timeDiff / 1000} seconds ago.`)
+      } else {
+        console.error(data);
       }
     })
     .catch(err => {
