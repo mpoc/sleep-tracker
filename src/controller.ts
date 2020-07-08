@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from "express";
 import moment from 'moment-timezone';
-import got from 'got';
+//@ts-ignore
+import geoTz from 'geo-tz';
 import { getSheetsObj, getObjectArrayHeader, getArray, append, GoogleSheetsAppendUpdates } from './sheets';
 import { successResponse, errorResponse } from './utils';
 import { ApiError } from "./error";
@@ -36,11 +37,7 @@ export const logSleep = async (req: Request, res: Response, next: NextFunction) 
     }
 
     // console.time('Get timezone name');
-    const timezoneName =
-      await getTimezoneFromCoords(data.coords.latitude, data.coords.longitude)
-        .catch(error => {
-          throw new ApiError("Failed to retrieve timezone from TimezoneDB", error);
-        });
+    const timezoneName = getTimezoneFromCoords(data.coords.latitude, data.coords.longitude);
     // console.timeEnd('Get timezone name');
 
     const utcTime = moment.utc(data.timestamp);
@@ -111,19 +108,4 @@ type TimezoneDBResponse = {
   timestamp: number
 }
 
-const getTimezoneFromCoords = async (lat: number, lng: number): Promise<string> => {
-  if (!process.env.TIMEZONEDB_API_KEY) {
-    throw new ApiError('TimezoneDB API key not defined');
-  }
-  const url = `http://api.timezonedb.com?key=${process.env.TIMEZONEDB_API_KEY}&format=json&by=position&lat=${lat}&lng=${lng}`;
-  try {
-    const response: TimezoneDBResponse = await got(url).json();
-    if (response.status == "OK") {
-      return response.zoneName;
-    } else {
-      throw new ApiError('Error receiving data from TimezoneDB API', response);
-    }
-  } catch (error) {
-    throw new ApiError('Error calling TimezoneDB API', error);
-  }
-};
+const getTimezoneFromCoords = (lat: number, lng: number): string => geoTz(lat, lng)[0];
