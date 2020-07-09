@@ -2,7 +2,7 @@ version: "3.8"
 
 services:
   sleep-tracker:
-    build: .
+    image: "mpoc/sleep-tracker"
     restart: always
     ports:
       - "8002:8000"
