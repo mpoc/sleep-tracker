@@ -1,6 +1,3 @@
-const REQUIRED_ACCURACY = 10;
-let watchID;
-
 const submit = position => {
   const json = {
     coords: {
@@ -52,50 +49,8 @@ const submit = position => {
     });
 };
 
-const positionSuccess = position => {
-  const crd = position.coords;
-
-  console.log(
-    `Timestamp: ${new Date(position.timestamp)} (${position.timestamp})`
-  );
-  console.log('Your current position is:');
-  console.log(`Latitude: ${crd.latitude}`);
-  console.log(`Longitude: ${crd.longitude}`);
-  console.log(`More or less ${crd.accuracy} meters.`);
-  
-  if (crd.accuracy > REQUIRED_ACCURACY) {
-    document.getElementById('text').innerHTML =
-      `Accuracy is less than ${REQUIRED_ACCURACY} meters, please try again`;
-    return;
-  }
-    
-  submit(position);
-};
-
-const positionError = err => {
-  console.log(`ERROR(${err.code}): ${err.message}`);
-  document.getElementById('text').innerHTML = `ERROR(${err.code}): ${err.message}`;
-};
-
-const getPosition = () => {
-  if (navigator.geolocation) {
-    const options = {
-      enableHighAccuracy: true,
-      timeout: 5000,
-      maximumAge: 0
-    };
-    navigator.geolocation.getCurrentPosition(
-      positionSuccess,
-      positionError,
-      options
-    );
-  } else {
-    console.log('Geolocation is not supported by this browser.');
-    document.getElementById(
-      'text'
-    ).innerHTML = 'Geolocation is not supported by this browser.';
-  }
-}
+const REQUIRED_ACCURACY = 10;
+let watchID;
 
 const watchSuccess = position => {
   const crd = position.coords;
@@ -119,6 +74,12 @@ const watchSuccess = position => {
   }
 }
 
+const watchError = err => {
+  console.log(`ERROR(${err.code}): ${err.message}`);
+  document.getElementById('text').innerHTML = `ERROR(${err.code}): ${err.message}`;
+};
+
+
 const watchPosition = () => {
   if (navigator.geolocation) {
     const options = {
@@ -126,7 +87,7 @@ const watchPosition = () => {
       timeout: 5000,
       maximumAge: 0,
     };
-    watchID = navigator.geolocation.watchPosition(watchSuccess, positionError, options);
+    watchID = navigator.geolocation.watchPosition(watchSuccess, watchError, options);
   } else {
     console.log('Geolocation is not supported by this browser.');
     document.getElementById('text').innerHTML =
@@ -135,6 +96,5 @@ const watchPosition = () => {
 }
 
 window.onload = () => {
-  // getPosition();
   watchPosition();
 };
