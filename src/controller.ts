@@ -124,12 +124,12 @@ const getNotificationText = (row: SheetsSleepEntry): { title: string, body: stri
   const isStop = !!row['Duration'];
   if (isStop) {
     return {
-      title: 'Sleep stop logged',
+      title: '⏹️ Sleep stop logged',
       body: `${row['Timezone local time']} at ${row['Timezone']}\nDuration: ${row['Duration']}`
     }
   } else {
     return {
-      title: 'Sleep start logged',
+      title: '▶️ Sleep start logged',
       body: `${row['Timezone local time']} at ${row['Timezone']}`
     }
   }
