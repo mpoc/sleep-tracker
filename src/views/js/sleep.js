@@ -59,7 +59,14 @@ const positionSuccess = position => {
   console.log(`Latitude: ${crd.latitude}`);
   console.log(`Longitude: ${crd.longitude}`);
   console.log(`More or less ${crd.accuracy} meters.`);
-
+  
+  const REQUIRED_ACCURACY = 10;
+  if (crd.accuracy < REQUIRED_ACCURACY) {
+    document.getElementById('text').innerHTML =
+      `Accuracy is less than ${REQUIRED_ACCURACY} meters, please try again`;
+    return;
+  }
+    
   submit(position);
 };
 
