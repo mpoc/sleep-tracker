@@ -21,6 +21,10 @@ const submit = position => {
   };
 
   const searchParams = new URLSearchParams(window.location.search);
+  if (!searchParams.has('apiKey')) {
+    document.getElementById('text').innerHTML = 'No API key provided';
+    return;
+  }
   const apiKey = searchParams.get('apiKey');
 
   const url = new URL('api/sleep', window.location.href + '/');
