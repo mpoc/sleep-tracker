@@ -1,3 +1,5 @@
+const REQUIRED_ACCURACY = 10;
+
 const submit = position => {
   const json = {
     coords: {
@@ -60,7 +62,6 @@ const positionSuccess = position => {
   console.log(`Longitude: ${crd.longitude}`);
   console.log(`More or less ${crd.accuracy} meters.`);
   
-  const REQUIRED_ACCURACY = 10;
   if (crd.accuracy > REQUIRED_ACCURACY) {
     document.getElementById('text').innerHTML =
       `Accuracy is less than ${REQUIRED_ACCURACY} meters, please try again`;
@@ -95,6 +96,43 @@ const getPosition = () => {
   }
 }
 
+const watchSuccess = position => {
+  const crd = position.coords;
+
+  console.log(
+    `Timestamp: ${new Date(position.timestamp)} (${position.timestamp})`
+  );
+  console.log('Your current position is:');
+  console.log(`Latitude: ${crd.latitude}`);
+  console.log(`Longitude: ${crd.longitude}`);
+  console.log(`More or less ${crd.accuracy} meters.`);
+
+  if (crd.accuracy > REQUIRED_ACCURACY) {
+    document.getElementById(
+      'text'
+    ).innerHTML = `Current accuracy: ${crd.accuracy} meters, required accuracy: ${REQUIRED_ACCURACY} meters, trying again`;
+    return;
+  }
+
+  submit(position);
+}
+
+const watchPosition = () => {
+  if (navigator.geolocation) {
+    const options = {
+      enableHighAccuracy: true,
+      timeout: 5000,
+      maximumAge: 0,
+    };
+    navigator.geolocation.watchPosition(watchSuccess, positionError, options);
+  } else {
+    console.log('Geolocation is not supported by this browser.');
+    document.getElementById('text').innerHTML =
+      'Geolocation is not supported by this browser.';
+  }
+}
+
 window.onload = () => {
-  getPosition();
+  // getPosition();
+  watchPosition();
 };
