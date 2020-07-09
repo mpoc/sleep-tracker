@@ -45,10 +45,6 @@ export const logSleep = async (req: Request, res: Response, next: NextFunction) 
     const data: GeolocationPosition = req.body;
     const apiKey = req.query.apiKey;
 
-    if (!process.env.API_KEY) {
-      throw new ApiError('No API key provided in environment');
-    }
-
     if (apiKey != process.env.API_KEY) {
       throw new ApiError('Invalid API key');
     }
@@ -69,21 +65,14 @@ export const logSleep = async (req: Request, res: Response, next: NextFunction) 
 
     const valuesToAppend = [ Object.values(entry) ];
 
-    if (!process.env.SPREADSHEET_ID) {
-      throw new ApiError("Spreadsheet ID not defined");
-    }
-    if (!process.env.RANGE) {
-      throw new ApiError('Range not defined');
-    }
-
     const sheetsObj = await getSheetsObj().catch(error => {
       throw new ApiError("Failed to login to Google", error);
     });
     
     const result: GoogleSheetsAppendUpdates = await append(
       sheetsObj,
-      process.env.SPREADSHEET_ID,
-      process.env.RANGE,
+      process.env.SPREADSHEET_ID!,
+      process.env.RANGE!,
       valuesToAppend
     ).catch(error => {
       throw new ApiError("Failed to append rows to Google Sheet", error);
@@ -91,7 +80,7 @@ export const logSleep = async (req: Request, res: Response, next: NextFunction) 
 
     const updatedRows = await getObjectArrayHeader(
       sheetsObj,
-      process.env.SPREADSHEET_ID,
+      process.env.SPREADSHEET_ID!,
       result.updatedRange
     ).catch(error => {
       throw new ApiError('Failed to retrieve row after writing', error);
@@ -110,9 +99,6 @@ export const logSleep = async (req: Request, res: Response, next: NextFunction) 
 };
 
 const sendNotification = async (row: SheetsSleepEntry) => {
-  if (!process.env.PUSHBULLET_API_KEY) {
-    throw new ApiError('PushBullet API key not defined');
-  }
   const notification = getNotificationText(row);
   const pusher = new PushBullet(process.env.PUSHBULLET_API_KEY);
   await pusher

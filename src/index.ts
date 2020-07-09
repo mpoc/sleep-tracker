@@ -1,9 +1,13 @@
 import express, { Request, Response, NextFunction } from 'express';
-import dotenv from 'dotenv';
+import dotenv from 'dotenv-safe';
+import path from 'path';
 import { logSleep } from './controller';
 import { handleError } from './error';
 
-dotenv.config({ path: __dirname + '/../secret/.env' });
+dotenv.config({
+  path: path.resolve(__dirname, '..', 'secret/.env'),
+  example: path.resolve(__dirname, '..', 'secret/.env.example'),
+});
 
 const app = express();
 
