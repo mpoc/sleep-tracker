@@ -104,17 +104,6 @@ export const logSleep = async (req: Request, res: Response, next: NextFunction) 
   } catch (error) {
     next(error);
   }
-};
-
-type TimezoneDBResponse = {
-  status: string,
-  message: string,
-  countryCode: string,
-  zoneName: string,
-  abbreviation: string,
-  gmtOffset: string,
-  dst: string,
-  timestamp: number
 }
 
 const getTimezoneFromCoords = (lat: number, lng: number): string => geoTz(lat, lng)[0];
