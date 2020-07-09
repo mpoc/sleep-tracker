@@ -1,4 +1,5 @@
 const REQUIRED_ACCURACY = 10;
+let watchID;
 
 const submit = position => {
   const json = {
@@ -110,11 +111,12 @@ const watchSuccess = position => {
   if (crd.accuracy > REQUIRED_ACCURACY) {
     document.getElementById(
       'text'
-    ).innerHTML = `Current accuracy: ${crd.accuracy} meters, required accuracy: ${REQUIRED_ACCURACY} meters, trying again`;
+    ).innerHTML = `Current accuracy: ${crd.accuracy} meters<br>Required accuracy: ${REQUIRED_ACCURACY} meters<br>Trying again...`;
     return;
+  } else {
+    navigator.geolocation.clearWatch(watchID);
+    submit(position);
   }
-
-  submit(position);
 }
 
 const watchPosition = () => {
@@ -124,7 +126,7 @@ const watchPosition = () => {
       timeout: 5000,
       maximumAge: 0,
     };
-    navigator.geolocation.watchPosition(watchSuccess, positionError, options);
+    watchID = navigator.geolocation.watchPosition(watchSuccess, positionError, options);
   } else {
     console.log('Geolocation is not supported by this browser.');
     document.getElementById('text').innerHTML =
