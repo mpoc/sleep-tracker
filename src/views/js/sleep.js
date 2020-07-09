@@ -61,7 +61,7 @@ const positionSuccess = position => {
   console.log(`More or less ${crd.accuracy} meters.`);
   
   const REQUIRED_ACCURACY = 10;
-  if (crd.accuracy < REQUIRED_ACCURACY) {
+  if (crd.accuracy > REQUIRED_ACCURACY) {
     document.getElementById('text').innerHTML =
       `Accuracy is less than ${REQUIRED_ACCURACY} meters, please try again`;
     return;
