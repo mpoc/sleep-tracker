@@ -54,6 +54,7 @@ export const logSleep = async (req: Request, res: Response, next: NextFunction) 
       longitude: String(data.coords.longitude),
       timezone: timezoneName,
       utcTime: utcTime.format('YYYY-MM-DD HH:mm:ss'),
+      durationString: `=IF(ISODD(ROW()),READABLE_DURATION(INDIRECT(ADDRESS(ROW()-1,COLUMN()-1,4)),INDIRECT(ADDRESS(ROW(),COLUMN()-1,4))),"")`
     };
 
     const valuesToAppend = [ Object.values(entry) ];
