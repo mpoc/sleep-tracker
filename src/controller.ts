@@ -27,7 +27,17 @@ type SleepEntry = {
   localTime: string,
   latitude: string,
   longitude: string,
-  timezone: string
+  timezone: string,
+  durationString: string
+}
+
+type SheetsSleepEntry = {
+  'Timezone local time': string,
+  'Latitude': string,
+  'Longitude': string,
+  'Timezone': string,
+  'UTC time': string,
+  'Duration': string
 }
 
 export const logSleep = async (req: Request, res: Response, next: NextFunction) => {
@@ -88,22 +98,40 @@ export const logSleep = async (req: Request, res: Response, next: NextFunction) 
     });
 
     const response = {
-      updatedRow: updatedRows[0]
+      updatedRow: updatedRows[0] as SheetsSleepEntry
     }
 
-    if (!process.env.PUSHBULLET_API_KEY) {
-      throw new ApiError('PushBullet API key not defined');
-    }
-    const pusher = new PushBullet(process.env.PUSHBULLET_API_KEY);
-
-    const notificationBody = Object.entries(response.updatedRow).map(([key, value]) => `${key}: ${value}`).join(",\n");
-    await pusher
-      .note(process.env.PUSHBULLET_EMAIL, 'Sleep logged', notificationBody)
-      .catch((error: Error) => { throw new ApiError('Failed to send notification', error) });
+    await sendNotification(response.updatedRow);
 
     successResponse(res, response, "Successfully logged sleep")
   } catch (error) {
     next(error);
+  }
+};
+
+const sendNotification = async (row: SheetsSleepEntry) => {
+  if (!process.env.PUSHBULLET_API_KEY) {
+    throw new ApiError('PushBullet API key not defined');
+  }
+  const notification = getNotificationText(row);
+  const pusher = new PushBullet(process.env.PUSHBULLET_API_KEY);
+  await pusher
+    .note(process.env.PUSHBULLET_EMAIL, notification.title, notification.body)
+    .catch((error: Error) => { throw new ApiError('Failed to send notification', error) });
+}
+
+const getNotificationText = (row: SheetsSleepEntry): { title: string, body: string } => {
+  const isStop = !!row['Duration'];
+  if (isStop) {
+    return {
+      title: 'Sleep stop logged',
+      body: `${row['Timezone local time']} at ${row['Timezone']}\nDuration: ${row['Duration']}`
+    }
+  } else {
+    return {
+      title: 'Sleep start logged',
+      body: `${row['Timezone local time']} at ${row['Timezone']}`
+    }
   }
 }
 
