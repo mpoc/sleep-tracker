@@ -37,6 +37,7 @@ const submit = position => {
         console.log(`${timeDiff / 1000} seconds ago.`)
       } else {
         console.error(data);
+        document.getElementById('text').innerHTML = data.message;
       }
     })
     .catch(err => {
