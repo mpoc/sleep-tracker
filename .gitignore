@@ -114,5 +114,6 @@ dist
 # End of https://www.toptal.com/developers/gitignore/api/node
 
 .vscode
-secret/
+secret/*
+!secret/.env.example
 build/
