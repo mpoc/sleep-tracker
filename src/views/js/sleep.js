@@ -49,7 +49,7 @@ const submit = position => {
     });
 };
 
-const REQUIRED_ACCURACY = 10;
+const REQUIRED_ACCURACY = 20;
 let watchID;
 
 const watchSuccess = position => {
