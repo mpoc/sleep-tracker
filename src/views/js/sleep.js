@@ -69,6 +69,7 @@ const watchSuccess = position => {
     ).innerHTML = `Current accuracy: ${crd.accuracy} meters<br>Required accuracy: ${REQUIRED_ACCURACY} meters<br>Trying again...`;
     return;
   } else {
+    document.getElementById('text').innerHTML = "Accuracy achieved, saving...";
     navigator.geolocation.clearWatch(watchID);
     submit(position);
   }
