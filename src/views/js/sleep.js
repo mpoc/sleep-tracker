@@ -64,8 +64,7 @@ const constructApiUrl = apiKey => {
   return url;
 }
 
-const REQUIRED_ACCURACY = 7000;
-// const REQUIRED_ACCURACY = 20;
+const REQUIRED_ACCURACY = 25;
 let watchID;
 
 const watchSuccess = position => {
