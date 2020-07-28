@@ -69,7 +69,13 @@ let watchID;
 
 const watchSuccess = position => {
   printPosition(position);
-  checkAccuracy(position);
+
+  if (!checkTimestamp(position)) return;
+  if (!checkAccuracy(position)) return;
+
+  document.getElementById('text').innerHTML = "Accuracy and timestamp OK, saving...";
+  navigator.geolocation.clearWatch(watchID);
+  submit(position);
 }
 
 const watchError = err => {
@@ -98,17 +104,23 @@ const printPosition = position => {
   console.log(`More or less ${position.coords.accuracy} meters.`);
 }
 
-const checkAccuracy = position => {
-  const accuracyAchieved = position.coords.accuracy > REQUIRED_ACCURACY;
-  if (accuracyAchieved) {
-    document.getElementById(
-      'text'
-    ).innerHTML = `Current accuracy: ${position.coords.accuracy} meters<br>Required accuracy: ${REQUIRED_ACCURACY} meters<br>Trying again...`;
-  } else {
-    document.getElementById('text').innerHTML = "Accuracy achieved, saving...";
-    navigator.geolocation.clearWatch(watchID);
-    submit(position);
+const checkTimestamp = position => {
+  const ALLOWED_TIMESTAMP_AGE = 2000;
+  const timestampAge = Date.now() - position.timestamp;
+  const timestampRecent = timestampAge < ALLOWED_TIMESTAMP_AGE;
+  if (!timestampRecent) {
+    document.getElementById('text').innerHTML = `Timestamp too old (${timestampAge} milliseconds)<br>Trying again...`;
   }
+  return timestampRecent;
+}
+
+const checkAccuracy = position => {
+  const accuracyAchieved = position.coords.accuracy < REQUIRED_ACCURACY;
+  if (!accuracyAchieved) {
+    document.getElementById('text').innerHTML =
+      `Current accuracy: ${position.coords.accuracy} meters<br>Required accuracy: ${REQUIRED_ACCURACY} meters<br>Trying again...`;
+  }
+  return accuracyAchieved;
 }
 
 const geolocationAvailable = () => {
