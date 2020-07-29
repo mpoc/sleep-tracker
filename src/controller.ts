@@ -72,7 +72,7 @@ export const logSleep = async (req: Request, res: Response, next: NextFunction) 
     const result: GoogleSheetsAppendUpdates = await append(
       sheetsObj,
       process.env.SPREADSHEET_ID!,
-      process.env.RANGE!,
+      process.env.SPREADSHEET_RANGE!,
       valuesToAppend
     ).catch(error => {
       throw new ApiError("Failed to append rows to Google Sheet", error);
