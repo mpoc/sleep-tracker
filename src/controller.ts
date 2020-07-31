@@ -49,26 +49,10 @@ type SheetsSleepEntry = {
 
 export const logSleep = async (req: Request, res: Response, next: NextFunction) => {
   try {
+    checkRequestApiKey(req);
+
     const data: GeolocationPosition = req.body;
-    const apiKey = req.query.apiKey;
-
-    if (apiKey != process.env.API_KEY) {
-      throw new ApiError('Invalid API key');
-    }
-
-    const timezoneName = getTimezoneFromCoords(data.coords.latitude, data.coords.longitude);
-
-    const utcTime = moment.utc(data.timestamp);
-    const localTime = utcTime.clone().tz(timezoneName);
-
-    const entry: SleepEntry = {
-      localTime: localTime.format('YYYY-MM-DD HH:mm:ss'),
-      latitude: String(data.coords.latitude),
-      longitude: String(data.coords.longitude),
-      timezone: timezoneName,
-      utcTime: utcTime.format('YYYY-MM-DD HH:mm:ss'),
-      durationString: `=IF(ISODD(ROW()),INDIRECT(ADDRESS(ROW(),COLUMN()-1,4))-INDIRECT(ADDRESS(ROW()-1,COLUMN()-1,4)),"")`
-    };
+    const entry = getSleepEntryFromGeolocationPosition(data);
 
     const valuesToAppend = [ Object.values(entry) ];
 
@@ -106,27 +90,11 @@ export const logSleep = async (req: Request, res: Response, next: NextFunction) 
 };
 
 export const replaceLastSleep = async (req: Request, res: Response, next: NextFunction) => {
-  try {
+  try {    
+    checkRequestApiKey(req);
+    
     const data: GeolocationPosition = req.body;
-    const apiKey = req.query.apiKey;
-
-    if (apiKey != process.env.API_KEY) {
-      throw new ApiError('Invalid API key');
-    }
-
-    const timezoneName = getTimezoneFromCoords(data.coords.latitude, data.coords.longitude);
-
-    const utcTime = moment.utc(data.timestamp);
-    const localTime = utcTime.clone().tz(timezoneName);
-
-    const entry: SleepEntry = {
-      localTime: localTime.format('YYYY-MM-DD HH:mm:ss'),
-      latitude: String(data.coords.latitude),
-      longitude: String(data.coords.longitude),
-      timezone: timezoneName,
-      utcTime: utcTime.format('YYYY-MM-DD HH:mm:ss'),
-      durationString: `=IF(ISODD(ROW()),INDIRECT(ADDRESS(ROW(),COLUMN()-1,4))-INDIRECT(ADDRESS(ROW()-1,COLUMN()-1,4)),"")`
-    };
+    const entry = getSleepEntryFromGeolocationPosition(data);
 
     const valuesToAppend = [ Object.values(entry) ];
 
@@ -177,6 +145,24 @@ export const replaceLastSleep = async (req: Request, res: Response, next: NextFu
   }
 };
 
+const getSleepEntryFromGeolocationPosition = (geolocationPosition: GeolocationPosition): SleepEntry => {
+  const timezoneName = getTimezoneFromCoords(geolocationPosition.coords.latitude, geolocationPosition.coords.longitude);
+
+  const utcTime = moment.utc(geolocationPosition.timestamp);
+  const localTime = utcTime.clone().tz(timezoneName);
+
+  const entry: SleepEntry = {
+    localTime: localTime.format('YYYY-MM-DD HH:mm:ss'),
+    latitude: String(geolocationPosition.coords.latitude),
+    longitude: String(geolocationPosition.coords.longitude),
+    timezone: timezoneName,
+    utcTime: utcTime.format('YYYY-MM-DD HH:mm:ss'),
+    durationString: `=IF(ISODD(ROW()),INDIRECT(ADDRESS(ROW(),COLUMN()-1,4))-INDIRECT(ADDRESS(ROW()-1,COLUMN()-1,4)),"")`
+  };
+
+  return entry;
+}
+
 const sendNotification = async (row: SheetsSleepEntry) => {
   const notification = getNotificationText(row);
   const pusher = new PushBullet(process.env.PUSHBULLET_API_KEY);
@@ -201,3 +187,10 @@ const getNotificationText = (row: SheetsSleepEntry): { title: string, body: stri
 }
 
 const getTimezoneFromCoords = (lat: number, lng: number): string => geoTz(lat, lng)[0];
+
+const checkRequestApiKey = (req: Request) => {
+  const apiKey = req.query.apiKey;
+  if (apiKey != process.env.API_KEY) {
+    throw new ApiError('Invalid API key');
+  }
+}
