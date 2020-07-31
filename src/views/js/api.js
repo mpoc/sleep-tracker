@@ -56,7 +56,7 @@ export const replaceLastSleepEntry = async (position) => {
   };
 
   const options = {
-    method: 'POST',
+    method: 'PUT',
     body: JSON.stringify(json),
     headers: {
       'Content-Type': 'application/json',

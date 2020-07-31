@@ -4,8 +4,9 @@ import {
   printPosition
 } from './utils.js';
 import {
+  getSleepEntries,
   submitSleepEntry,
-  getSleepEntries
+  replaceLastSleepEntry
 } from './api.js'
 
 const processSleepApiResponse = data => {
@@ -13,9 +14,6 @@ const processSleepApiResponse = data => {
     const insertedRowText = prettyObjectString(data.data.updatedRow);
 
     document.getElementById('text').innerHTML = `Inserted row:<br>${insertedRowText}`;
-
-    const timeDiff = new Date() - new Date(data.data.updatedRow['Timezone local time']);
-    console.log(`${timeDiff / 1000} seconds ago.`)
   } else {
     console.error(data);
     document.getElementById('text').innerHTML = data.message;
@@ -25,10 +23,7 @@ const processSleepApiResponse = data => {
 const processReplaceApiResponse = data => {
   if (data.success) {
     const insertedRowText = prettyObjectString(data.data.updatedRow);
-
     document.getElementById('text').innerHTML = `Replaced row:<br>${insertedRowText}`;
-
-    const timeDiff = new Date() - new Date(data.data.updatedRow['Timezone local time']);
   } else {
     console.error(data);
     document.getElementById('text').innerHTML = data.message;
@@ -38,7 +33,7 @@ const processReplaceApiResponse = data => {
 const REQUIRED_ACCURACY = 25;
 let watchID;
 
-const submitPosition = (successFunction) => {
+const submitPosition = (curriedSuccessFn) => {
   if (!geolocationAvailable()) return;
 
   const options = {
@@ -47,20 +42,20 @@ const submitPosition = (successFunction) => {
     maximumAge: 0,
   };
   
-  watchID = navigator.geolocation.watchPosition(watchSuccess, watchError, options);
+  watchID = navigator.geolocation.watchPosition(curriedSuccessFn, watchError, options);
 }
 
-const watchSuccess = async (position) => {
-  printPosition(position);
+const onWatchSuccess = (successFn) =>
+  async (position) => {
+    printPosition(position);
 
-  if (!checkTimestamp(position)) return;
-  if (!checkAccuracy(position)) return;
+    if (!checkTimestamp(position)) return;
+    if (!checkAccuracy(position)) return;
 
-  document.getElementById('text').innerHTML = "Accuracy and timestamp OK, saving...";
-  navigator.geolocation.clearWatch(watchID);
+    document.getElementById('text').innerHTML = "Accuracy and timestamp OK, saving...";
+    navigator.geolocation.clearWatch(watchID);
 
-  const response = await submitSleepEntry(position);
-  processSleepApiResponse(response);
+    await successFn(position);
 }
 
 const watchError = err => {
@@ -68,6 +63,16 @@ const watchError = err => {
   console.log(errorText);
   document.getElementById('text').innerHTML = errorText;
 };
+
+const submitAndProcessSleepEntry = async (position) => {
+  const response = await submitSleepEntry(position);
+  processSleepApiResponse(response);
+}
+
+const submitAndProcessSleepEntryReplace = async (position) => {
+  const response = await replaceLastSleepEntry(position);
+  processReplaceApiResponse(response);
+}
 
 const checkTimestamp = position => {
   const ALLOWED_TIMESTAMP_AGE = 2000;
@@ -137,10 +142,13 @@ const disableButtons = () => {
 const logSleepButtonAction = () => {
   disableButtons()
   clearInterval(entryDisplayInterval);
-  submitPosition();
+  submitPosition(onWatchSuccess(submitAndProcessSleepEntry));
 }
 
 const replaceLastSleepButtonAction = () => {
+  disableButtons()
+  clearInterval(entryDisplayInterval);
+  submitPosition(onWatchSuccess(submitAndProcessSleepEntryReplace));
 }
 
 const activateButtons = () => {
