@@ -23,7 +23,7 @@ const submit = position => {
   const apiKey = getApiKey();
   if (!apiKey) return;
 
-  const url = constructApiUrl(apiKey);
+  const url = constructSleepApiUrl(apiKey);
 
   fetch(url, options)
     .then(res => res.json())
@@ -33,10 +33,7 @@ const submit = position => {
 
 const processApiResponse = data => {
   if (data.success) {
-    const insertedRowText =
-      Object.entries(data.data.updatedRow)
-        .map(([key, value]) => `${key}: ${value}`)
-        .join(",<br>");
+    const insertedRowText = prettyObjectString(data.data.updatedRow);
 
     document.getElementById('text').innerHTML = `Inserted row:<br>${insertedRowText}`;
 
@@ -58,8 +55,14 @@ const getApiKey = () => {
   return apiKey;
 }
 
-const constructApiUrl = apiKey => {
+const constructSleepApiUrl = apiKey => {
   const url = new URL('api/sleep', window.location.href + '/');
+  url.searchParams.append('apiKey', apiKey);
+  return url;
+}
+
+const constructReplaceApiUrl = apiKey => {
+  const url = new URL('api/sleep/replace', window.location.href + '/');
   url.searchParams.append('apiKey', apiKey);
   return url;
 }
@@ -133,6 +136,131 @@ const geolocationAvailable = () => {
   }
 }
 
-window.onload = () => {
+const prettyObjectString = object => Object.entries(object)
+  .map(([key, value]) => `${key}: ${value}`)
+  .join(",<br>");
+
+let entryDisplayInterval;
+
+const showLastSleepEntry = data => {
+  if (data.success) {
+    enableButtons();
+    const lastEntry = data.data[data.data.length - 1];
+    updateEntryDisplay(lastEntry);
+    clearInterval(entryDisplayInterval);
+    entryDisplayInterval = setInterval(() => updateEntryDisplay(lastEntry), 1000);
+  } else {
+    console.error(data);
+    document.getElementById('text').innerHTML = data.message;
+  }
+}
+
+const updateEntryDisplay = entry => {
+  const splitUTCDate = entry['UTC time'].split(" ");
+  const formattedUTCDate = splitUTCDate[0] + "T" + splitUTCDate[1] + "Z";
+  
+  const timeDiff = new Date() - new Date(formattedUTCDate);
+  
+  document.getElementById('text').innerHTML =
+    `Last sleep entry:<br><br>${prettyObjectString(entry)}<br><br>${formatDuration(timeDiff)} ago.`;
+}
+
+const loadLastSleepEntry = () => {
+  const apiKey = getApiKey();
+  if (!apiKey) return;
+
+  const url = constructSleepApiUrl(apiKey);
+
+  fetch(url)
+    .then(res => res.json())
+    .then(showLastSleepEntry)
+    .catch(err => console.error(err));
+};
+
+const formatDuration = duration => {
+  const secondsDiff = duration / 1000;
+
+  const hours = parseInt(secondsDiff / 3600);
+  const minutes = parseInt((secondsDiff / 60) % 60);
+  const seconds = parseInt(secondsDiff % 60);
+
+  // const hour = { singular: ' hour', plural: ' hours' };
+  // const minute = { singular: ' minute', plural: ' minutes' };
+  // const second = { singular: ' second', plural: ' seconds' };
+
+  const hour = { singular: 'h', plural: 'h' };
+  const minute = { singular: 'm', plural: 'm' };
+  const second = { singular: 's', plural: 's' };
+  
+  const hoursString = hours + (hours == 1 ? hour.singular : hour.plural);
+  const minutesString = minutes + (minutes == 1 ? minute.singular : minute.plural);
+  const secondsString = seconds + (seconds == 1 ? second.singular : second.plural);
+  
+  // return hoursString + " " + minutesString + " " + secondsString;
+
+  return (hours == 0 ? "" : hoursString) + " " +
+    ((hours == 0 & minutes == 0) ? "" : minutesString) + " " +
+    secondsString;
+}
+
+const activateButtons = () => {
+  document.getElementById("logSleepButton")
+    .addEventListener('click', logSleepButtonAction);
+  document.getElementById("replaceLastSleepButton")
+    .addEventListener('click', replaceLastSleepButtonAction);
+}
+
+const enableButtons = () => {
+  document.getElementById("logSleepButton").disabled = false;
+  document.getElementById("replaceLastSleepButton").disabled = false;
+}
+
+const disableButtons = () => {
+  document.getElementById("logSleepButton").disabled = true;
+  document.getElementById("replaceLastSleepButton").disabled = true;
+}
+
+const logSleepButtonAction = () => {
+  disableButtons()
+  clearInterval(entryDisplayInterval);
   watchPosition();
+}
+
+const replaceLastSleepButtonAction = () => {
+  const json = {
+    coords: {
+      latitude: position.coords.latitude,
+      longitude: position.coords.longitude,
+      altitude: position.coords.altitude,
+      accuracy: position.coords.accuracy,
+      altitudeAccuracy: position.coords.altitudeAccuracy,
+      heading: position.coords.heading,
+      speed: position.coords.speed
+    },
+    timestamp: position.timestamp,
+  };
+
+  const options = {
+    method: 'POST',
+    body: JSON.stringify(json),
+    headers: {
+      'Content-Type': 'application/json',
+    },
+  };
+
+  const apiKey = getApiKey();
+  if (!apiKey) return;
+
+  const url = constructSleepApiUrl(apiKey);
+
+  fetch(url, options)
+    .then(res => res.json())
+    .then(processApiResponse)
+    .catch(err => console.error(err));
+}
+
+window.onload = () => {
+  // watchPosition();
+  loadLastSleepEntry();
+  activateButtons();
 };

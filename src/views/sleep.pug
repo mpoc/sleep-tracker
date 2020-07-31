@@ -6,5 +6,15 @@ html(lang='en')
         title Sleep
         script(src="/js/sleep.js")
     body
-        #text Logging sleep...
+        table.table.table-responsive.table-borderless
+            tbody
+                tr
+                    td
+                        button#logSleepButton.btn.btn-primary.btn-lg(type="button" disabled) Log sleep entry
+                tr
+                    td
+                        button#replaceLastSleepButton.btn.btn-primary.btn-lg(type="button" disabled) Replace last sleep entry
+                tr
+                    td
+                        #text Getting last sleep log...
         include includes/bootstrap-js.pug
