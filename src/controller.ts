@@ -11,7 +11,8 @@ import {
   getArray,
   append,
   GoogleSheetsAppendUpdates,
-  update
+  update,
+  deleteRow, deleteRows
 } from './sheets';
 import { successResponse, errorResponse } from './utils';
 import { ApiError } from "./error";
@@ -81,7 +82,7 @@ export const logSleep = async (req: Request, res: Response, next: NextFunction) 
       updatedRow: updatedRows[0] as SheetsSleepEntry
     }
 
-    await sendNotification(response.updatedRow);
+    await sendEntryNotification(response.updatedRow);
 
     successResponse(res, response, "Successfully logged sleep")
   } catch (error) {
@@ -137,9 +138,47 @@ export const replaceLastSleep = async (req: Request, res: Response, next: NextFu
       updatedRow: updatedRows[0] as SheetsSleepEntry
     }
 
-    await sendNotification(response.updatedRow);
+    await sendEntryNotification(response.updatedRow);
 
-    successResponse(res, response, "Successfully logged sleep")
+    successResponse(res, response, "Successfully replaced last sleep")
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const deleteSecondLastSleep = async (req: Request, res: Response, next: NextFunction) => {
+  try {    
+    checkRequestApiKey(req);
+    
+    const sheetsObj = await getSheetsObj().catch(error => {
+      throw new ApiError("Failed to login to Google", error);
+    });
+
+    const rows = await getArray(
+      sheetsObj,
+      process.env.SPREADSHEET_ID!,
+      process.env.SPREADSHEET_RANGE!,
+    ).catch((error: Error) => {
+      throw new ApiError('Failed to retrieve row after writing', error);
+    });
+
+    const rowToDelete = rows.length - 1;
+    const result = await deleteRow(sheetsObj, process.env.SPREADSHEET_ID!, 0, rowToDelete);
+
+    const response = {
+      deletedRow: {
+        'Timezone local time': rows[rowToDelete - 1][0],
+        'Latitude': rows[rowToDelete - 1][1],
+        'Longitude': rows[rowToDelete - 1][2],
+        'Timezone': rows[rowToDelete - 1][3],
+        'UTC time': rows[rowToDelete - 1][4],
+        'Duration': rows[rowToDelete - 1][5]
+      } as SheetsSleepEntry
+    }
+
+    await sendDeleteNotification(response.deletedRow);
+
+    successResponse(res, response, "Successfully deleted sleep")
   } catch (error) {
     next(error);
   }
@@ -163,27 +202,46 @@ const getSleepEntryFromGeolocationPosition = (geolocationPosition: GeolocationPo
   return entry;
 }
 
-const sendNotification = async (row: SheetsSleepEntry) => {
-  const notification = getNotificationText(row);
+type Notification = {
+  title: string,
+  body: string
+}
+
+const sendNotification = async (notification: Notification) => {
   const pusher = new PushBullet(process.env.PUSHBULLET_API_KEY);
   await pusher
     .note(process.env.PUSHBULLET_EMAIL, notification.title, notification.body)
     .catch((error: Error) => { throw new ApiError('Failed to send notification', error) });
 }
 
-const getNotificationText = (row: SheetsSleepEntry): { title: string, body: string } => {
-  const isStop = !!row['Duration'];
-  if (isStop) {
-    return {
-      title: '⏹️ Sleep stop logged',
-      body: `${row['Timezone local time']} at ${row['Timezone']}\nDuration: ${row['Duration']}`
-    }
-  } else {
-    return {
-      title: '▶️ Sleep start logged',
-      body: `${row['Timezone local time']} at ${row['Timezone']}`
-    }
+const sendEntryNotification = async (entry: SheetsSleepEntry) => {
+  const notification = getEntryNotificationText(entry);
+  await sendNotification(notification);
+}
+
+const sendDeleteNotification = async (entry: SheetsSleepEntry) => {
+  const notification = getDeleteNotificationText(entry);
+  await sendNotification(notification);
+}
+
+const getEntryNotificationText = (entry: SheetsSleepEntry): Notification => {
+  const isStop = !!entry['Duration'];
+  return {
+    title: isStop ? '⏹️ Sleep stop logged' : '▶️ Sleep start logged',
+    body: getShortSleepEntryDescription(entry)
   }
+}
+
+const getDeleteNotificationText = (entry: SheetsSleepEntry): Notification => ({
+  title: '🗑️ Sleep deleted',
+  body: getShortSleepEntryDescription(entry)
+})
+
+const getShortSleepEntryDescription = (entry: SheetsSleepEntry) => {
+  const isStop = !!entry['Duration'];
+  return isStop
+    ? `${entry['Timezone local time']} at ${entry['Timezone']}\nDuration: ${entry['Duration']}`
+    : `${entry['Timezone local time']} at ${entry['Timezone']}`
 }
 
 const getTimezoneFromCoords = (lat: number, lng: number): string => geoTz(lat, lng)[0];
