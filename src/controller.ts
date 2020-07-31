@@ -111,11 +111,7 @@ export const replaceLastSleep = async (req: Request, res: Response, next: NextFu
       throw new ApiError('Failed to retrieve row after writing', error);
     });
 
-    const lastColumnCharNumber = 64 + rows[0].length;
-    // Limit in case there's columns in AA+ territory
-    const limitedColumnCharNumber = lastColumnCharNumber > 90 ? 90 : lastColumnCharNumber
-    const lastColumn = String.fromCharCode(limitedColumnCharNumber);
-    const rangeToUpdate = `A${rows.length}:${lastColumn}`;
+    const rangeToUpdate = getLastRowRange(rows);
 
     const result: GoogleSheetsAppendUpdates = await update(
       sheetsObj,
@@ -251,4 +247,16 @@ const checkRequestApiKey = (req: Request) => {
   if (apiKey != process.env.API_KEY) {
     throw new ApiError('Invalid API key');
   }
+}
+
+const getLastRowRange = (rows: any[]) => {
+  const A_CHAR_CODE = "A".charCodeAt(0)
+  const Z_CHAR_CODE = "Z".charCodeAt(0)
+
+  const lastColumnCharNumber = A_CHAR_CODE + (rows[0].length - 1);
+  // Limit in case there's columns in AA+ territory
+  const limitedColumnCharNumber = lastColumnCharNumber > Z_CHAR_CODE ? Z_CHAR_CODE : lastColumnCharNumber
+  const lastColumn = String.fromCharCode(limitedColumnCharNumber);
+  const lastRowRange = `A${rows.length}:${lastColumn}`;
+  return lastRowRange;
 }
