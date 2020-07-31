@@ -2,7 +2,7 @@ FROM node:14-alpine as builder
 WORKDIR /usr/src/sleep-tracker
 COPY package.json yarn.lock ./
 # https://github.com/yarnpkg/yarn/issues/749
-RUN yarn install --frozen-lockfile && yarn cache clean
+RUN yarn install --frozen-lockfile
 COPY . .
 RUN yarn compile
 
