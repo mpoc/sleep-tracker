@@ -106,7 +106,11 @@ const geolocationAvailable = () => {
 let entryDisplayInterval;
 
 const showSleepEntry = (entry) => {
-  enableButtons();
+  document.getElementById("logSleepButton").disabled = false;
+  const isStop = !!entry['Duration'];
+  if (!isStop) {
+    document.getElementById("replaceLastSleepButton").disabled = false;
+  }
   startEntryDisplay(entry);
 }
 
