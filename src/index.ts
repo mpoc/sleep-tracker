@@ -20,8 +20,9 @@ app.use('/js', express.static(__dirname + '/views/js'));
 app.use(express.static(__dirname + '/static'))
 
 app.post('/api/sleep', logSleep);
-app.post('/api/sleep/replace', replaceLastSleep);
-app.post('/api/sleep/deleteSecondLast', deleteSecondLastSleep);
+app.put('/api/sleep/replace', replaceLastSleep);
+app.delete('/api/sleep/deleteSecondLast', deleteSecondLastSleep);
+
 app.get('/sleep', async (req, res) => res.render('sleep.pug'));
 
 app.use((error: Error, req: Request, res: Response, next: NextFunction) => {
