@@ -8,11 +8,12 @@ import PushBullet from 'pushbullet';
 import {
   getSheetsObj,
   getObjectArrayHeader,
+  getObjectArray,
   getArray,
   append,
   GoogleSheetsAppendUpdates,
   update,
-  deleteRow, deleteRows
+  deleteRow
 } from './sheets';
 import { successResponse, errorResponse } from './utils';
 import { ApiError } from "./error";
@@ -83,6 +84,30 @@ export const logSleep = async (req: Request, res: Response, next: NextFunction) 
     }
 
     await sendEntryNotification(response.updatedRow);
+
+    successResponse(res, response, "Successfully logged sleep")
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getSleep = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    checkRequestApiKey(req);
+
+    const sheetsObj = await getSheetsObj().catch(error => {
+      throw new ApiError("Failed to login to Google", error);
+    });
+
+    const result = await getObjectArray(
+      sheetsObj,
+      process.env.SPREADSHEET_ID!,
+      process.env.SPREADSHEET_RANGE!,
+    ).catch((error: Error) => {
+      throw new ApiError('Failed to retrieve rows after writing', error);
+    });
+    
+    const response = result;
 
     successResponse(res, response, "Successfully logged sleep")
   } catch (error) {
