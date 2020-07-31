@@ -108,7 +108,7 @@ export const replaceLastSleep = async (req: Request, res: Response, next: NextFu
       process.env.SPREADSHEET_ID!,
       process.env.SPREADSHEET_RANGE!,
     ).catch((error: Error) => {
-      throw new ApiError('Failed to retrieve row after writing', error);
+      throw new ApiError('Failed to retrieve rows', error);
     });
 
     const rangeToUpdate = getLastRowRange(rows);
@@ -119,7 +119,7 @@ export const replaceLastSleep = async (req: Request, res: Response, next: NextFu
       rangeToUpdate,
       valuesToAppend
     ).catch(error => {
-      throw new ApiError("Failed to append rows to Google Sheet", error);
+      throw new ApiError("Failed to update rows", error);
     });
 
     const updatedRows = await getObjectArrayHeader(
@@ -127,7 +127,7 @@ export const replaceLastSleep = async (req: Request, res: Response, next: NextFu
       process.env.SPREADSHEET_ID!,
       result.updatedRange
     ).catch(error => {
-      throw new ApiError('Failed to retrieve row after writing', error);
+      throw new ApiError('Failed to retrieve row after updating', error);
     });
 
     const response = {
@@ -155,7 +155,7 @@ export const deleteSecondLastSleep = async (req: Request, res: Response, next: N
       process.env.SPREADSHEET_ID!,
       process.env.SPREADSHEET_RANGE!,
     ).catch((error: Error) => {
-      throw new ApiError('Failed to retrieve row after writing', error);
+      throw new ApiError('Failed to retrieve rows', error);
     });
 
     const rowToDelete = rows.length - 1;
