@@ -1,37 +1,14 @@
-const submit = position => {
-  const json = {
-    coords: {
-      latitude: position.coords.latitude,
-      longitude: position.coords.longitude,
-      altitude: position.coords.altitude,
-      accuracy: position.coords.accuracy,
-      altitudeAccuracy: position.coords.altitudeAccuracy,
-      heading: position.coords.heading,
-      speed: position.coords.speed
-    },
-    timestamp: position.timestamp,
-  };
+import {
+  formatDuration,
+  prettyObjectString,
+  printPosition
+} from './utils.js';
+import {
+  submitSleepEntry,
+  getSleepEntries
+} from './api.js'
 
-  const options = {
-    method: 'POST',
-    body: JSON.stringify(json),
-    headers: {
-      'Content-Type': 'application/json',
-    },
-  };
-
-  const apiKey = getApiKey();
-  if (!apiKey) return;
-
-  const url = constructSleepApiUrl(apiKey);
-
-  fetch(url, options)
-    .then(res => res.json())
-    .then(processApiResponse)
-    .catch(err => console.error(err));
-};
-
-const processApiResponse = data => {
+const processSleepApiResponse = data => {
   if (data.success) {
     const insertedRowText = prettyObjectString(data.data.updatedRow);
 
@@ -45,49 +22,23 @@ const processApiResponse = data => {
   }
 }
 
-const getApiKey = () => {
-  const searchParams = new URLSearchParams(window.location.search);
-  if (!searchParams.has('apiKey')) {
-    document.getElementById('text').innerHTML = 'No API key provided';
-    return null;
+const processReplaceApiResponse = data => {
+  if (data.success) {
+    const insertedRowText = prettyObjectString(data.data.updatedRow);
+
+    document.getElementById('text').innerHTML = `Replaced row:<br>${insertedRowText}`;
+
+    const timeDiff = new Date() - new Date(data.data.updatedRow['Timezone local time']);
+  } else {
+    console.error(data);
+    document.getElementById('text').innerHTML = data.message;
   }
-  const apiKey = searchParams.get('apiKey');
-  return apiKey;
-}
-
-const constructSleepApiUrl = apiKey => {
-  const url = new URL('api/sleep', window.location.href + '/');
-  url.searchParams.append('apiKey', apiKey);
-  return url;
-}
-
-const constructReplaceApiUrl = apiKey => {
-  const url = new URL('api/sleep/replace', window.location.href + '/');
-  url.searchParams.append('apiKey', apiKey);
-  return url;
 }
 
 const REQUIRED_ACCURACY = 25;
 let watchID;
 
-const watchSuccess = position => {
-  printPosition(position);
-
-  if (!checkTimestamp(position)) return;
-  if (!checkAccuracy(position)) return;
-
-  document.getElementById('text').innerHTML = "Accuracy and timestamp OK, saving...";
-  navigator.geolocation.clearWatch(watchID);
-  submit(position);
-}
-
-const watchError = err => {
-  const errorText = `ERROR(${err.code}): ${err.message}`;
-  console.log(errorText);
-  document.getElementById('text').innerHTML = errorText;
-};
-
-const watchPosition = () => {
+const submitPosition = (successFunction) => {
   if (!geolocationAvailable()) return;
 
   const options = {
@@ -99,13 +50,24 @@ const watchPosition = () => {
   watchID = navigator.geolocation.watchPosition(watchSuccess, watchError, options);
 }
 
-const printPosition = position => {
-  console.log(`Timestamp: ${new Date(position.timestamp)} (${position.timestamp})`);
-  console.log('Your current position is:');
-  console.log(`Latitude: ${position.coords.latitude}`);
-  console.log(`Longitude: ${position.coords.longitude}`);
-  console.log(`More or less ${position.coords.accuracy} meters.`);
+const watchSuccess = async (position) => {
+  printPosition(position);
+
+  if (!checkTimestamp(position)) return;
+  if (!checkAccuracy(position)) return;
+
+  document.getElementById('text').innerHTML = "Accuracy and timestamp OK, saving...";
+  navigator.geolocation.clearWatch(watchID);
+
+  const response = await submitSleepEntry(position);
+  processSleepApiResponse(response);
 }
+
+const watchError = err => {
+  const errorText = `ERROR(${err.code}): ${err.message}`;
+  console.log(errorText);
+  document.getElementById('text').innerHTML = errorText;
+};
 
 const checkTimestamp = position => {
   const ALLOWED_TIMESTAMP_AGE = 2000;
@@ -136,78 +98,30 @@ const geolocationAvailable = () => {
   }
 }
 
-const prettyObjectString = object => Object.entries(object)
-  .map(([key, value]) => `${key}: ${value}`)
-  .join(",<br>");
-
 let entryDisplayInterval;
 
-const showLastSleepEntry = data => {
-  if (data.success) {
-    enableButtons();
-    const lastEntry = data.data[data.data.length - 1];
-    updateEntryDisplay(lastEntry);
-    clearInterval(entryDisplayInterval);
-    entryDisplayInterval = setInterval(() => updateEntryDisplay(lastEntry), 1000);
-  } else {
-    console.error(data);
-    document.getElementById('text').innerHTML = data.message;
-  }
+const showSleepEntry = (entry) => {
+  enableButtons();
+  startEntryDisplay(entry);
 }
 
 const updateEntryDisplay = entry => {
-  const splitUTCDate = entry['UTC time'].split(" ");
-  const formattedUTCDate = splitUTCDate[0] + "T" + splitUTCDate[1] + "Z";
-  
+  const [ date, time ] = entry['UTC time'].split(" ");
+  const formattedUTCDate = date + "T" + time + "Z";
+
   const timeDiff = new Date() - new Date(formattedUTCDate);
   
   document.getElementById('text').innerHTML =
     `Last sleep entry:<br><br>${prettyObjectString(entry)}<br><br>${formatDuration(timeDiff)} ago.`;
 }
 
-const loadLastSleepEntry = () => {
-  const apiKey = getApiKey();
-  if (!apiKey) return;
+const startEntryDisplay = (entry) => {
+  // Initial start
+  updateEntryDisplay(entry);
 
-  const url = constructSleepApiUrl(apiKey);
-
-  fetch(url)
-    .then(res => res.json())
-    .then(showLastSleepEntry)
-    .catch(err => console.error(err));
-};
-
-const formatDuration = duration => {
-  const secondsDiff = duration / 1000;
-
-  const hours = parseInt(secondsDiff / 3600);
-  const minutes = parseInt((secondsDiff / 60) % 60);
-  const seconds = parseInt(secondsDiff % 60);
-
-  // const hour = { singular: ' hour', plural: ' hours' };
-  // const minute = { singular: ' minute', plural: ' minutes' };
-  // const second = { singular: ' second', plural: ' seconds' };
-
-  const hour = { singular: 'h', plural: 'h' };
-  const minute = { singular: 'm', plural: 'm' };
-  const second = { singular: 's', plural: 's' };
-  
-  const hoursString = hours + (hours == 1 ? hour.singular : hour.plural);
-  const minutesString = minutes + (minutes == 1 ? minute.singular : minute.plural);
-  const secondsString = seconds + (seconds == 1 ? second.singular : second.plural);
-  
-  // return hoursString + " " + minutesString + " " + secondsString;
-
-  return (hours == 0 ? "" : hoursString) + " " +
-    ((hours == 0 & minutes == 0) ? "" : minutesString) + " " +
-    secondsString;
-}
-
-const activateButtons = () => {
-  document.getElementById("logSleepButton")
-    .addEventListener('click', logSleepButtonAction);
-  document.getElementById("replaceLastSleepButton")
-    .addEventListener('click', replaceLastSleepButtonAction);
+  // Loop
+  clearInterval(entryDisplayInterval);
+  entryDisplayInterval = setInterval(() => updateEntryDisplay(entry), 1000);
 }
 
 const enableButtons = () => {
@@ -223,44 +137,32 @@ const disableButtons = () => {
 const logSleepButtonAction = () => {
   disableButtons()
   clearInterval(entryDisplayInterval);
-  watchPosition();
+  submitPosition();
 }
 
 const replaceLastSleepButtonAction = () => {
-  const json = {
-    coords: {
-      latitude: position.coords.latitude,
-      longitude: position.coords.longitude,
-      altitude: position.coords.altitude,
-      accuracy: position.coords.accuracy,
-      altitudeAccuracy: position.coords.altitudeAccuracy,
-      heading: position.coords.heading,
-      speed: position.coords.speed
-    },
-    timestamp: position.timestamp,
-  };
-
-  const options = {
-    method: 'POST',
-    body: JSON.stringify(json),
-    headers: {
-      'Content-Type': 'application/json',
-    },
-  };
-
-  const apiKey = getApiKey();
-  if (!apiKey) return;
-
-  const url = constructSleepApiUrl(apiKey);
-
-  fetch(url, options)
-    .then(res => res.json())
-    .then(processApiResponse)
-    .catch(err => console.error(err));
 }
 
+const activateButtons = () => {
+  document.getElementById("logSleepButton")
+    .addEventListener('click', logSleepButtonAction);
+  document.getElementById("replaceLastSleepButton")
+    .addEventListener('click', replaceLastSleepButtonAction);
+}
+
+const loadLastSleepEntry = async () => {
+  const sleepEntries = await getSleepEntries();
+
+  if (sleepEntries.success) {
+    const lastEntry = sleepEntries.data[sleepEntries.data.length - 1];
+    showSleepEntry(lastEntry);
+  } else {
+    console.error(sleepEntries);
+    document.getElementById('text').innerHTML = sleepEntries.message;
+  }
+};
+
 window.onload = () => {
-  // watchPosition();
-  loadLastSleepEntry();
   activateButtons();
+  loadLastSleepEntry();
 };
