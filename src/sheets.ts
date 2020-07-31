@@ -68,6 +68,26 @@ export const append = async (
   });
 }
 
+export const update = async (
+  sheetsObj: any,
+  spreadsheetId: string,
+  range: string,
+  values: string[][]
+): Promise<any> => {
+  return await new Promise((resolve, reject) => {
+    sheetsObj.spreadsheets.values.update({
+      spreadsheetId,
+      range,
+      valueInputOption: 'USER_ENTERED',
+      requestBody: {
+        values
+      }
+    },
+    (err: any, res: any) => (err ? reject(err) : resolve(res.data))
+    );
+  });
+}
+
 const toObjectArray = (array: any[][], header?: any[]): any[] => {
   if (!header) {
     return toObjectArray(array, array.splice(0, 1)[0]);

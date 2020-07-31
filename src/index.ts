@@ -1,7 +1,7 @@
 import express, { Request, Response, NextFunction } from 'express';
 import dotenv from 'dotenv-safe';
 import path from 'path';
-import { logSleep } from './controller';
+import { logSleep, replaceLastSleep } from './controller';
 import { handleError } from './error';
 
 dotenv.config({
@@ -20,6 +20,7 @@ app.use('/js', express.static(__dirname + '/views/js'));
 app.use(express.static(__dirname + '/static'))
 
 app.post('/api/sleep', logSleep);
+app.post('/api/sleep/replace', replaceLastSleep);
 app.get('/sleep', async (req, res) => res.render('sleep.pug'));
 
 app.use((error: Error, req: Request, res: Response, next: NextFunction) => {
