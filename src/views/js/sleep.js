@@ -8,11 +8,11 @@ import {
   submitSleepEntry,
   replaceLastSleepEntry
 } from './api.js'
+import { getAutoLog } from './params.js'
 
 const processSleepApiResponse = data => {
   if (data.success) {
     const insertedRowText = prettyObjectString(data.data.updatedRow);
-
     document.getElementById('text').innerHTML = `Inserted row:<br>${insertedRowText}`;
   } else {
     console.error(data);
@@ -175,6 +175,11 @@ const loadLastSleepEntry = async () => {
 };
 
 window.onload = () => {
-  activateButtons();
-  loadLastSleepEntry();
+  const autoLog = getAutoLog();
+  if (autoLog) {
+    logSleepButtonAction();
+  } else {
+    activateButtons();
+    loadLastSleepEntry();
+  }
 };
