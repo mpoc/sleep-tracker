@@ -144,13 +144,13 @@ const disableButtons = () => {
 }
 
 const logSleepButtonAction = () => {
-  disableButtons()
+  disableButtons();
   clearInterval(entryDisplayInterval);
   submitPosition(onWatchSuccess(submitAndProcessSleepEntry));
 }
 
 const replaceLastSleepButtonAction = () => {
-  disableButtons()
+  disableButtons();
   clearInterval(entryDisplayInterval);
   submitPosition(onWatchSuccess(submitAndProcessSleepEntryReplace));
 }

@@ -1,3 +1,5 @@
+import { getApiKey } from './params.js'
+
 export const getSleepEntries = async () => {
   const apiKey = getApiKey();
   if (!apiKey) return;
@@ -79,14 +81,4 @@ const getEndpointUrl = (endpoint, apiKey) => {
     url.searchParams.append('apiKey', apiKey);
   }
   return url;
-}
-
-const getApiKey = () => {
-  const searchParams = new URLSearchParams(window.location.search);
-  if (!searchParams.has('apiKey')) {
-    document.getElementById('text').innerHTML = 'No API key provided';
-    return null;
-  }
-  const apiKey = searchParams.get('apiKey');
-  return apiKey;
 }
