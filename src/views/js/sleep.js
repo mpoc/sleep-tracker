@@ -4,7 +4,7 @@ import {
   printPosition
 } from './utils.js';
 import {
-  getSleepEntries,
+  getLastSleepEntry,
   submitSleepEntry,
   replaceLastSleepEntry
 } from './api.js'
@@ -163,14 +163,13 @@ const activateButtons = () => {
 }
 
 const loadLastSleepEntry = async () => {
-  const sleepEntries = await getSleepEntries();
-
-  if (sleepEntries.success) {
-    const lastEntry = sleepEntries.data[sleepEntries.data.length - 1];
+  const apiResponse = await getLastSleepEntry();
+  if (apiResponse.success) {
+    const lastEntry = apiResponse.data;
     showSleepEntry(lastEntry);
   } else {
-    console.error(sleepEntries);
-    document.getElementById('text').innerHTML = sleepEntries.message;
+    console.error(apiResponse);
+    document.getElementById('text').innerHTML = apiResponse.message;
   }
 };
 

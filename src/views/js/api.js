@@ -11,6 +11,17 @@ export const getSleepEntries = async () => {
     .catch(err => console.error(err));
 };
 
+export const getLastSleepEntry = async () => {
+  const apiKey = getApiKey();
+  if (!apiKey) return;
+
+  const url = getEndpointUrl("api/sleep/last", apiKey);
+
+  return await fetch(url)
+    .then(res => res.json())
+    .catch(err => console.error(err));
+};
+
 export const submitSleepEntry = async (position) => {
   const json = {
     coords: {
