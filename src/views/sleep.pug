@@ -13,7 +13,8 @@ html(lang='en')
                         button#logSleepButton.btn.btn-success.btn-lg(type="button" disabled) Log sleep entry
                 tr
                     td
-                        button#replaceLastSleepButton.btn.btn-primary.btn-lg(type="button" disabled) Replace last sleep entry
+                        button#replaceConfirmationButton.btn.btn-primary.btn-lg(type='button' data-toggle='modal' data-target='#confirmationModal' disabled) Replace last sleep entry
+                        include includes/replace-confirmation-modal.pug
                 tr
                     td
                         #text Getting last sleep log...

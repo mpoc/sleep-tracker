@@ -109,7 +109,7 @@ const showSleepEntry = (entry) => {
   document.getElementById("logSleepButton").disabled = false;
   const isStop = !!entry['Duration'];
   if (!isStop) {
-    document.getElementById("replaceLastSleepButton").disabled = false;
+    document.getElementById("replaceConfirmationButton").disabled = false;
   }
   startEntryDisplay(entry);
 }
@@ -135,12 +135,12 @@ const startEntryDisplay = (entry) => {
 
 const enableButtons = () => {
   document.getElementById("logSleepButton").disabled = false;
-  document.getElementById("replaceLastSleepButton").disabled = false;
+  document.getElementById("replaceConfirmationButton").disabled = false;
 }
 
 const disableButtons = () => {
   document.getElementById("logSleepButton").disabled = true;
-  document.getElementById("replaceLastSleepButton").disabled = true;
+  document.getElementById("replaceConfirmationButton").disabled = true;
 }
 
 const logSleepButtonAction = () => {
