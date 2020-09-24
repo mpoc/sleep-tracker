@@ -85,7 +85,7 @@ export const logSleep = async (req: Request, res: Response, next: NextFunction) 
 
     await sendEntryNotification(response.updatedRow);
 
-    successResponse(res, response, "Successfully logged sleep")
+    successResponse(res, response, "Successfully added sleep entry")
   } catch (error) {
     next(error);
   }
@@ -104,12 +104,36 @@ export const getSleep = async (req: Request, res: Response, next: NextFunction) 
       process.env.SPREADSHEET_ID!,
       process.env.SPREADSHEET_RANGE!,
     ).catch((error: Error) => {
-      throw new ApiError('Failed to retrieve rows after writing', error);
+      throw new ApiError('Failed to retrieve rows', error);
     });
     
     const response = result;
 
-    successResponse(res, response, "Successfully logged sleep")
+    successResponse(res, response, "Successfully retrieved sleep entries")
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getLastSleep = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    checkRequestApiKey(req);
+
+    const sheetsObj = await getSheetsObj().catch(error => {
+      throw new ApiError("Failed to login to Google", error);
+    });
+
+    const result = await getObjectArray(
+      sheetsObj,
+      process.env.SPREADSHEET_ID!,
+      process.env.SPREADSHEET_RANGE!,
+    ).catch((error: Error) => {
+      throw new ApiError('Failed to retrieve rows', error);
+    });
+
+    const response = result[result.length - 1];
+
+    successResponse(res, response, "Successfully retrieved last sleep entry")
   } catch (error) {
     next(error);
   }
@@ -161,7 +185,7 @@ export const replaceLastSleep = async (req: Request, res: Response, next: NextFu
 
     await sendEntryNotification(response.updatedRow);
 
-    successResponse(res, response, "Successfully replaced last sleep")
+    successResponse(res, response, "Successfully replaced last sleep entry")
   } catch (error) {
     next(error);
   }
@@ -199,7 +223,7 @@ export const deleteSecondLastSleep = async (req: Request, res: Response, next: N
 
     await sendDeleteNotification(response.deletedRow);
 
-    successResponse(res, response, "Successfully deleted sleep")
+    successResponse(res, response, "Successfully deleted second to last sleep entry")
   } catch (error) {
     next(error);
   }
