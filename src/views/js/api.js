@@ -2,8 +2,6 @@ import { getApiKey } from './params.js'
 
 export const getSleepEntries = async () => {
   const apiKey = getApiKey();
-  if (!apiKey) return;
-
   const url = getEndpointUrl("api/sleep", apiKey);
 
   return await fetch(url)
@@ -13,8 +11,6 @@ export const getSleepEntries = async () => {
 
 export const getLastSleepEntry = async () => {
   const apiKey = getApiKey();
-  if (!apiKey) return;
-
   const url = getEndpointUrl("api/sleep/last", apiKey);
 
   return await fetch(url)
@@ -45,8 +41,6 @@ export const submitSleepEntry = async (position) => {
   };
 
   const apiKey = getApiKey();
-  if (!apiKey) return;
-
   const url = getEndpointUrl("api/sleep", apiKey);
 
   return await fetch(url, options)
@@ -77,8 +71,6 @@ export const replaceLastSleepEntry = async (position) => {
   };
 
   const apiKey = getApiKey();
-  if (!apiKey) return;
-
   const url = getEndpointUrl("api/sleep/replace", apiKey);
 
   return await fetch(url, options)
