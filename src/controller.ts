@@ -1,6 +1,5 @@
 import { Request, Response, NextFunction } from "express";
 import moment from 'moment-timezone';
-//@ts-ignore
 import geoTz from 'geo-tz';
 //@ts-ignore
 import PushBullet from 'pushbullet';
@@ -289,7 +288,7 @@ const getShortSleepEntryDescription = (entry: SheetsSleepEntry) => {
     : `${entry['Timezone local time']} at ${entry['Timezone']}`
 }
 
-const getTimezoneFromCoords = (lat: number, lng: number): string => geoTz(lat, lng)[0];
+const getTimezoneFromCoords = (lat: number, lng: number): string => geoTz.find(lat, lng)[0];
 
 const checkRequestApiKey = (req: Request) => {
   const apiKey = req.query.apiKey;
