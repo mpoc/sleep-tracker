@@ -25,6 +25,7 @@ app.delete('/api/sleep/deleteSecondLast', deleteSecondLastSleep);
 app.get('/api/sleep', getSleep);
 app.get('/api/sleep/last', getLastSleep);
 
+app.get('/', async (req, res) => res.render('sleep.pug'));
 app.get('/sleep', async (req, res) => res.render('sleep.pug'));
 
 app.use((error: Error, req: Request, res: Response, next: NextFunction) => {
