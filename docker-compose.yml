@@ -7,4 +7,4 @@ services:
     ports:
       - "8002:8000"
     volumes:
-        - "./secret:/usr/src/sleep-tracker/secret"
+      - "./secret:/usr/src/sleep-tracker/secret"
