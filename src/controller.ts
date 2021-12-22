@@ -124,9 +124,12 @@ export const getLastSleep = async (req: Request, res: Response, next: NextFuncti
       throw new ApiError('Failed to retrieve rows', error);
     });
 
-    const response = result[result.length - 1];
+    const responseData = {
+      lastSleepEntry: result[result.length - 1],
+      numberOfSleepEntries: result.length,
+    };
 
-    successResponse(res, response, "Successfully retrieved last sleep entry")
+    successResponse(res, responseData, "Successfully retrieved last sleep entry")
   } catch (error) {
     next(error);
   }

@@ -105,32 +105,44 @@ const geolocationAvailable = () => {
 
 let entryDisplayInterval;
 
-const showSleepEntry = (entry) => {
+const showSleepEntry = (entryData) => {
   document.getElementById("logSleepButton").disabled = false;
-  const isStop = !!entry['Duration'];
+  const isStop = !!entryData.lastSleepEntry['Duration'];
   if (!isStop) {
     document.getElementById("replaceConfirmationButton").disabled = false;
   }
-  startEntryDisplay(entry);
+  startEntryDisplay(entryData);
 }
 
-const updateEntryDisplay = entry => {
-  const [ date, time ] = entry['UTC time'].split(" ");
+const updateEntryDisplay = entryData => {
+  const [date, time] = entryData.lastSleepEntry['UTC time'].split(" ");
   const formattedUTCDate = date + "T" + time + "Z";
 
   const timeDiff = new Date() - new Date(formattedUTCDate);
   
-  document.getElementById('text').innerHTML =
-    `Last sleep entry:<br><br>${prettyObjectString(entry)}<br><br>Logged ${formatDuration(timeDiff)} ago.`;
+  document.getElementById('text').innerHTML = `
+    <div>
+      Sleep entries in total: ${entryData.numberOfSleepEntries}
+    </div>
+    <br>
+    <div>
+      Last sleep entry:
+      <br>
+      ${prettyObjectString(entryData.lastSleepEntry)}
+    </div>
+    <br>
+    <div>
+      Logged ${formatDuration(timeDiff)} ago.
+    </div>`;
 }
 
-const startEntryDisplay = (entry) => {
+const startEntryDisplay = (entryData) => {
   // Initial start
-  updateEntryDisplay(entry);
+  updateEntryDisplay(entryData);
 
   // Loop
   clearInterval(entryDisplayInterval);
-  entryDisplayInterval = setInterval(() => updateEntryDisplay(entry), 1000);
+  entryDisplayInterval = setInterval(() => updateEntryDisplay(entryData), 1000);
 }
 
 const enableButtons = () => {
@@ -165,8 +177,8 @@ const activateButtons = () => {
 const loadLastSleepEntry = async () => {
   const apiResponse = await getLastSleepEntry();
   if (apiResponse.success) {
-    const lastEntry = apiResponse.data;
-    showSleepEntry(lastEntry);
+    const lastEntryData = apiResponse.data;
+    showSleepEntry(lastEntryData);
   } else {
     console.error(apiResponse);
     document.getElementById('text').innerHTML = apiResponse.message;
