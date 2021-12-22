@@ -58,3 +58,10 @@ Without HTTPS, this error will happen when trying to access the location:
 ```text
 ERROR(1): Only secure origins are allowed (see: https://goo.gl/Y0ZkNV).
 ```
+
+## How to build
+
+```shell
+docker build -t mpoc/sleep-tracker:latest .
+docker push mpoc/sleep-tracker:latest
+```
