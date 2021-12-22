@@ -32,7 +32,6 @@ app.use((error: Error, req: Request, res: Response, next: NextFunction) => {
 });
 
 const PORT = '8000';
-app.listen(PORT, async (err: Error) => {
-  if (err) return;
+app.listen(PORT, () => {
   console.log(`Server is listening on port ${PORT}`);
 });
