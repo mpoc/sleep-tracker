@@ -2,7 +2,9 @@
   "name": "sleep-tracker",
   "main": "build/index.js",
   "types": "build/index.d.ts",
-  "files": [ "build" ],
+  "files": [
+    "build"
+  ],
   "license": "Apache-2.0",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
@@ -17,21 +19,21 @@
     "dev": "nodemon --watch 'src/**/*.ts' --exec 'ts-node' src/index.ts"
   },
   "devDependencies": {
-    "@types/dotenv-safe": "^8.1.0",
-    "@types/express": "^4.17.7",
-    "@types/node": "^14.0.20",
-    "gts": "^2.0.2",
-    "ts-node": "^8.10.2",
-    "typescript": "^3.9.6"
+    "@types/dotenv-safe": "^8.1.2",
+    "@types/express": "^4.17.13",
+    "@types/node": "^17.0.2",
+    "gts": "^3.1.0",
+    "ts-node": "^10.4.0",
+    "typescript": "^4.5.4"
   },
   "dependencies": {
     "dotenv-safe": "^8.2.0",
-    "express": "^4.17.1",
-    "geo-tz": "^6.0.0",
-    "googleapis": "^52.1.0",
-    "moment": "^2.27.0",
-    "moment-timezone": "^0.5.31",
-    "pug": "^3.0.0",
+    "express": "^4.17.2",
+    "geo-tz": "^7.0.1",
+    "googleapis": "^92.0.0",
+    "moment": "^2.29.1",
+    "moment-timezone": "^0.5.34",
+    "pug": "^3.0.2",
     "pushbullet": "^2.4.0"
   }
 }
