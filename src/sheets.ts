@@ -3,15 +3,20 @@ import readline from 'readline';
 // https://github.com/googleapis/google-api-nodejs-client/issues/2187
 import { sheets } from 'googleapis/build/src/apis/sheets';
 import { OAuth2Client } from 'google-auth-library';
+import { ApiError } from './error';
 
 const CRED_PATH = 'secret/credentials.json';
 const TOKEN_PATH = 'secret/token.json';
 const SCOPES = ['https://www.googleapis.com/auth/spreadsheets'];
 
 export const getSheetsObj = async () => {
-  const cred = JSON.parse(fs.readFileSync(CRED_PATH, 'utf8'));
-  const auth = await authorize(cred);
-  return sheets({version: 'v4', auth});
+  try { 
+    const cred = JSON.parse(fs.readFileSync(CRED_PATH, 'utf8'));
+    const auth = await authorize(cred);
+    return sheets({version: 'v4', auth});
+  } catch (error) {
+    throw new ApiError("Failed to login to Google", error);
+  }
 }
 
 export const getArray = async (

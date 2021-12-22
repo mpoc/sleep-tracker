@@ -57,9 +57,7 @@ export const logSleep = async (req: Request, res: Response, next: NextFunction) 
 
     const valuesToAppend = [ Object.values(entry) ];
 
-    const sheetsObj = await getSheetsObj().catch(error => {
-      throw new ApiError("Failed to login to Google", error);
-    });
+    const sheetsObj = await getSheetsObj()
     
     const result: GoogleSheetsAppendUpdates = await append(
       sheetsObj,
@@ -94,9 +92,7 @@ export const getSleep = async (req: Request, res: Response, next: NextFunction) 
   try {
     checkRequestApiKey(req);
 
-    const sheetsObj = await getSheetsObj().catch(error => {
-      throw new ApiError("Failed to login to Google", error);
-    });
+    const sheetsObj = await getSheetsObj()
 
     const result = await getObjectArray(
       sheetsObj,
@@ -118,9 +114,7 @@ export const getLastSleep = async (req: Request, res: Response, next: NextFuncti
   try {
     checkRequestApiKey(req);
 
-    const sheetsObj = await getSheetsObj().catch(error => {
-      throw new ApiError("Failed to login to Google", error);
-    });
+    const sheetsObj = await getSheetsObj()
 
     const result = await getObjectArray(
       sheetsObj,
@@ -147,9 +141,7 @@ export const replaceLastSleep = async (req: Request, res: Response, next: NextFu
 
     const valuesToAppend = [ Object.values(entry) ];
 
-    const sheetsObj = await getSheetsObj().catch(error => {
-      throw new ApiError("Failed to login to Google", error);
-    });
+    const sheetsObj = await getSheetsObj()
     
     const rows = await getArray(
       sheetsObj,
@@ -194,9 +186,7 @@ export const deleteSecondLastSleep = async (req: Request, res: Response, next: N
   try {    
     checkRequestApiKey(req);
     
-    const sheetsObj = await getSheetsObj().catch(error => {
-      throw new ApiError("Failed to login to Google", error);
-    });
+    const sheetsObj = await getSheetsObj()
 
     const rows = await getArray(
       sheetsObj,
