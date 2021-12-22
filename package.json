@@ -16,7 +16,7 @@
     "postcompile": "yarn copy-static",
     "compile": "tsc",
     "start": "node build/index.js",
-    "dev": "nodemon --watch 'src/**/*.ts' --exec 'ts-node' src/index.ts"
+    "dev": "nodemon src/index.ts"
   },
   "devDependencies": {
     "@types/dotenv-safe": "^8.1.2",
