@@ -121,7 +121,7 @@ const updateEntryDisplay = entry => {
   const timeDiff = new Date() - new Date(formattedUTCDate);
   
   document.getElementById('text').innerHTML =
-    `Last sleep entry:<br><br>${prettyObjectString(entry)}<br><br>${formatDuration(timeDiff)} ago.`;
+    `Last sleep entry:<br><br>${prettyObjectString(entry)}<br><br>Logged ${formatDuration(timeDiff)} ago.`;
 }
 
 const startEntryDisplay = (entry) => {
