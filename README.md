@@ -38,3 +38,13 @@ yarn start
 ```shell
 docker-compose up -d
 ```
+
+## How to log sleep
+
+Go to http://localhost:8000/sleep?apiKey=FDePZR0CKULDeWf6eX6DqpG2EfcSPvj3BB84VjIFnorkPtY2AUGEW9aH to see the app.
+Note that in order to log the sleep entry location, it will have run over HTTPS.
+Without HTTPS, this error will happen when trying to access the location:
+
+```text
+ERROR(1): Only secure origins are allowed (see: https://goo.gl/Y0ZkNV).
+```
