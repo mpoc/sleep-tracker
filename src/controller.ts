@@ -110,26 +110,30 @@ export const getSleepRoute = async (req: Request, res: Response, next: NextFunct
   }
 };
 
+export const getLastSleep = async () => {
+  const sheetsObj = await getSheetsObj()
+
+  const result = await getObjectArray(
+    sheetsObj,
+    process.env.SPREADSHEET_ID!,
+    process.env.SPREADSHEET_RANGE!,
+  ).catch((error: Error) => {
+    throw new ApiError('Failed to retrieve rows', error);
+  });
+
+  const lastSleepData = {
+    lastSleepEntry: result[result.length - 1],
+    numberOfSleepEntries: result.length,
+  };
+
+  return lastSleepData
+};
+
 export const getLastSleepRoute = async (req: Request, res: Response, next: NextFunction) => {
   try {
     checkRequestApiKey(req);
-
-    const sheetsObj = await getSheetsObj()
-
-    const result = await getObjectArray(
-      sheetsObj,
-      process.env.SPREADSHEET_ID!,
-      process.env.SPREADSHEET_RANGE!,
-    ).catch((error: Error) => {
-      throw new ApiError('Failed to retrieve rows', error);
-    });
-
-    const responseData = {
-      lastSleepEntry: result[result.length - 1],
-      numberOfSleepEntries: result.length,
-    };
-
-    successResponse(res, responseData, "Successfully retrieved last sleep entry")
+    const lastSleepData = await getLastSleep();
+    successResponse(res, lastSleepData, "Successfully retrieved last sleep entry")
   } catch (error) {
     next(error);
   }
