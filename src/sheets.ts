@@ -45,14 +45,6 @@ export const getObjectArrayHeader = async (
   (await getArray(sheetsObj, spreadsheetId, '1:1'))[0]
 );
 
-export type GoogleSheetsAppendUpdates = {
-  spreadsheetId: string,
-  updatedRange: string,
-  updatedRows: number,
-  updatedColumns: number,
-  updatedCells: number
-}
-
 export const append = async (
   sheetsObj: any,
   spreadsheetId: string,

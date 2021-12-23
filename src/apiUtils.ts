@@ -1,11 +1,6 @@
 import { Response } from "express";
 import { ApiError } from './error'
-
-type ApiResponse = {
-  success: boolean,
-  data?: object,
-  message?: string
-}
+import { ApiResponse } from "./types";
 
 export const successResponse = (res: Response, data: object, message: string) => {
   const response: ApiResponse = {

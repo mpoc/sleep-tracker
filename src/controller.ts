@@ -10,43 +10,12 @@ import {
   getObjectArray,
   getArray,
   append,
-  GoogleSheetsAppendUpdates,
   update,
   deleteRow
 } from './sheets';
 import { successResponse, errorResponse } from './apiUtils';
 import { ApiError } from "./error";
-
-type GeolocationPosition = {
-  coords: {
-      latitude: number,
-      longitude: number,
-      altitude: number,
-      accuracy: number,
-      altitudeAccuracy: number,
-      heading: number,
-      speed: number,
-  },
-  timestamp: number
-}
-
-type SleepEntry = {
-  utcTime: string,
-  localTime: string,
-  latitude: string,
-  longitude: string,
-  timezone: string,
-  durationString: string
-}
-
-type SheetsSleepEntry = {
-  'Timezone local time': string,
-  'Latitude': string,
-  'Longitude': string,
-  'Timezone': string,
-  'UTC time': string,
-  'Duration': string
-}
+import { GeolocationPosition, SheetsSleepEntry, SleepEntry, GoogleSheetsAppendUpdates, Notification } from './types';
 
 export const logSleepRoute = async (req: Request, res: Response, next: NextFunction) => {
   try {
@@ -241,11 +210,6 @@ const getSleepEntryFromGeolocationPosition = (geolocationPosition: GeolocationPo
   };
 
   return entry;
-}
-
-type Notification = {
-  title: string,
-  body: string
 }
 
 const sendNotification = async (notification: Notification) => {
