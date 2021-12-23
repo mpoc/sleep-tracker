@@ -14,7 +14,7 @@ import {
   update,
   deleteRow
 } from './sheets';
-import { successResponse, errorResponse } from './utils';
+import { successResponse, errorResponse } from './apiUtils';
 import { ApiError } from "./error";
 
 type GeolocationPosition = {

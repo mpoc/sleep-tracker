@@ -1,5 +1,5 @@
 import { Response } from "express";
-import { errorResponse } from './utils';
+import { errorResponse } from './apiUtils';
 
 export class ApiError extends Error {
   errorLogData?: any;
