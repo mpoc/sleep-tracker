@@ -1,7 +1,7 @@
 import express, { Request, Response, NextFunction } from 'express';
 import dotenv from 'dotenv-safe';
 import path from 'path';
-import { logSleep, replaceLastSleep, deleteSecondLastSleep, getSleep, getLastSleep } from './controller';
+import { logSleepRoute, replaceLastSleepRoute, deleteSecondLastSleepRoute, getSleepRoute, getLastSleepRoute } from './controller';
 import { handleError } from './error';
 
 dotenv.config({
@@ -19,11 +19,11 @@ app.set('views', __dirname + '/views');
 app.use('/js', express.static(__dirname + '/views/js'));
 app.use(express.static(__dirname + '/static'))
 
-app.post('/api/sleep', logSleep);
-app.put('/api/sleep/replace', replaceLastSleep);
-app.delete('/api/sleep/deleteSecondLast', deleteSecondLastSleep);
-app.get('/api/sleep', getSleep);
-app.get('/api/sleep/last', getLastSleep);
+app.post('/api/sleep', logSleepRoute);
+app.put('/api/sleep/replace', replaceLastSleepRoute);
+app.delete('/api/sleep/deleteSecondLast', deleteSecondLastSleepRoute);
+app.get('/api/sleep', getSleepRoute);
+app.get('/api/sleep/last', getLastSleepRoute);
 
 app.get('/', async (req, res) => res.render('sleep.pug'));
 app.get('/sleep', async (req, res) => res.render('sleep.pug'));

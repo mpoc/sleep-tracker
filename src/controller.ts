@@ -48,7 +48,7 @@ type SheetsSleepEntry = {
   'Duration': string
 }
 
-export const logSleep = async (req: Request, res: Response, next: NextFunction) => {
+export const logSleepRoute = async (req: Request, res: Response, next: NextFunction) => {
   try {
     checkRequestApiKey(req);
 
@@ -88,7 +88,7 @@ export const logSleep = async (req: Request, res: Response, next: NextFunction) 
   }
 };
 
-export const getSleep = async (req: Request, res: Response, next: NextFunction) => {
+export const getSleepRoute = async (req: Request, res: Response, next: NextFunction) => {
   try {
     checkRequestApiKey(req);
 
@@ -110,7 +110,7 @@ export const getSleep = async (req: Request, res: Response, next: NextFunction) 
   }
 };
 
-export const getLastSleep = async (req: Request, res: Response, next: NextFunction) => {
+export const getLastSleepRoute = async (req: Request, res: Response, next: NextFunction) => {
   try {
     checkRequestApiKey(req);
 
@@ -135,7 +135,7 @@ export const getLastSleep = async (req: Request, res: Response, next: NextFuncti
   }
 };
 
-export const replaceLastSleep = async (req: Request, res: Response, next: NextFunction) => {
+export const replaceLastSleepRoute = async (req: Request, res: Response, next: NextFunction) => {
   try {    
     checkRequestApiKey(req);
     
@@ -185,7 +185,7 @@ export const replaceLastSleep = async (req: Request, res: Response, next: NextFu
   }
 };
 
-export const deleteSecondLastSleep = async (req: Request, res: Response, next: NextFunction) => {
+export const deleteSecondLastSleepRoute = async (req: Request, res: Response, next: NextFunction) => {
   try {    
     checkRequestApiKey(req);
     
