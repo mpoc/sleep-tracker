@@ -16,6 +16,7 @@ import {
 import { successResponse, errorResponse } from './apiUtils';
 import { ApiError } from "./error";
 import { GeolocationPosition, SheetsSleepEntry, SleepEntry, GoogleSheetsAppendUpdates, Notification } from './types';
+import { millisecondsToHours } from "./utils";
 
 export const logSleepRoute = async (req: Request, res: Response, next: NextFunction) => {
   try {
@@ -210,24 +211,29 @@ const getSleepEntryFromGeolocationPosition = (geolocationPosition: GeolocationPo
   };
 
   return entry;
-}
+};
 
 const sendNotification = async (notification: Notification) => {
   const pusher = new PushBullet(process.env.PUSHBULLET_API_KEY);
   await pusher
     .note(process.env.PUSHBULLET_EMAIL, notification.title, notification.body)
     .catch((error: Error) => { throw new ApiError('Failed to send notification', error) });
-}
+};
 
 const sendEntryNotification = async (entry: SheetsSleepEntry) => {
   const notification = getEntryNotificationText(entry);
   await sendNotification(notification);
-}
+};
 
 const sendDeleteNotification = async (entry: SheetsSleepEntry) => {
   const notification = getDeleteNotificationText(entry);
   await sendNotification(notification);
-}
+};
+
+export const sendReminderNotification = async (msSinceLastSleepEntry: number) => {
+  const notification = getReminderNotificationText(msSinceLastSleepEntry);
+  await sendNotification(notification);
+};
 
 const getEntryNotificationText = (entry: SheetsSleepEntry): Notification => {
   const isStop = !!entry['Duration'];
@@ -235,19 +241,28 @@ const getEntryNotificationText = (entry: SheetsSleepEntry): Notification => {
     title: isStop ? '⏹️ Sleep stop logged' : '▶️ Sleep start logged',
     body: getShortSleepEntryDescription(entry)
   }
-}
+};
 
 const getDeleteNotificationText = (entry: SheetsSleepEntry): Notification => ({
   title: '🗑️ Sleep deleted',
   body: getShortSleepEntryDescription(entry)
-})
+});
+
+const getReminderNotificationText = (msSinceLastSleepEntry: number): Notification => {
+  const roundFloat = (num: number) => Math.round(num * 10) / 10
+  const hours = millisecondsToHours(msSinceLastSleepEntry);
+  return {
+    title: '🔔 Sleep entry reminder',
+    body: `It has been ${roundFloat(hours)} hours since your last sleep entry. Don't forget to log your sleep!`,
+  }
+};
 
 const getShortSleepEntryDescription = (entry: SheetsSleepEntry) => {
   const isStop = !!entry['Duration'];
   return isStop
     ? `${entry['Timezone local time']} at ${entry['Timezone']}\nDuration: ${entry['Duration']}`
     : `${entry['Timezone local time']} at ${entry['Timezone']}`
-}
+};
 
 const getTimezoneFromCoords = (lat: number, lng: number): string => geoTz.find(lat, lng)[0];
 
@@ -256,7 +271,7 @@ const checkRequestApiKey = (req: Request) => {
   if (apiKey != process.env.API_KEY) {
     throw new ApiError('Invalid API key');
   }
-}
+};
 
 const getLastRowRange = (rows: any[]) => {
   const A_CHAR_CODE = "A".charCodeAt(0)
@@ -268,4 +283,4 @@ const getLastRowRange = (rows: any[]) => {
   const lastColumn = String.fromCharCode(limitedColumnCharNumber);
   const lastRowRange = `A${rows.length}:${lastColumn}`;
   return lastRowRange;
-}
+};

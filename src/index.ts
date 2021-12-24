@@ -1,8 +1,9 @@
 import express, { Request, Response, NextFunction } from 'express';
 import dotenv from 'dotenv-safe';
 import path from 'path';
-import { logSleepRoute, replaceLastSleepRoute, deleteSecondLastSleepRoute, getSleepRoute, getLastSleepRoute } from './controller';
+import { logSleepRoute, replaceLastSleepRoute, deleteSecondLastSleepRoute, getSleepRoute, getLastSleepRoute, getLastSleep, sendReminderNotification } from './controller';
 import { handleError } from './error';
+import { millisecondsSinceSleepEntry, millisecondsToHours, minutesToMilliseconds } from './utils';
 
 dotenv.config({
   path: path.resolve(__dirname, '..', 'secret/.env'),
@@ -35,4 +36,36 @@ app.use((error: Error, req: Request, res: Response, next: NextFunction) => {
 const PORT = '8000';
 app.listen(PORT, () => {
   console.log(`Server is listening on port ${PORT}`);
+  checkReminderLoop();
 });
+
+const HOURS_BEFORE_REMINDER = 15;
+const REMINDER_CHECK_INTERVAL_MINUTES = 5;
+
+const getMsSinceLastSleepLog = async () => {
+  const lastSleepData = await getLastSleep();
+  const msDiff = millisecondsSinceSleepEntry(lastSleepData.lastSleepEntry);
+  return msDiff;
+};
+
+let notificationSent = false;
+
+const checkReminderNotification = async () => {
+  const msDiff = await getMsSinceLastSleepLog();
+  const hoursDiff = millisecondsToHours(msDiff);
+
+  if (hoursDiff > HOURS_BEFORE_REMINDER) {
+    if (!notificationSent) {
+      console.log(`${new Date().toISOString()}: Sending reminder notification`)
+      notificationSent = true;
+      await sendReminderNotification(msDiff);
+    }
+  } else {
+    notificationSent = false;
+  }
+};
+
+const checkReminderLoop = () => {
+  checkReminderNotification();
+  setTimeout(checkReminderLoop, minutesToMilliseconds(REMINDER_CHECK_INTERVAL_MINUTES));
+};
