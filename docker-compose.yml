@@ -1,10 +1,10 @@
-version: "3.8"
+version: '3.8'
 
 services:
   sleep-tracker:
-    image: "mpoc/sleep-tracker"
+    image: mpoc/sleep-tracker:latest
     restart: always
     ports:
-      - "8002:8000"
+      - 8002:8000
     volumes:
-      - "./secret:/usr/src/sleep-tracker/secret"
+      - ./secret:/usr/src/sleep-tracker/secret
