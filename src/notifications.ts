@@ -30,7 +30,7 @@ export const sendReminderNotification = async (msSinceLastSleepEntry: number) =>
 const getEntryNotificationText = (entry: SheetsSleepEntry): Notification => {
   const isStop = !!entry['Duration'];
   return {
-    title: isStop ? '⏹️ Sleep stop logged' : '▶️ Sleep start logged',
+    title: isStop ? '🌅 Sleep stop logged' : '🌃 Sleep start logged',
     body: getShortSleepEntryDescription(entry)
   }
 };
