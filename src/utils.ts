@@ -1,3 +1,4 @@
+import geoTz from 'geo-tz';
 
 import { SheetsSleepEntry } from "./types";
 
@@ -16,3 +17,5 @@ export const millisecondsSinceSleepEntry = (sleepEntry: SheetsSleepEntry) => {
 
 export const millisecondsToHours = (milliseconds: number) => milliseconds / 1000 / 60 / 60;
 export const minutesToMilliseconds = (minutes: number) => minutes * 60 * 1000;
+
+export const getTimezoneFromCoords = (lat: number, lng: number): string => geoTz.find(lat, lng)[0];

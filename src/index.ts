@@ -1,7 +1,9 @@
 import express, { Request, Response, NextFunction } from 'express';
 import dotenv from 'dotenv-safe';
 import path from 'path';
-import { logSleepRoute, replaceLastSleepRoute, deleteSecondLastSleepRoute, getSleepRoute, getLastSleepRoute, getLastSleep, sendReminderNotification } from './controller';
+
+import { logSleepRoute, replaceLastSleepRoute, deleteSecondLastSleepRoute, getSleepRoute, getLastSleepRoute, getLastSleep } from './controller';
+import { sendReminderNotification } from './notifications';
 import { handleError } from './error';
 import { millisecondsSinceSleepEntry, millisecondsToHours, minutesToMilliseconds } from './utils';
 
