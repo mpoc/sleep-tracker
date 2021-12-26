@@ -30,7 +30,7 @@ const processReplaceApiResponse = data => {
   }
 }
 
-const REQUIRED_ACCURACY = 25;
+const REQUIRED_ACCURACY = 40;
 let watchID;
 
 const submitPosition = (curriedSuccessFn) => {
