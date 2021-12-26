@@ -8,7 +8,7 @@ import { ApiError } from './error';
 const sendNotification = async (notification: Notification) => {
   const pusher = new PushBullet(process.env.PUSHBULLET_API_KEY);
   await pusher
-    .note(process.env.PUSHBULLET_EMAIL, notification.title, notification.body)
+    .note({}, notification.title, notification.body)
     .catch((error: Error) => { throw new ApiError('Failed to send notification', error) });
 };
 

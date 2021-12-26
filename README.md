@@ -16,7 +16,6 @@ Environment variables for `secret/.env` file:
 1. `SPREADSHEET_ID` - Google Sheets spreadsheet ID, e.g. the ID for a spreadsheet with the link https://docs.google.com/spreadsheets/d/13Nig7emkfeSDraasAERmsc82k2i3y4Csdfcazj0kUPcUY/ would be `13Nig7emkfeSDraasAERmsc82k2i3y4Csdfcazj0kUPcUY`
 1. `SPREADSHEET_RANGE` - The name of the Google Sheets spreadsheet, e.g. `Sheet1`
 1. `PUSHBULLET_API_KEY` - PushBullet API key to send a notification after creating/deleting a sleep entry
-1. `PUSHBULLET_EMAIL` - Email address for the PushBullet notification
 
 Google Sheets API OAuth client credentials for `secret/credentials.json` file also have to be generated at https://console.cloud.google.com/apis/api/sheets.googleapis.com/credentials.
 The client ID has to be of type Desktop app.
