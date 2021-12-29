@@ -119,10 +119,12 @@ const updateEntryDisplay = entryData => {
   const formattedUTCDate = date + "T" + time + "Z";
 
   const timeDiff = new Date() - new Date(formattedUTCDate);
+
+  const isStop = !!entryData.lastSleepEntry['Duration'];
   
   document.getElementById('text').innerHTML = `
     <div>
-      Sleep entries in total: ${entryData.numberOfSleepEntries}
+      ${isStop ? '🌞' : '😴'} You are currently ${isStop ? 'awake' : 'sleeping'}
     </div>
     <br>
     <div>
@@ -133,7 +135,12 @@ const updateEntryDisplay = entryData => {
     <br>
     <div>
       Logged ${formatDuration(timeDiff)} ago.
-    </div>`;
+    </div>
+    <br>
+    <div>
+      Sleep entries in total: ${entryData.numberOfSleepEntries}
+    </div>
+  `;
 }
 
 const startEntryDisplay = (entryData) => {
