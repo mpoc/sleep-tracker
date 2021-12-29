@@ -28,9 +28,9 @@ export const sendReminderNotification = async (msSinceLastSleepEntry: number) =>
 };
 
 const getEntryNotificationText = (entry: SheetsSleepEntry): Notification => {
-  const isStop = sheetsSleepEntryIsStop(entry);
+  const lastSleepEntryIsStop = sheetsSleepEntryIsStop(entry);
   return {
-    title: isStop ? '🌅 Sleep stop logged' : '🌃 Sleep start logged',
+    title: lastSleepEntryIsStop ? '🌅 Sleep stop logged' : '🌃 Sleep start logged',
     body: getShortSleepEntryDescription(entry)
   }
 };
@@ -50,8 +50,8 @@ const getReminderNotificationText = (msSinceLastSleepEntry: number): Notificatio
 };
 
 const getShortSleepEntryDescription = (entry: SheetsSleepEntry) => {
-  const isStop = sheetsSleepEntryIsStop(entry);
-  return isStop
+  const lastSleepEntryIsStop = sheetsSleepEntryIsStop(entry);
+  return lastSleepEntryIsStop
     ? `${entry['Timezone local time']} at ${entry['Timezone']}\nDuration: ${entry['Duration']}`
     : `${entry['Timezone local time']} at ${entry['Timezone']}`
 };

@@ -107,8 +107,8 @@ let entryDisplayInterval;
 
 const showSleepEntry = (entryData) => {
   document.getElementById("logSleepButton").disabled = false;
-  const isStop = !!entryData.lastSleepEntry['Duration'];
-  if (!isStop) {
+  const lastSleepEntryIsStop = !!entryData.lastSleepEntry['Duration'];
+  if (!lastSleepEntryIsStop) {
     document.getElementById("replaceConfirmationButton").disabled = false;
   }
   startEntryDisplay(entryData);
