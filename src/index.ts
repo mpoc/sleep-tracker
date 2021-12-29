@@ -5,7 +5,7 @@ import path from 'path';
 import { logSleepRoute, replaceLastSleepRoute, deleteSecondLastSleepRoute, getSleepRoute, getLastSleepRoute, getLastSleep } from './controller';
 import { sendReminderNotification } from './notifications';
 import { handleError } from './error';
-import { millisecondsSinceSleepEntry, millisecondsToHours, minutesToMilliseconds } from './utils';
+import { millisecondsSinceSleepEntry, millisecondsToHours, minutesToMilliseconds, sheetsSleepEntryIsStop } from './utils';
 
 dotenv.config({
   path: path.resolve(__dirname, '..', 'secret/.env'),
@@ -41,29 +41,31 @@ app.listen(PORT, () => {
   checkReminderLoop();
 });
 
-const HOURS_BEFORE_REMINDER = 15;
+const HOURS_BEFORE_START_REMINDER = 15;
+const HOURS_BEFORE_STOP_REMINDER = 10;
 const REMINDER_CHECK_INTERVAL_MINUTES = 5;
 
-const getMsSinceLastSleepLog = async () => {
-  const lastSleepData = await getLastSleep();
-  const msDiff = millisecondsSinceSleepEntry(lastSleepData.lastSleepEntry);
-  return msDiff;
-};
-
-let notificationSent = false;
+let reminderNotificationSent = false;
 
 const checkReminderNotification = async () => {
-  const msDiff = await getMsSinceLastSleepLog();
+  const lastSleepData = await getLastSleep();
+  
+  const lastSleepEntryIsStop = sheetsSleepEntryIsStop(lastSleepData.lastSleepEntry);
+  
+  const msDiff = millisecondsSinceSleepEntry(lastSleepData.lastSleepEntry);
   const hoursDiff = millisecondsToHours(msDiff);
 
-  if (hoursDiff > HOURS_BEFORE_REMINDER) {
-    if (!notificationSent) {
-      console.log(`${new Date().toISOString()}: Sending reminder notification`)
-      notificationSent = true;
-      await sendReminderNotification(msDiff);
+  const hoursBeforeReminder = lastSleepEntryIsStop ? HOURS_BEFORE_START_REMINDER : HOURS_BEFORE_STOP_REMINDER;
+
+  // console.log(`${new Date().toISOString()}: Checking ${lastSleepEntryIsStop ? 'start' : 'stop'} reminder notification ${hoursDiff} (${hoursBeforeReminder})`)
+  if (hoursDiff > hoursBeforeReminder) {
+    if (!reminderNotificationSent) {
+      console.log(`${new Date().toISOString()}: Sending ${lastSleepEntryIsStop ? 'start' : 'stop'} reminder notification`)
+      reminderNotificationSent = true;
+      await sendReminderNotification(msDiff, lastSleepEntryIsStop);
     }
   } else {
-    notificationSent = false;
+    reminderNotificationSent = false;
   }
 };
 

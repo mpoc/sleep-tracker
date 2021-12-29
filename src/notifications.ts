@@ -22,8 +22,8 @@ export const sendDeleteNotification = async (entry: SheetsSleepEntry) => {
   await sendNotification(notification);
 };
 
-export const sendReminderNotification = async (msSinceLastSleepEntry: number) => {
-  const notification = getReminderNotificationText(msSinceLastSleepEntry);
+export const sendReminderNotification = async (msSinceLastSleepEntry: number, lastEntryIsStop: boolean) => {
+  const notification = getReminderNotificationText(msSinceLastSleepEntry, lastEntryIsStop);
   await sendNotification(notification);
 };
 
@@ -40,12 +40,12 @@ const getDeleteNotificationText = (entry: SheetsSleepEntry): Notification => ({
   body: getShortSleepEntryDescription(entry)
 });
 
-const getReminderNotificationText = (msSinceLastSleepEntry: number): Notification => {
+const getReminderNotificationText = (msSinceLastSleepEntry: number, lastEntryIsStop: boolean): Notification => {
   const roundFloat = (num: number) => Math.round(num * 10) / 10
   const hours = millisecondsToHours(msSinceLastSleepEntry);
   return {
-    title: '🔔 Sleep entry reminder',
-    body: `It has been ${roundFloat(hours)} hours since your last sleep entry. Don't forget to log your sleep!`,
+    title: lastEntryIsStop ? '🥱 Time to go to sleep' : '⏰ Time to wake up',
+    body: `It has been ${roundFloat(hours)} hours since you ${lastEntryIsStop ? 'woke up' : 'fell asleep'}`,
   }
 };
 
