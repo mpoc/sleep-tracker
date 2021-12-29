@@ -81,7 +81,7 @@ export const getSleepRoute = async (req: Request, res: Response, next: NextFunct
 export const getLastSleep = async () => {
   const sheetsObj = await getSheetsObj()
 
-  const result = await getObjectArray(
+  const result: SheetsSleepEntry[] = await getObjectArray(
     sheetsObj,
     process.env.SPREADSHEET_ID!,
     process.env.SPREADSHEET_RANGE!,
