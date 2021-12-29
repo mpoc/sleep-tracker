@@ -2,7 +2,7 @@
 import PushBullet from 'pushbullet';
 
 import { Notification, SheetsSleepEntry } from './types';
-import { millisecondsToHours } from "./utils";
+import { millisecondsToHours, sheetsSleepEntryIsStop } from "./utils";
 import { ApiError } from './error';
 
 const sendNotification = async (notification: Notification) => {
@@ -28,7 +28,7 @@ export const sendReminderNotification = async (msSinceLastSleepEntry: number) =>
 };
 
 const getEntryNotificationText = (entry: SheetsSleepEntry): Notification => {
-  const isStop = !!entry['Duration'];
+  const isStop = sheetsSleepEntryIsStop(entry);
   return {
     title: isStop ? '🌅 Sleep stop logged' : '🌃 Sleep start logged',
     body: getShortSleepEntryDescription(entry)
@@ -50,7 +50,7 @@ const getReminderNotificationText = (msSinceLastSleepEntry: number): Notificatio
 };
 
 const getShortSleepEntryDescription = (entry: SheetsSleepEntry) => {
-  const isStop = !!entry['Duration'];
+  const isStop = sheetsSleepEntryIsStop(entry);
   return isStop
     ? `${entry['Timezone local time']} at ${entry['Timezone']}\nDuration: ${entry['Duration']}`
     : `${entry['Timezone local time']} at ${entry['Timezone']}`

@@ -2,6 +2,8 @@ import geoTz from 'geo-tz';
 
 import { SheetsSleepEntry } from "./types";
 
+export const sheetsSleepEntryIsStop = (entry: SheetsSleepEntry) => !!entry['Duration'];
+
 const sleepEntryToDateObj = (sleepEntry: SheetsSleepEntry) => {
   const [date, time] = sleepEntry['UTC time'].split(" ");
   const formattedUTCDate = date + "T" + time + "Z";
