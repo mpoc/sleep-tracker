@@ -120,11 +120,11 @@ const updateEntryDisplay = entryData => {
 
   const timeDiff = new Date() - new Date(formattedUTCDate);
 
-  const isStop = !!entryData.lastSleepEntry['Duration'];
+  const lastSleepEntryIsStop = !!entryData.lastSleepEntry['Duration'];
   
   document.getElementById('text').innerHTML = `
     <div>
-      ${isStop ? '🌞' : '😴'} You are currently ${isStop ? 'awake' : 'sleeping'}
+      ${lastSleepEntryIsStop ? '🌞 You are currently awake' : '😴 You are currently sleeping'}
     </div>
     <br>
     <div>
