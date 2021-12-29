@@ -124,17 +124,13 @@ const updateEntryDisplay = entryData => {
   
   document.getElementById('text').innerHTML = `
     <div>
-      ${lastSleepEntryIsStop ? '🌞 You are currently awake' : '😴 You are currently sleeping'}
+      ${lastSleepEntryIsStop ? '🌞 Awake' : '😴 Asleep'} for ${formatDuration(timeDiff)}
     </div>
     <br>
     <div>
       Last sleep entry:
       <br>
       ${prettyObjectString(entryData.lastSleepEntry)}
-    </div>
-    <br>
-    <div>
-      Logged ${formatDuration(timeDiff)} ago.
     </div>
     <br>
     <div>
