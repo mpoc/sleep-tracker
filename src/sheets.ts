@@ -10,7 +10,7 @@ const TOKEN_PATH = 'secret/token.json';
 const SCOPES = ['https://www.googleapis.com/auth/spreadsheets'];
 
 export const getSheetsObj = async () => {
-  try { 
+  try {
     const cred = JSON.parse(fs.readFileSync(CRED_PATH, 'utf8'));
     const auth = await authorize(cred);
     return sheets({version: 'v4', auth});

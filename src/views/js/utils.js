@@ -12,11 +12,11 @@ export const formatDuration = duration => {
   const hour = { singular: 'h', plural: 'h' };
   const minute = { singular: 'm', plural: 'm' };
   const second = { singular: 's', plural: 's' };
-  
+
   const hoursString = hours + (hours == 1 ? hour.singular : hour.plural);
   const minutesString = minutes + (minutes == 1 ? minute.singular : minute.plural);
   const secondsString = seconds + (seconds == 1 ? second.singular : second.plural);
-  
+
   // return hoursString + " " + minutesString + " " + secondsString;
 
   return (hours == 0 ? "" : hoursString) + " " +

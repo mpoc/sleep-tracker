@@ -49,9 +49,9 @@ let reminderNotificationSent = false;
 
 const checkReminderNotification = async () => {
   const lastSleepData = await getLastSleep();
-  
+
   const lastSleepEntryIsStop = sheetsSleepEntryIsStop(lastSleepData.lastSleepEntry);
-  
+
   const msDiff = millisecondsSinceSleepEntry(lastSleepData.lastSleepEntry);
   const hoursDiff = millisecondsToHours(msDiff);
 

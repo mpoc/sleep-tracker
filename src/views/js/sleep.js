@@ -41,7 +41,7 @@ const submitPosition = (curriedSuccessFn) => {
     timeout: 5000,
     maximumAge: 0,
   };
-  
+
   watchID = navigator.geolocation.watchPosition(curriedSuccessFn, watchError, options);
 }
 
@@ -121,7 +121,7 @@ const updateEntryDisplay = entryData => {
   const timeDiff = new Date() - new Date(formattedUTCDate);
 
   const lastSleepEntryIsStop = !!entryData.lastSleepEntry['Duration'];
-  
+
   document.getElementById('text').innerHTML = `
     <div>
       ${lastSleepEntryIsStop ? '🌞 Awake' : '😴 Asleep'} for ${formatDuration(timeDiff)}

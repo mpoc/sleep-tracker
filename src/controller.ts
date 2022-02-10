@@ -26,7 +26,7 @@ export const logSleepRoute = async (req: Request, res: Response, next: NextFunct
     const valuesToAppend = [ Object.values(entry) ];
 
     const sheetsObj = await getSheetsObj()
-    
+
     const result: GoogleSheetsAppendUpdates = await append(
       sheetsObj,
       process.env.SPREADSHEET_ID!,
@@ -69,7 +69,7 @@ export const getSleepRoute = async (req: Request, res: Response, next: NextFunct
     ).catch((error: Error) => {
       throw new ApiError('Failed to retrieve rows', error);
     });
-    
+
     const response = result;
 
     successResponse(res, response, "Successfully retrieved sleep entries")
@@ -108,16 +108,16 @@ export const getLastSleepRoute = async (req: Request, res: Response, next: NextF
 };
 
 export const replaceLastSleepRoute = async (req: Request, res: Response, next: NextFunction) => {
-  try {    
+  try {
     checkRequestApiKey(req);
-    
+
     const data: GeolocationPosition = req.body;
     const entry = getSleepEntryFromGeolocationPosition(data);
 
     const valuesToAppend = [ Object.values(entry) ];
 
     const sheetsObj = await getSheetsObj()
-    
+
     const rows = await getArray(
       sheetsObj,
       process.env.SPREADSHEET_ID!,
@@ -158,9 +158,9 @@ export const replaceLastSleepRoute = async (req: Request, res: Response, next: N
 };
 
 export const deleteSecondLastSleepRoute = async (req: Request, res: Response, next: NextFunction) => {
-  try {    
+  try {
     checkRequestApiKey(req);
-    
+
     const sheetsObj = await getSheetsObj()
 
     const rows = await getArray(
