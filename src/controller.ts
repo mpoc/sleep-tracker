@@ -199,13 +199,30 @@ const getSleepEntryFromGeolocationPosition = (geolocationPosition: GeolocationPo
   const utcTime = moment.utc(geolocationPosition.timestamp);
   const localTime = utcTime.clone().tz(timezoneName);
 
+  const durationFormula = `
+    (
+      INDIRECT(ADDRESS(ROW(), COLUMN() - 1, 4)) -
+      INDIRECT(ADDRESS(ROW() - 1, COLUMN() - 1, 4))
+    )
+  `
+  const formula = `
+    =IF(
+      ISODD(ROW()),
+      IF(
+        ${durationFormula} < 0,
+        "N/A",
+        ${durationFormula}
+      ),
+      ""
+    )
+  `
   const entry: SleepEntry = {
     localTime: localTime.format('YYYY-MM-DD HH:mm:ss'),
     latitude: String(geolocationPosition.coords.latitude),
     longitude: String(geolocationPosition.coords.longitude),
     timezone: timezoneName,
     utcTime: utcTime.format('YYYY-MM-DD HH:mm:ss'),
-    durationString: `=IF(ISODD(ROW()),INDIRECT(ADDRESS(ROW(),COLUMN()-1,4))-INDIRECT(ADDRESS(ROW()-1,COLUMN()-1,4)),"")`
+    durationString: formula.replace(/\s/g, '')
   };
 
   return entry;
