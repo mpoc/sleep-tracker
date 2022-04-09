@@ -31,7 +31,7 @@
     "express": "^4.17.2",
     "geo-tz": "^7.0.1",
     "googleapis": "^92.0.0",
-    "moment": "^2.29.1",
+    "moment": "^2.29.2",
     "moment-timezone": "^0.5.34",
     "pug": "^3.0.2",
     "pushbullet": "^2.4.0"
