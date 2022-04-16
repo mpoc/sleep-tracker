@@ -75,7 +75,7 @@ const submitAndProcessSleepEntryReplace = async (position) => {
 }
 
 const checkTimestamp = position => {
-  const ALLOWED_TIMESTAMP_AGE = 2000;
+  const ALLOWED_TIMESTAMP_AGE = 5000;
   const timestampAge = Date.now() - position.timestamp;
   const timestampRecent = timestampAge < ALLOWED_TIMESTAMP_AGE;
   if (!timestampRecent) {
