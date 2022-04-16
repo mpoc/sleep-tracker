@@ -41,8 +41,8 @@ app.listen(PORT, () => {
   checkReminderLoop();
 });
 
-const HOURS_BEFORE_START_REMINDER = 15;
-const HOURS_BEFORE_STOP_REMINDER = 10;
+const HOURS_BEFORE_START_REMINDER = 15.5;
+const HOURS_BEFORE_STOP_REMINDER = 8.5;
 const REMINDER_CHECK_INTERVAL_MINUTES = 5;
 
 let reminderNotificationSent = false;
