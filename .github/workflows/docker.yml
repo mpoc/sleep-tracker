@@ -23,4 +23,6 @@ jobs:
         with:
           context: .
           push: true
-          tags: mpoc/sleep-tracker:latest
+          tags: |
+            mpoc/sleep-tracker:latest
+            mpoc/sleep-tracker:${{ github.sha }}
