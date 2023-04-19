@@ -1,6 +1,7 @@
 import express, { Request, Response, NextFunction } from 'express';
 import dotenv from 'dotenv-safe';
 import path from 'path';
+import cors from 'cors';
 
 import { logSleepRoute, replaceLastSleepRoute, deleteSecondLastSleepRoute, getSleepRoute, getLastSleepRoute, getLastSleep } from './controller';
 import { sendReminderNotification } from './notifications';
@@ -14,6 +15,7 @@ dotenv.config({
 
 const app = express();
 
+app.use(cors());
 app.use(express.urlencoded({extended: false}));
 app.use(express.json());
 
