@@ -1,5 +1,11 @@
 <script lang="ts">
+    import { onMount } from 'svelte';
     import ReplaceConfirmationModal from '$lib/ReplaceConfirmationModal.svelte';
+    import type { PageData } from './$types';
+    export let data: PageData;
+    onMount(async () => {
+        console.log('mounted')
+    });
 </script>
 
 <table class="table table-responsive table-borderless">
@@ -26,6 +32,7 @@
         </tr>
         <tr>
             <td id="text">Getting last sleep log...</td>
+            <div>{JSON.stringify(data)}</div>
         </tr>
     </tbody>
 </table>
