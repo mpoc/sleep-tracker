@@ -1,11 +1,11 @@
-#confirmationModal.modal.fade(tabindex='-1' role='dialog' aria-labelledby='confirmationModalLabel' aria-hidden='true')
-    .modal-dialog.modal-dialog-centered(role='document')
+#confirmationModal.modal.fade(tabindex='-1')
+    .modal-dialog.modal-dialog-centered
         .modal-content
             .modal-header
                 h5#confirmationModalLabel.modal-title Confirm replace
-                button.close(type='button' data-dismiss='modal' aria-label='Close')
-                    span(aria-hidden='true') &times;
+                button.btn-close(type='button' data-bs-dismiss='modal' aria-label='Close')
             .modal-body Are you sure you want to replace the last sleep entry?
             .modal-footer
-                button.btn.btn-secondary(type='button' data-dismiss='modal') Cancel
-                button#replaceLastSleepButton.btn.btn-primary(type='button' data-dismiss='modal') Replace
+                button.btn.btn-secondary(type='button' data-bs-dismiss='modal') Cancel
+                button#replaceLastSleepButton.btn.btn-primary(type='button' data-bs-dismiss='modal') Replace
+
