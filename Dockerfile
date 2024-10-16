@@ -7,6 +7,7 @@ COPY . .
 RUN yarn compile
 
 FROM node:20-alpine
+LABEL org.opencontainers.image.source=https://github.com/mpoc/sleep-tracker
 WORKDIR /usr/src/sleep-tracker
 COPY package.json yarn.lock ./
 RUN yarn install --frozen-lockfile --production && yarn cache clean
