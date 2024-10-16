@@ -3,7 +3,7 @@
 A simple progressive web app to track sleep.
 
 <p align="center">
-    <img src="images/sleep-tracker.png" alt="An example of a sleep logged during 22nd of December" width="250">
+    <img src="images/sleep-tracker.png" alt="An example of a sleep entry logged on the 15th of October" width="250">
 </p>
 
 ## Specifying secrets
@@ -23,7 +23,7 @@ The client ID has to be of type Desktop app.
 During first login there will be a command line prompt to log in with Google.
 After logging in, a `secret/token.json` file will be generated and the app will have to be restarted in order for it to work.
 
-This command can be used to generate the initial `secret/token.json` file: 
+This command can be used to generate the initial `secret/token.json` file:
 
 ```shell
 docker run -it --rm -v `pwd`/secret:/usr/src/sleep-tracker/secret -p 8002:8000 mpoc/sleep-tracker
