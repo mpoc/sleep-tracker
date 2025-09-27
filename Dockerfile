@@ -1,4 +1,4 @@
-FROM bun:1.2
+FROM oven/bun:1.2
 LABEL org.opencontainers.image.source=https://github.com/mpoc/sleep-tracker
 WORKDIR /usr/src/sleep-tracker
 COPY package.json bun.lock ./
