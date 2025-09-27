@@ -79,7 +79,7 @@ export const replaceLastSleepEntry = async (position) => {
 }
 
 const getEndpointUrl = (endpoint, apiKey) => {
-  const url = new URL(endpoint, window.location.href + '/');
+  const url = new URL(endpoint, window.location.href);
   if (apiKey) {
     url.searchParams.append('apiKey', apiKey);
   }

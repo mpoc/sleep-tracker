@@ -1,9 +1,9 @@
-import express, { type Request, type Response, type NextFunction } from 'express';
+import { serve } from "bun";
+import pug from 'pug';
 import dotenv from 'dotenv-safe';
 import path from 'path';
-import pino from 'pino-http';
 
-import { logSleepRoute, replaceLastSleepRoute, deleteSecondLastSleepRoute, getSleepRoute, getLastSleepRoute, getLastSleep } from './controller';
+import { logSleepRoute, replaceLastSleepRoute, getSleepRoute, getLastSleepRoute, getLastSleep, checkRequestApiKey } from './controller';
 import { sendReminderNotification } from './notifications';
 import { handleError } from './error';
 import { millisecondsSinceSleepEntry, millisecondsToHours, minutesToMilliseconds, sheetsSleepEntryIsStop } from './utils';
@@ -13,40 +13,61 @@ dotenv.config({
   example: path.resolve(__dirname, '..', 'secret/.env.example'),
 });
 
-const app = express();
+const sleepHtml = pug.renderFile("./src/views/sleep.pug");
 
-app.use(pino({
-  redact: ['req.headers', 'res.headers'],
-  transport: {
-    target: 'pino-pretty',
-  }
-}));
-app.use(express.urlencoded({extended: false}));
-app.use(express.json());
-
-app.set('view engine', 'pug');
-app.set('views', __dirname + '/views');
-app.use('/js', express.static(__dirname + '/views/js'));
-app.use(express.static(__dirname + '/static'))
-
-app.post('/api/sleep', logSleepRoute);
-app.put('/api/sleep/replace', replaceLastSleepRoute);
-app.delete('/api/sleep/deleteSecondLast', deleteSecondLastSleepRoute);
-app.get('/api/sleep', getSleepRoute);
-app.get('/api/sleep/last', getLastSleepRoute);
-
-app.get('/', async (req, res) => res.render('sleep.pug'));
-app.get('/sleep', async (req, res) => res.render('sleep.pug'));
-
-app.use((error: Error, req: Request, res: Response, next: NextFunction) => {
-  handleError(res, error);
+const server = serve({
+  port: "8000",
+  routes: {
+    "/api/sleep": {
+      async POST(req) {
+        checkRequestApiKey(req);
+        return logSleepRoute(req);
+      },
+      async GET(req) {
+        checkRequestApiKey(req);
+        return getSleepRoute(req);
+      },
+    },
+    "/api/sleep/replace": {
+      async PUT(req) {
+        checkRequestApiKey(req);
+        return replaceLastSleepRoute(req);
+      }
+    },
+    "/api/sleep/last": {
+      async GET(req) {
+        checkRequestApiKey(req);
+        return getLastSleepRoute(req);
+      }
+    },
+    "/": async () => {
+      return new Response(sleepHtml, {
+        headers: { "Content-Type": "text/html" }
+      });
+    },
+    "/js/*": async (req) => {
+      const url = new URL(req.url);
+      const file = Bun.file(`./src/views${url.pathname}`);
+      if (await file.exists()) {
+        return new Response(file);
+      }
+      return new Response("Not Found", { status: 404 });
+    },
+    "/*": async (req) => {
+      const url = new URL(req.url);
+      const staticFile = Bun.file(`./src/static${url.pathname}`);
+      if (await staticFile.exists()) {
+        return new Response(staticFile);
+      }
+      return new Response("Not Found", { status: 404 });
+    },
+  },
+  error(error) {
+    return handleError(error);
+  },
 });
 
-const PORT = '8000';
-app.listen(PORT, () => {
-  console.log(`Server is listening on port ${PORT}`);
-  checkReminderLoop();
-});
+console.log(`Server is listening on ${server.url}`);
 
 const HOURS_BEFORE_START_REMINDER = 15.5;
 const HOURS_BEFORE_STOP_REMINDER = 8.5;
@@ -80,3 +101,5 @@ const checkReminderLoop = () => {
   checkReminderNotification();
   setTimeout(checkReminderLoop, minutesToMilliseconds(REMINDER_CHECK_INTERVAL_MINUTES));
 };
+
+checkReminderLoop();

@@ -1,17 +1,16 @@
-import type { Response } from "express";
 import { ApiError } from './error'
 import type { ApiResponse } from "./types";
 
-export const successResponse = (res: Response, data: object, message: string) => {
+export const successResponse = (data: object, message: string) => {
   const response: ApiResponse = {
     success: true,
     data,
     message
   }
-  res.status(200).json(response);
+  return Response.json(response);
 }
 
-export const errorResponse = (res: Response, error: ApiError) => {
+export const errorResponse = (error: ApiError) => {
   if (error.errorLogData instanceof Error) {
     console.error(error.message + (error.errorLogData ? (':\n\t' + error.errorLogData.toString()) : ""));
   } else {
@@ -21,5 +20,5 @@ export const errorResponse = (res: Response, error: ApiError) => {
     success: false,
     message: error.message
   };
-  res.status(500).json(response);
+  return Response.json(response);
 };

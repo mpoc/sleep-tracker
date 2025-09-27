@@ -1,15 +1,19 @@
-export type GeolocationPosition = {
-  coords: {
-    latitude: number,
-    longitude: number,
-    altitude: number,
-    accuracy: number,
-    altitudeAccuracy: number,
-    heading: number,
-    speed: number,
-  },
-  timestamp: number
-}
+import { z } from "zod";
+
+export const GeolocationPositionSchema = z.object({
+  coords: z.object({
+    latitude: z.number(),
+    longitude: z.number(),
+    altitude: z.number().nullable(),
+    accuracy: z.number(),
+    altitudeAccuracy: z.number().nullable(),
+    heading: z.number().nullable(),
+    speed: z.number().nullable(),
+  }),
+  timestamp: z.number(),
+});
+
+export type GeolocationPosition = z.infer<typeof GeolocationPositionSchema>;
 
 export type SleepEntry = {
   utcTime: string,

@@ -13,70 +13,59 @@ import {
 } from './sheets';
 import { successResponse, errorResponse } from './apiUtils';
 import { ApiError } from "./error";
-import type { GeolocationPosition, SheetsSleepEntry, SleepEntry, GoogleSheetsAppendUpdates, Notification } from './types';
+import { type GeolocationPosition, type SheetsSleepEntry, type SleepEntry, type GoogleSheetsAppendUpdates, type Notification, GeolocationPositionSchema } from './types';
 import { sendEntryNotification, sendDeleteNotification } from './notifications';
 import { getTimezoneFromCoords } from "./utils";
+import type { BunRequest } from "bun";
 
-export const logSleepRoute = async (req: Request, res: Response, next: NextFunction) => {
-  try {
-    checkRequestApiKey(req);
+export const logSleepRoute = async (req: BunRequest) => {
+  const data: GeolocationPosition = GeolocationPositionSchema.parse(await req.json());
+  const entry = getSleepEntryFromGeolocationPosition(data);
 
-    const data: GeolocationPosition = req.body;
-    const entry = getSleepEntryFromGeolocationPosition(data);
+  const valuesToAppend = [ Object.values(entry) ];
 
-    const valuesToAppend = [ Object.values(entry) ];
+  const sheetsObj = await getSheetsObj()
 
-    const sheetsObj = await getSheetsObj()
+  const result: GoogleSheetsAppendUpdates = await append(
+    sheetsObj,
+    process.env.SPREADSHEET_ID!,
+    process.env.SPREADSHEET_RANGE!,
+    valuesToAppend
+  ).catch(error => {
+    throw new ApiError("Failed to append rows to Google Sheet", error);
+  });
 
-    const result: GoogleSheetsAppendUpdates = await append(
-      sheetsObj,
-      process.env.SPREADSHEET_ID!,
-      process.env.SPREADSHEET_RANGE!,
-      valuesToAppend
-    ).catch(error => {
-      throw new ApiError("Failed to append rows to Google Sheet", error);
-    });
+  const updatedRows = await getObjectArrayHeader(
+    sheetsObj,
+    process.env.SPREADSHEET_ID!,
+    result.updatedRange
+  ).catch(error => {
+    throw new ApiError('Failed to retrieve row after writing', error);
+  });
 
-    const updatedRows = await getObjectArrayHeader(
-      sheetsObj,
-      process.env.SPREADSHEET_ID!,
-      result.updatedRange
-    ).catch(error => {
-      throw new ApiError('Failed to retrieve row after writing', error);
-    });
-
-    const response = {
-      updatedRow: updatedRows[0] as SheetsSleepEntry
-    }
-
-    await sendEntryNotification(response.updatedRow);
-
-    successResponse(res, response, "Successfully added sleep entry")
-  } catch (error) {
-    next(error);
+  const response = {
+    updatedRow: updatedRows[0] as SheetsSleepEntry
   }
+
+  await sendEntryNotification(response.updatedRow);
+
+  return successResponse(response, "Successfully added sleep entry")
 };
 
-export const getSleepRoute = async (req: Request, res: Response, next: NextFunction) => {
-  try {
-    checkRequestApiKey(req);
+export const getSleepRoute = async (req: BunRequest) => {
+  const sheetsObj = await getSheetsObj()
 
-    const sheetsObj = await getSheetsObj()
+  const result = await getObjectArray(
+    sheetsObj,
+    process.env.SPREADSHEET_ID!,
+    process.env.SPREADSHEET_RANGE!,
+  ).catch((error: Error) => {
+    throw new ApiError('Failed to retrieve rows', error);
+  });
 
-    const result = await getObjectArray(
-      sheetsObj,
-      process.env.SPREADSHEET_ID!,
-      process.env.SPREADSHEET_RANGE!,
-    ).catch((error: Error) => {
-      throw new ApiError('Failed to retrieve rows', error);
-    });
+  const response = result;
 
-    const response = result;
-
-    successResponse(res, response, "Successfully retrieved sleep entries")
-  } catch (error) {
-    next(error);
-  }
+  return successResponse(response, "Successfully retrieved sleep entries")
 };
 
 export const getLastSleep = async () => {
@@ -101,100 +90,53 @@ export const getLastSleep = async () => {
   return lastSleepData
 };
 
-export const getLastSleepRoute = async (req: Request, res: Response, next: NextFunction) => {
-  try {
-    checkRequestApiKey(req);
-    const lastSleepData = await getLastSleep();
-    successResponse(res, lastSleepData, "Successfully retrieved last sleep entry")
-  } catch (error) {
-    next(error);
-  }
+export const getLastSleepRoute = async (req: BunRequest) => {
+  const lastSleepData = await getLastSleep();
+  return successResponse(lastSleepData, "Successfully retrieved last sleep entry")
 };
 
-export const replaceLastSleepRoute = async (req: Request, res: Response, next: NextFunction) => {
-  try {
-    checkRequestApiKey(req);
+export const replaceLastSleepRoute = async (req: BunRequest) => {
+  const data: GeolocationPosition = GeolocationPositionSchema.parse(await req.json());
+  const entry = getSleepEntryFromGeolocationPosition(data);
 
-    const data: GeolocationPosition = req.body;
-    const entry = getSleepEntryFromGeolocationPosition(data);
+  const valuesToAppend = [ Object.values(entry) ];
 
-    const valuesToAppend = [ Object.values(entry) ];
+  const sheetsObj = await getSheetsObj()
 
-    const sheetsObj = await getSheetsObj()
+  const rows = await getArray(
+    sheetsObj,
+    process.env.SPREADSHEET_ID!,
+    process.env.SPREADSHEET_RANGE!,
+  ).catch((error: Error) => {
+    throw new ApiError('Failed to retrieve rows', error);
+  });
 
-    const rows = await getArray(
-      sheetsObj,
-      process.env.SPREADSHEET_ID!,
-      process.env.SPREADSHEET_RANGE!,
-    ).catch((error: Error) => {
-      throw new ApiError('Failed to retrieve rows', error);
-    });
+  const rangeToUpdate = getLastRowRange(rows);
 
-    const rangeToUpdate = getLastRowRange(rows);
+  const result: GoogleSheetsAppendUpdates = await update(
+    sheetsObj,
+    process.env.SPREADSHEET_ID!,
+    rangeToUpdate,
+    valuesToAppend
+  ).catch(error => {
+    throw new ApiError("Failed to update rows", error);
+  });
 
-    const result: GoogleSheetsAppendUpdates = await update(
-      sheetsObj,
-      process.env.SPREADSHEET_ID!,
-      rangeToUpdate,
-      valuesToAppend
-    ).catch(error => {
-      throw new ApiError("Failed to update rows", error);
-    });
+  const updatedRows = await getObjectArrayHeader(
+    sheetsObj,
+    process.env.SPREADSHEET_ID!,
+    result.updatedRange
+  ).catch(error => {
+    throw new ApiError('Failed to retrieve row after updating', error);
+  });
 
-    const updatedRows = await getObjectArrayHeader(
-      sheetsObj,
-      process.env.SPREADSHEET_ID!,
-      result.updatedRange
-    ).catch(error => {
-      throw new ApiError('Failed to retrieve row after updating', error);
-    });
-
-    const response = {
-      updatedRow: updatedRows[0] as SheetsSleepEntry
-    }
-
-    await sendEntryNotification(response.updatedRow);
-
-    successResponse(res, response, "Successfully replaced last sleep entry")
-  } catch (error) {
-    next(error);
+  const response = {
+    updatedRow: updatedRows[0] as SheetsSleepEntry
   }
-};
 
-export const deleteSecondLastSleepRoute = async (req: Request, res: Response, next: NextFunction) => {
-  try {
-    checkRequestApiKey(req);
+  await sendEntryNotification(response.updatedRow);
 
-    const sheetsObj = await getSheetsObj()
-
-    const rows = await getArray(
-      sheetsObj,
-      process.env.SPREADSHEET_ID!,
-      process.env.SPREADSHEET_RANGE!,
-    ).catch((error: Error) => {
-      throw new ApiError('Failed to retrieve rows', error);
-    });
-
-    const rowToDelete = rows.length - 1;
-    const result = await deleteRow(sheetsObj, process.env.SPREADSHEET_ID!, 0, rowToDelete);
-
-    const response = {
-      deletedRow: {
-        'Timezone local time': rows[rowToDelete - 1][0],
-        'Latitude': rows[rowToDelete - 1][1],
-        'Longitude': rows[rowToDelete - 1][2],
-        'Timezone': rows[rowToDelete - 1][3],
-        'UTC time': rows[rowToDelete - 1][4],
-        'Duration': rows[rowToDelete - 1][5]
-      } as SheetsSleepEntry
-    }
-
-    await sendDeleteNotification(response.deletedRow);
-
-    successResponse(res, response, "Successfully deleted second to last sleep entry")
-  } catch (error) {
-    next(error);
-  }
+  return successResponse(response, "Successfully replaced last sleep entry")
 };
 
 const getSleepEntryFromGeolocationPosition = (geolocationPosition: GeolocationPosition): SleepEntry => {
@@ -232,8 +174,9 @@ const getSleepEntryFromGeolocationPosition = (geolocationPosition: GeolocationPo
   return entry;
 };
 
-const checkRequestApiKey = (req: Request) => {
-  const apiKey = req.query.apiKey;
+export const checkRequestApiKey = (req: BunRequest) => {
+  const { searchParams } = new URL(req.url)
+  const apiKey = searchParams.get("apiKey");
   if (apiKey != process.env.API_KEY) {
     throw new ApiError('Invalid API key');
   }

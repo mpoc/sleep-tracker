@@ -17,10 +17,10 @@ export class ApiError extends Error {
   }
 }
 
-export const handleError = (res: Response, error: Error) => {
+export const handleError = (error: Error) => {
   if (error instanceof ApiError) {
-    errorResponse(res, error);
+    return errorResponse(error);
   } else {
-    errorResponse(res, new ApiError("Unknown error", error));
+    return errorResponse(new ApiError("Unknown error", error));
   }
 }
