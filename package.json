@@ -1,10 +1,5 @@
 {
   "name": "sleep-tracker",
-  "main": "build/index.js",
-  "types": "build/index.d.ts",
-  "files": [
-    "build"
-  ],
   "license": "Apache-2.0",
   "scripts": {
     "check": "gts check",
