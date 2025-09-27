@@ -15,7 +15,7 @@
     "gts": "^3.1.0"
   },
   "dependencies": {
-    "dotenv-safe": "^8.2.0",
+    "dotenv-safe": "^9.1.0",
     "express": "^5.1.0",
     "geo-tz": "^8.1.4",
     "googleapis": "^100.0.0",
