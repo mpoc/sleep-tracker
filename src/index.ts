@@ -1,6 +1,7 @@
 import express, { type Request, type Response, type NextFunction } from 'express';
 import dotenv from 'dotenv-safe';
 import path from 'path';
+import pino from 'pino-http';
 
 import { logSleepRoute, replaceLastSleepRoute, deleteSecondLastSleepRoute, getSleepRoute, getLastSleepRoute, getLastSleep } from './controller';
 import { sendReminderNotification } from './notifications';
@@ -14,6 +15,12 @@ dotenv.config({
 
 const app = express();
 
+app.use(pino({
+  redact: ['req.headers', 'res.headers'],
+  transport: {
+    target: 'pino-pretty',
+  }
+}));
 app.use(express.urlencoded({extended: false}));
 app.use(express.json());
 
