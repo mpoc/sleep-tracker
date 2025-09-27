@@ -1,15 +1,24 @@
-//@ts-ignore
-import PushBullet from 'pushbullet';
-
 import { Notification, SheetsSleepEntry } from './types';
 import { millisecondsToHours, sheetsSleepEntryIsStop } from "./utils";
 import { ApiError } from './error';
 
 const sendNotification = async (notification: Notification) => {
-  const pusher = new PushBullet(process.env.PUSHBULLET_API_KEY);
-  await pusher
-    .note({}, notification.title, notification.body)
-    .catch((error: Error) => { throw new ApiError('Failed to send notification', error) });
+  try {
+    await fetch('https://api.pushbullet.com/v2/pushes', {
+      method: 'POST',
+      headers: {
+        'Access-Token': process.env.PUSHBULLET_API_KEY,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        body: notification.body,
+        title: notification.title,
+        type: 'note'
+      })
+    });
+  } catch (error) {
+    throw new ApiError('Failed to send notification', error);
+  }
 };
 
 export const sendEntryNotification = async (entry: SheetsSleepEntry) => {

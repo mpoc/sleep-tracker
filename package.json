@@ -21,7 +21,6 @@
     "googleapis": "^100.0.0",
     "moment": "^2.29.4",
     "moment-timezone": "^0.5.43",
-    "pug": "^3.0.2",
-    "pushbullet": "^2.4.0"
+    "pug": "^3.0.2"
   }
 }
