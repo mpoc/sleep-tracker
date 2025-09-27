@@ -4,6 +4,7 @@ import readline from 'readline';
 import { sheets } from 'googleapis/build/src/apis/sheets';
 import { OAuth2Client } from 'google-auth-library';
 import { ApiError } from './error';
+import type { sheets_v4 } from 'googleapis';
 
 const CRED_PATH = 'secret/credentials.json';
 const TOKEN_PATH = 'secret/token.json';
@@ -20,7 +21,7 @@ export const getSheetsObj = async () => {
 }
 
 export const getArray = async (
-  sheetsObj: any,
+  sheetsObj: sheets_v4.Sheets,
   spreadsheetId: string,
   range: string
 ): Promise<any[][]> => await new Promise((resolve, reject) => {
@@ -31,13 +32,13 @@ export const getArray = async (
   }) as any[][];
 
 export const getObjectArray = async (
-  sheetsObj: any,
+  sheetsObj: sheets_v4.Sheets,
   spreadsheetId: string,
   range: string
 ): Promise<any[]> => toObjectArray(await getArray(sheetsObj, spreadsheetId, range));
 
 export const getObjectArrayHeader = async (
-  sheetsObj: any,
+  sheetsObj: sheets_v4.Sheets,
   spreadsheetId: string,
   range: string
 ): Promise<any[]> => toObjectArray(
@@ -46,7 +47,7 @@ export const getObjectArrayHeader = async (
 );
 
 export const append = async (
-  sheetsObj: any,
+  sheetsObj: sheets_v4.Sheets,
   spreadsheetId: string,
   range: string,
   values: string[][]
@@ -66,7 +67,7 @@ export const append = async (
 }
 
 export const update = async (
-  sheetsObj: any,
+  sheetsObj: sheets_v4.Sheets,
   spreadsheetId: string,
   range: string,
   values: string[][]
@@ -86,7 +87,7 @@ export const update = async (
 }
 
 export const deleteRows = async (
-  sheetsObj: any,
+  sheetsObj: sheets_v4.Sheets,
   spreadsheetId: string,
   sheetId: number,
   startIndex: number,
@@ -116,7 +117,7 @@ export const deleteRows = async (
 }
 
 export const deleteRow = async (
-  sheetsObj: any,
+  sheetsObj: sheets_v4.Sheets,
   spreadsheetId: string,
   sheetId: number,
   rowIndex: number
