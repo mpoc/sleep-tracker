@@ -1,5 +1,6 @@
 import type { Request, Response, NextFunction } from "express";
 import moment from 'moment-timezone';
+import assert from 'node:assert';
 
 import {
   getSheetsObj,
@@ -89,8 +90,11 @@ export const getLastSleep = async () => {
     throw new ApiError('Failed to retrieve rows', error);
   });
 
+  const lastSleepEntry = result.at(-1);
+  assert(lastSleepEntry);
+
   const lastSleepData = {
-    lastSleepEntry: result[result.length - 1],
+    lastSleepEntry,
     numberOfSleepEntries: result.length,
   };
 
