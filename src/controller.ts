@@ -1,4 +1,4 @@
-import { Request, Response, NextFunction } from "express";
+import type { Request, Response, NextFunction } from "express";
 import moment from 'moment-timezone';
 
 import {
@@ -12,7 +12,7 @@ import {
 } from './sheets';
 import { successResponse, errorResponse } from './apiUtils';
 import { ApiError } from "./error";
-import { GeolocationPosition, SheetsSleepEntry, SleepEntry, GoogleSheetsAppendUpdates, Notification } from './types';
+import type { GeolocationPosition, SheetsSleepEntry, SleepEntry, GoogleSheetsAppendUpdates, Notification } from './types';
 import { sendEntryNotification, sendDeleteNotification } from './notifications';
 import { getTimezoneFromCoords } from "./utils";
 

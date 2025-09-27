@@ -1,6 +1,6 @@
 import geoTz from 'geo-tz';
 
-import { SheetsSleepEntry } from "./types";
+import type { SheetsSleepEntry } from "./types";
 
 export const sheetsSleepEntryIsStop = (entry: SheetsSleepEntry) => !!entry['Duration'];
 
@@ -20,4 +20,10 @@ export const millisecondsSinceSleepEntry = (sleepEntry: SheetsSleepEntry) => {
 export const millisecondsToHours = (milliseconds: number) => milliseconds / 1000 / 60 / 60;
 export const minutesToMilliseconds = (minutes: number) => minutes * 60 * 1000;
 
-export const getTimezoneFromCoords = (lat: number, lng: number): string => geoTz.find(lat, lng)[0];
+export const getTimezoneFromCoords = (lat: number, lng: number) => {
+  const timezone = geoTz.find(lat, lng)[0];
+  if (!timezone) {
+    throw new Error(`Could not find timezone for coordinates: ${lat}, ${lng}`);
+  }
+  return timezone;
+};
