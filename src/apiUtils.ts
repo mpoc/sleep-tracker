@@ -1,7 +1,7 @@
 import { ApiError } from './error'
-import type { ApiResponse } from "./types";
+import type { ApiResponse, SuccessResponseData } from "./types";
 
-export const successResponse = (data: object, message: string) => {
+export const successResponse = (data: SuccessResponseData, message: string) => {
   const response: ApiResponse = {
     success: true,
     data,

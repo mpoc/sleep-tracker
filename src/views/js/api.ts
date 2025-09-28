@@ -1,3 +1,4 @@
+import type { ApiResponse, GetLastSleepRouteResponse } from '../../types.js';
 import { getApiKey } from './params.js'
 
 export const getSleepEntries = async () => {
@@ -13,12 +14,14 @@ export const getLastSleepEntry = async () => {
   const apiKey = getApiKey();
   const url = getEndpointUrl("api/sleep/last", apiKey);
 
-  return await fetch(url)
+  const response = await fetch(url)
     .then(res => res.json())
     .catch(err => console.error(err));
+
+  return response as ApiResponse<GetLastSleepRouteResponse>;
 };
 
-export const submitSleepEntry = async (position) => {
+export const submitSleepEntry = async (position: GeolocationPosition) => {
   const json = {
     coords: {
       latitude: position.coords.latitude,
@@ -48,7 +51,7 @@ export const submitSleepEntry = async (position) => {
     .catch(err => console.error(err));
 };
 
-export const replaceLastSleepEntry = async (position) => {
+export const replaceLastSleepEntry = async (position: GeolocationPosition) => {
   const json = {
     coords: {
       latitude: position.coords.latitude,
@@ -78,7 +81,7 @@ export const replaceLastSleepEntry = async (position) => {
     .catch(err => console.error(err));
 }
 
-const getEndpointUrl = (endpoint, apiKey) => {
+const getEndpointUrl = (endpoint: string, apiKey?: string) => {
   const url = new URL(endpoint, window.location.href);
   if (apiKey) {
     url.searchParams.append('apiKey', apiKey);

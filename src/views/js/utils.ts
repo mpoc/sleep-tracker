@@ -1,9 +1,9 @@
-export const formatDuration = duration => {
+export const formatDuration = (duration: number) => {
   const secondsDiff = duration / 1000;
 
-  const hours = parseInt(secondsDiff / 3600);
-  const minutes = parseInt((secondsDiff / 60) % 60);
-  const seconds = parseInt(secondsDiff % 60);
+  const hours = Math.floor(secondsDiff / 3600);
+  const minutes = Math.floor((secondsDiff / 60) % 60);
+  const seconds = Math.floor(secondsDiff % 60);
 
   // const hour = { singular: ' hour', plural: ' hours' };
   // const minute = { singular: ' minute', plural: ' minutes' };
@@ -20,15 +20,15 @@ export const formatDuration = duration => {
   // return hoursString + " " + minutesString + " " + secondsString;
 
   return (hours == 0 ? "" : hoursString) + " " +
-    ((hours == 0 & minutes == 0) ? "" : minutesString) + " " +
+    ((hours == 0 && minutes == 0) ? "" : minutesString) + " " +
     secondsString;
 }
 
-export const prettyObjectString = object => Object.entries(object)
+export const prettyObjectString = (object: Record<string, any>) => Object.entries(object)
   .map(([key, value]) => `${key}: ${value}`)
   .join(",<br>");
 
-export const printPosition = position => {
+export const printPosition = (position: GeolocationPosition) => {
   console.log(`Timestamp: ${new Date(position.timestamp)} (${position.timestamp})`);
   console.log('Your current position is:');
   console.log(`Latitude: ${position.coords.latitude}`);

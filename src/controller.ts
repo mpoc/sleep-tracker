@@ -54,7 +54,7 @@ export const logSleepRoute = async (req: BunRequest) => {
 export const getSleepRoute = async (req: BunRequest) => {
   const sheetsObj = await getSheetsObj()
 
-  const result = await getObjectArray(
+  const result: SheetsSleepEntry[] = await getObjectArray(
     sheetsObj,
     process.env.SPREADSHEET_ID!,
     process.env.SPREADSHEET_RANGE!,
