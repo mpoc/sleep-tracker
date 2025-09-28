@@ -1,4 +1,4 @@
-import { errorResponse } from './apiUtils';
+import { errorResponse } from "./apiUtils";
 
 export class ApiError extends Error {
   errorLogData?: any;
@@ -19,7 +19,6 @@ export class ApiError extends Error {
 export const handleError = (error: Error) => {
   if (error instanceof ApiError) {
     return errorResponse(error);
-  } else {
-    return errorResponse(new ApiError("Unknown error", error));
   }
-}
+  return errorResponse(new ApiError("Unknown error", error));
+};
