@@ -4,6 +4,6 @@ WORKDIR /usr/src/sleep-tracker
 COPY package.json bun.lock ./
 RUN bun install --frozen-lockfile --production
 COPY . .
-RUN bun build
+RUN bun run build
 EXPOSE 8000
 ENTRYPOINT ["bun", "dist/index.ts"]
