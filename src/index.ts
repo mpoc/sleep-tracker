@@ -1,15 +1,20 @@
+import path from "node:path";
 import { serve } from "bun";
-import dotenv from 'dotenv-safe';
-import path from 'path';
-
-import { logSleepRoute, replaceLastSleepRoute, getSleepRoute, getLastSleepRoute, checkRequestApiKey } from './controller';
-import { handleError } from './error';
+import dotenv from "dotenv-safe";
 import { checkReminderLoop } from "./checkReminderLoop";
-import sleepHtml from './views/sleep.html';
+import {
+  checkRequestApiKey,
+  getLastSleepRoute,
+  getSleepRoute,
+  logSleepRoute,
+  replaceLastSleepRoute,
+} from "./controller";
+import { handleError } from "./error";
+import sleepHtml from "./views/sleep.html";
 
 dotenv.config({
-  path: path.resolve(__dirname, '..', 'secret/.env'),
-  example: path.resolve(__dirname, '..', 'secret/.env.example'),
+  path: path.resolve(__dirname, "..", "secret/.env"),
+  example: path.resolve(__dirname, "..", "secret/.env.example"),
 });
 
 const server = serve({
@@ -29,13 +34,13 @@ const server = serve({
       async PUT(req) {
         checkRequestApiKey(req);
         return replaceLastSleepRoute(req);
-      }
+      },
     },
     "/api/sleep/last": {
       async GET(req) {
         checkRequestApiKey(req);
         return getLastSleepRoute(req);
-      }
+      },
     },
     "/": sleepHtml,
   },
