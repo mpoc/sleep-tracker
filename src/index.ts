@@ -9,6 +9,7 @@ import {
 } from "./controller";
 import { handleError } from "./error";
 import sleepHtml from "./views/sleep.html";
+import sleepReactHtml from "./views/sleepReact.html";
 
 const server = serve({
   port: "8000",
@@ -36,6 +37,7 @@ const server = serve({
       },
     },
     "/": sleepHtml,
+    "/react": sleepReactHtml,
   },
   error(error) {
     return handleError(error);
