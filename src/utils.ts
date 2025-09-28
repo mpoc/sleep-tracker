@@ -1,4 +1,6 @@
-import { find as findTimezone } from 'geo-tz';
+// Bun build fails if this is an import, temporary workaround is to use dynamic import
+// import { find as findTimezone } from 'geo-tz';
+const { find: findTimezone } = await import('geo-tz');
 
 import type { SheetsSleepEntry } from "./types";
 
