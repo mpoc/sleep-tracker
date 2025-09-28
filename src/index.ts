@@ -6,13 +6,12 @@ import path from 'path';
 import { logSleepRoute, replaceLastSleepRoute, getSleepRoute, getLastSleepRoute, checkRequestApiKey } from './controller';
 import { handleError } from './error';
 import { checkReminderLoop } from "./checkReminderLoop";
+import sleepHtml from './views/sleep.html';
 
 dotenv.config({
   path: path.resolve(__dirname, '..', 'secret/.env'),
   example: path.resolve(__dirname, '..', 'secret/.env.example'),
 });
-
-const sleepHtml = pug.renderFile("./src/views/sleep.pug");
 
 const server = serve({
   port: "8000",
@@ -39,11 +38,7 @@ const server = serve({
         return getLastSleepRoute(req);
       }
     },
-    "/": async () => {
-      return new Response(sleepHtml, {
-        headers: { "Content-Type": "text/html" }
-      });
-    },
+    "/": sleepHtml,
     "/js/*": async (req) => {
       const url = new URL(req.url);
       const file = Bun.file(`./src/views${url.pathname}`);

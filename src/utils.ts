@@ -1,4 +1,4 @@
-import geoTz from 'geo-tz';
+import { find as findTimezone } from 'geo-tz';
 
 import type { SheetsSleepEntry } from "./types";
 
@@ -21,7 +21,7 @@ export const millisecondsToHours = (milliseconds: number) => milliseconds / 1000
 export const minutesToMilliseconds = (minutes: number) => minutes * 60 * 1000;
 
 export const getTimezoneFromCoords = (lat: number, lng: number) => {
-  const timezone = geoTz.find(lat, lng)[0];
+  const timezone = findTimezone(lat, lng)[0];
   if (!timezone) {
     throw new Error(`Could not find timezone for coordinates: ${lat}, ${lng}`);
   }
