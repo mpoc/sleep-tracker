@@ -2,7 +2,7 @@
   "name": "sleep-tracker",
   "license": "Apache-2.0",
   "scripts": {
-    "build": "bun build --target=bun --production --outdir=dist ./src/index.ts",
+    "build": "bun build --target=bun --production --outdir=dist --sourcemap ./src/index.ts",
     "start": "bun src/index.ts",
     "dev": "bun --watch src/index.ts"
   },
