@@ -19,7 +19,6 @@
     "googleapis": "^160.0.0",
     "moment": "^2.30.1",
     "moment-timezone": "^0.6.0",
-    "pug": "^3.0.3",
     "zod": "^4.1.11"
   }
 }
