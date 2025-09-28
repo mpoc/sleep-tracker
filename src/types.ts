@@ -46,8 +46,28 @@ export type GoogleSheetsAppendUpdates = {
   updatedCells: number
 }
 
-export type ApiResponse = {
-  success: boolean,
-  data?: object,
-  message?: string
+export type LogSleepRouteResponse = {
+  updatedRow: SheetsSleepEntry;
+}
+
+export type GetSleepRouteResponse = SheetsSleepEntry[]
+
+export type GetLastSleepRouteResponse = {
+  lastSleepEntry: SheetsSleepEntry;
+  numberOfSleepEntries: number;
+}
+
+export type ReplaceLastSleepRouteResponse = {
+  updatedRow: SheetsSleepEntry;
+}
+
+export type SuccessResponseData = LogSleepRouteResponse | GetSleepRouteResponse | GetLastSleepRouteResponse | ReplaceLastSleepRouteResponse;
+
+export type ApiResponse<T extends SuccessResponseData = SuccessResponseData> = {
+  success: true,
+  data: T,
+  message: string
+} | {
+  success: false,
+  message: string
 }

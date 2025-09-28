@@ -9,31 +9,44 @@ import {
   replaceLastSleepEntry
 } from './api.js'
 import { getAutoLog } from './params.js'
+import type { ApiResponse, GetLastSleepRouteResponse, LogSleepRouteResponse, ReplaceLastSleepRouteResponse } from '../../types';
 
-const processSleepApiResponse = data => {
+const processSleepApiResponse = (data: ApiResponse<LogSleepRouteResponse>) => {
   if (data.success) {
     const insertedRowText = prettyObjectString(data.data.updatedRow);
-    document.getElementById('text').innerHTML = `Inserted row:<br>${insertedRowText}`;
+    const textElement = document.getElementById('text');
+    if (textElement) {
+      textElement.innerHTML = `Inserted row:<br>${insertedRowText}`;
+    }
   } else {
     console.error(data);
-    document.getElementById('text').innerHTML = data.message;
+    const textElement = document.getElementById('text');
+    if (textElement) {
+      textElement.innerHTML = data.message;
+    }
   }
 }
 
-const processReplaceApiResponse = data => {
+const processReplaceApiResponse = (data: ApiResponse<ReplaceLastSleepRouteResponse>) => {
   if (data.success) {
     const insertedRowText = prettyObjectString(data.data.updatedRow);
-    document.getElementById('text').innerHTML = `Replaced row:<br>${insertedRowText}`;
+    const textElement = document.getElementById('text');
+    if (textElement) {
+      textElement.innerHTML = `Replaced row:<br>${insertedRowText}`;
+    }
   } else {
     console.error(data);
-    document.getElementById('text').innerHTML = data.message;
+    const textElement = document.getElementById('text');
+    if (textElement) {
+      textElement.innerHTML = data.message;
+    }
   }
 }
 
 const REQUIRED_ACCURACY = 40;
-let watchID;
+let watchID: number;
 
-const submitPosition = (curriedSuccessFn) => {
+const submitPosition = (curriedSuccessFn: (position: GeolocationPosition) => Promise<void>) => {
   if (!geolocationAvailable()) return;
 
   const options = {
@@ -45,50 +58,62 @@ const submitPosition = (curriedSuccessFn) => {
   watchID = navigator.geolocation.watchPosition(curriedSuccessFn, watchError, options);
 }
 
-const onWatchSuccess = (successFn) =>
-  async (position) => {
+const onWatchSuccess = (successFn: (position: GeolocationPosition) => Promise<void>) =>
+  async (position: GeolocationPosition) => {
     printPosition(position);
 
     if (!checkTimestamp(position)) return;
     if (!checkAccuracy(position)) return;
 
-    document.getElementById('text').innerHTML = "Accuracy and timestamp OK, saving...";
+    const textElement = document.getElementById('text');
+    if (textElement) {
+      textElement.innerHTML = "Accuracy and timestamp OK, saving...";
+    }
     navigator.geolocation.clearWatch(watchID);
 
     await successFn(position);
 }
 
-const watchError = err => {
+const watchError = (err: GeolocationPositionError) => {
   const errorText = `ERROR(${err.code}): ${err.message}`;
   console.log(errorText);
-  document.getElementById('text').innerHTML = errorText;
+  const textElement = document.getElementById('text');
+  if (textElement) {
+    textElement.innerHTML = errorText;
+  }
 };
 
-const submitAndProcessSleepEntry = async (position) => {
+const submitAndProcessSleepEntry = async (position: GeolocationPosition) => {
   const response = await submitSleepEntry(position);
   processSleepApiResponse(response);
 }
 
-const submitAndProcessSleepEntryReplace = async (position) => {
+const submitAndProcessSleepEntryReplace = async (position: GeolocationPosition) => {
   const response = await replaceLastSleepEntry(position);
   processReplaceApiResponse(response);
 }
 
-const checkTimestamp = position => {
+const checkTimestamp = (position: GeolocationPosition) => {
   const ALLOWED_TIMESTAMP_AGE = 5000;
   const timestampAge = Date.now() - position.timestamp;
   const timestampRecent = timestampAge < ALLOWED_TIMESTAMP_AGE;
   if (!timestampRecent) {
-    document.getElementById('text').innerHTML = `Timestamp too old (${timestampAge} milliseconds)<br>Trying again...`;
+    const textElement = document.getElementById('text');
+    if (textElement) {
+      textElement.innerHTML = `Timestamp too old (${timestampAge} milliseconds)<br>Trying again...`;
+    }
   }
   return timestampRecent;
 }
 
-const checkAccuracy = position => {
+const checkAccuracy = (position: GeolocationPosition) => {
   const accuracyAchieved = position.coords.accuracy < REQUIRED_ACCURACY;
   if (!accuracyAchieved) {
-    document.getElementById('text').innerHTML =
-      `Current accuracy: ${position.coords.accuracy} meters<br>Required accuracy: ${REQUIRED_ACCURACY} meters<br>Trying again...`;
+    const textElement = document.getElementById('text');
+    if (textElement) {
+      textElement.innerHTML =
+        `Current accuracy: ${position.coords.accuracy} meters<br>Required accuracy: ${REQUIRED_ACCURACY} meters<br>Trying again...`;
+    }
   }
   return accuracyAchieved;
 }
@@ -98,31 +123,43 @@ const geolocationAvailable = () => {
     return true;
   } else {
     console.log('Geolocation is not supported by this browser.');
-    document.getElementById('text').innerHTML = 'Geolocation is not supported by this browser.';
+    const textElement = document.getElementById('text');
+    if (textElement) {
+      textElement.innerHTML = 'Geolocation is not supported by this browser.';
+    }
     return false;
   }
 }
 
-let entryDisplayInterval;
+let entryDisplayInterval: ReturnType<typeof setInterval>;
 
-const showSleepEntry = (entryData) => {
-  document.getElementById("logSleepButton").disabled = false;
-  const lastSleepEntryIsStop = !!entryData.lastSleepEntry['Duration'];
+const showSleepEntry = (entryData: GetLastSleepRouteResponse) => {
+  const logSleepButton = document.getElementById("logSleepButton");
+  if (logSleepButton) {
+    logSleepButton.removeAttribute("disabled");
+  }
+
+  const lastSleepEntryIsStop = !!entryData.lastSleepEntry.Duration;
   if (!lastSleepEntryIsStop) {
-    document.getElementById("replaceConfirmationButton").disabled = false;
+    const replaceConfirmationButton = document.getElementById("replaceConfirmationButton");
+    if (replaceConfirmationButton) {
+      replaceConfirmationButton.removeAttribute("disabled");
+    }
   }
   startEntryDisplay(entryData);
 }
 
-const updateEntryDisplay = entryData => {
+const updateEntryDisplay = (entryData: GetLastSleepRouteResponse) => {
   const [date, time] = entryData.lastSleepEntry['UTC time'].split(" ");
   const formattedUTCDate = date + "T" + time + "Z";
 
-  const timeDiff = new Date() - new Date(formattedUTCDate);
+  const timeDiff = new Date().getTime() - new Date(formattedUTCDate).getTime();
 
-  const lastSleepEntryIsStop = !!entryData.lastSleepEntry['Duration'];
+  const lastSleepEntryIsStop = !!entryData.lastSleepEntry.Duration;
 
-  document.getElementById('text').innerHTML = `
+  const textElement = document.getElementById('text');
+  if (textElement) {
+    textElement.innerHTML = `
     <div>
       ${lastSleepEntryIsStop ? '🌞 Awake' : '😴 Asleep'} for ${formatDuration(timeDiff)}
     </div>
@@ -137,9 +174,10 @@ const updateEntryDisplay = entryData => {
       Sleep entries in total: ${entryData.numberOfSleepEntries}
     </div>
   `;
+  }
 }
 
-const startEntryDisplay = (entryData) => {
+const startEntryDisplay = (entryData: GetLastSleepRouteResponse) => {
   // Initial start
   updateEntryDisplay(entryData);
 
@@ -149,13 +187,25 @@ const startEntryDisplay = (entryData) => {
 }
 
 const enableButtons = () => {
-  document.getElementById("logSleepButton").disabled = false;
-  document.getElementById("replaceConfirmationButton").disabled = false;
+  const logSleepButton = document.getElementById("logSleepButton");
+  if (logSleepButton) {
+    logSleepButton.removeAttribute("disabled");
+  }
+  const replaceConfirmationButton = document.getElementById("replaceConfirmationButton");
+  if (replaceConfirmationButton) {
+    replaceConfirmationButton.removeAttribute("disabled");
+  }
 }
 
 const disableButtons = () => {
-  document.getElementById("logSleepButton").disabled = true;
-  document.getElementById("replaceConfirmationButton").disabled = true;
+  const logSleepButton = document.getElementById("logSleepButton");
+  if (logSleepButton) {
+    logSleepButton.setAttribute("disabled", "true");
+  }
+  const replaceConfirmationButton = document.getElementById("replaceConfirmationButton");
+  if (replaceConfirmationButton) {
+    replaceConfirmationButton.setAttribute("disabled", "true");
+  }
 }
 
 const logSleepButtonAction = () => {
@@ -171,10 +221,14 @@ const replaceLastSleepButtonAction = () => {
 }
 
 const activateButtons = () => {
-  document.getElementById("logSleepButton")
-    .addEventListener('click', logSleepButtonAction);
-  document.getElementById("replaceLastSleepButton")
-    .addEventListener('click', replaceLastSleepButtonAction);
+  const logSleepButton = document.getElementById("logSleepButton");
+  if (logSleepButton) {
+    logSleepButton.addEventListener('click', logSleepButtonAction);
+  }
+  const replaceLastSleepButton = document.getElementById("replaceLastSleepButton");
+  if (replaceLastSleepButton) {
+    replaceLastSleepButton.addEventListener('click', replaceLastSleepButtonAction);
+  }
 }
 
 const loadLastSleepEntry = async () => {
@@ -184,7 +238,10 @@ const loadLastSleepEntry = async () => {
     showSleepEntry(lastEntryData);
   } else {
     console.error(apiResponse);
-    document.getElementById('text').innerHTML = apiResponse.message;
+    const textElement = document.getElementById('text');
+    if (textElement) {
+      textElement.innerHTML = apiResponse.message;
+    }
   }
 };
 
