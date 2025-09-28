@@ -1,5 +1,4 @@
 import { serve } from "bun";
-import pug from 'pug';
 import dotenv from 'dotenv-safe';
 import path from 'path';
 
