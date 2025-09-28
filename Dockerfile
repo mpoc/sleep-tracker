@@ -6,4 +6,4 @@ RUN bun install --frozen-lockfile --production
 COPY . .
 RUN bun run build
 EXPOSE 8000
-ENTRYPOINT ["bun", "dist/index.ts"]
+ENTRYPOINT ["bun", "dist/index.js"]
