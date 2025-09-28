@@ -1,26 +1,34 @@
-const LogSleepButton: React.FC = () => (
-  <button
-    className="btn btn-success btn-lg"
-    disabled
-    id="logSleepButton"
-    type="button"
-  >
-    Log sleep entry
-  </button>
-);
+import { useState } from "react";
 
-const ReplaceConfirmationButton: React.FC = () => (
-  <button
-    className="btn btn-primary btn-lg"
-    data-bs-target="#confirmationModal"
-    data-bs-toggle="modal"
-    disabled
-    id="replaceConfirmationButton"
-    type="button"
-  >
-    Replace last sleep entry
-  </button>
-);
+const LogSleepButton: React.FC = () => {
+  const [disabled] = useState<boolean>(true);
+  return (
+    <button
+      className="btn btn-success btn-lg"
+      disabled={disabled}
+      id="logSleepButton"
+      type="button"
+    >
+      Log sleep entry
+    </button>
+  );
+};
+
+const ReplaceConfirmationButton: React.FC = () => {
+  const [disabled] = useState<boolean>(true);
+  return (
+    <button
+      className="btn btn-primary btn-lg"
+      data-bs-target="#confirmationModal"
+      data-bs-toggle="modal"
+      disabled={disabled}
+      id="replaceConfirmationButton"
+      type="button"
+    >
+      Replace last sleep entry
+    </button>
+  );
+};
 
 const ConfirmationModal: React.FC = () => (
   <div className="modal fade" id="confirmationModal" tabIndex={-1}>
@@ -62,7 +70,10 @@ const ConfirmationModal: React.FC = () => (
   </div>
 );
 
-const Text: React.FC = () => <div id="text">Getting last sleep log...</div>;
+const Text: React.FC = () => {
+  const [text] = useState<string>("Getting last sleep log...");
+  return <div id="text">{text}</div>;
+};
 
 const LayoutTable: React.FC = () => (
   <table className="table-responsive table-borderless table">
