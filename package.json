@@ -7,11 +7,13 @@
     "dev": "bun --watch src/index.ts"
   },
   "devDependencies": {
+    "@biomejs/biome": "2.2.4",
     "@tsconfig/bun": "^1.0.8",
     "@types/bun": "^1.2.22",
     "@types/dotenv-safe": "^9.1.0",
     "@types/node": "^24.5.2",
-    "@types/pug": "^2.0.10"
+    "@types/pug": "^2.0.10",
+    "ultracite": "5.4.4"
   },
   "dependencies": {
     "dotenv-safe": "^9.1.0",
