@@ -21,9 +21,9 @@ export const millisecondsSinceSleepEntry = (sleepEntry: SheetsSleepEntry) => {
 };
 
 export const millisecondsToHours = (milliseconds: number) =>
-  // biome-ignore lint/style/noMagicNumbers: <obvious>
+  // biome-ignore lint/style/noMagicNumbers: <milliseconds in hour>
   milliseconds / 1000 / 60 / 60;
-// biome-ignore lint/style/noMagicNumbers: <obvious>
+// biome-ignore lint/style/noMagicNumbers: <milliseconds in minute>
 export const minutesToMilliseconds = (minutes: number) => minutes * 60 * 1000;
 
 export const getTimezoneFromCoords = (lat: number, lng: number) => {

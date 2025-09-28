@@ -1,53 +1,60 @@
-import {
-  formatDuration,
-  prettyObjectString,
-  printPosition
-} from './utils.js';
+import type {
+  ApiResponse,
+  GetLastSleepRouteResponse,
+  LogSleepRouteResponse,
+  ReplaceLastSleepRouteResponse,
+} from "../../types";
 import {
   getLastSleepEntry,
+  replaceLastSleepEntry,
   submitSleepEntry,
-  replaceLastSleepEntry
-} from './api.js'
-import { getAutoLog } from './params.js'
-import type { ApiResponse, GetLastSleepRouteResponse, LogSleepRouteResponse, ReplaceLastSleepRouteResponse } from '../../types';
+} from "./api.js";
+import { getAutoLog } from "./params.js";
+import { formatDuration, prettyObjectString, printPosition } from "./utils.js";
 
 const processSleepApiResponse = (data: ApiResponse<LogSleepRouteResponse>) => {
   if (data.success) {
     const insertedRowText = prettyObjectString(data.data.updatedRow);
-    const textElement = document.getElementById('text');
+    const textElement = document.getElementById("text");
     if (textElement) {
       textElement.innerHTML = `Inserted row:<br>${insertedRowText}`;
     }
   } else {
     console.error(data);
-    const textElement = document.getElementById('text');
+    const textElement = document.getElementById("text");
     if (textElement) {
       textElement.innerHTML = data.message;
     }
   }
-}
+};
 
-const processReplaceApiResponse = (data: ApiResponse<ReplaceLastSleepRouteResponse>) => {
+const processReplaceApiResponse = (
+  data: ApiResponse<ReplaceLastSleepRouteResponse>
+) => {
   if (data.success) {
     const insertedRowText = prettyObjectString(data.data.updatedRow);
-    const textElement = document.getElementById('text');
+    const textElement = document.getElementById("text");
     if (textElement) {
       textElement.innerHTML = `Replaced row:<br>${insertedRowText}`;
     }
   } else {
     console.error(data);
-    const textElement = document.getElementById('text');
+    const textElement = document.getElementById("text");
     if (textElement) {
       textElement.innerHTML = data.message;
     }
   }
-}
+};
 
 const REQUIRED_ACCURACY = 40;
 let watchID: number;
 
-const submitPosition = (curriedSuccessFn: (position: GeolocationPosition) => Promise<void>) => {
-  if (!geolocationAvailable()) return;
+const submitPosition = (
+  curriedSuccessFn: (position: GeolocationPosition) => Promise<void>
+) => {
+  if (!geolocationAvailable()) {
+    return;
+  }
 
   const options = {
     enableHighAccuracy: true,
@@ -55,29 +62,38 @@ const submitPosition = (curriedSuccessFn: (position: GeolocationPosition) => Pro
     maximumAge: 0,
   };
 
-  watchID = navigator.geolocation.watchPosition(curriedSuccessFn, watchError, options);
-}
+  watchID = navigator.geolocation.watchPosition(
+    curriedSuccessFn,
+    watchError,
+    options
+  );
+};
 
-const onWatchSuccess = (successFn: (position: GeolocationPosition) => Promise<void>) =>
+const onWatchSuccess =
+  (successFn: (position: GeolocationPosition) => Promise<void>) =>
   async (position: GeolocationPosition) => {
     printPosition(position);
 
-    if (!checkTimestamp(position)) return;
-    if (!checkAccuracy(position)) return;
+    if (!checkTimestamp(position)) {
+      return;
+    }
+    if (!checkAccuracy(position)) {
+      return;
+    }
 
-    const textElement = document.getElementById('text');
+    const textElement = document.getElementById("text");
     if (textElement) {
       textElement.innerHTML = "Accuracy and timestamp OK, saving...";
     }
     navigator.geolocation.clearWatch(watchID);
 
     await successFn(position);
-}
+  };
 
 const watchError = (err: GeolocationPositionError) => {
   const errorText = `ERROR(${err.code}): ${err.message}`;
   console.log(errorText);
-  const textElement = document.getElementById('text');
+  const textElement = document.getElementById("text");
   if (textElement) {
     textElement.innerHTML = errorText;
   }
@@ -86,50 +102,50 @@ const watchError = (err: GeolocationPositionError) => {
 const submitAndProcessSleepEntry = async (position: GeolocationPosition) => {
   const response = await submitSleepEntry(position);
   processSleepApiResponse(response);
-}
+};
 
-const submitAndProcessSleepEntryReplace = async (position: GeolocationPosition) => {
+const submitAndProcessSleepEntryReplace = async (
+  position: GeolocationPosition
+) => {
   const response = await replaceLastSleepEntry(position);
   processReplaceApiResponse(response);
-}
+};
 
 const checkTimestamp = (position: GeolocationPosition) => {
   const ALLOWED_TIMESTAMP_AGE = 5000;
   const timestampAge = Date.now() - position.timestamp;
   const timestampRecent = timestampAge < ALLOWED_TIMESTAMP_AGE;
   if (!timestampRecent) {
-    const textElement = document.getElementById('text');
+    const textElement = document.getElementById("text");
     if (textElement) {
       textElement.innerHTML = `Timestamp too old (${timestampAge} milliseconds)<br>Trying again...`;
     }
   }
   return timestampRecent;
-}
+};
 
 const checkAccuracy = (position: GeolocationPosition) => {
   const accuracyAchieved = position.coords.accuracy < REQUIRED_ACCURACY;
   if (!accuracyAchieved) {
-    const textElement = document.getElementById('text');
+    const textElement = document.getElementById("text");
     if (textElement) {
-      textElement.innerHTML =
-        `Current accuracy: ${position.coords.accuracy} meters<br>Required accuracy: ${REQUIRED_ACCURACY} meters<br>Trying again...`;
+      textElement.innerHTML = `Current accuracy: ${position.coords.accuracy} meters<br>Required accuracy: ${REQUIRED_ACCURACY} meters<br>Trying again...`;
     }
   }
   return accuracyAchieved;
-}
+};
 
 const geolocationAvailable = () => {
   if (navigator.geolocation) {
     return true;
-  } else {
-    console.log('Geolocation is not supported by this browser.');
-    const textElement = document.getElementById('text');
-    if (textElement) {
-      textElement.innerHTML = 'Geolocation is not supported by this browser.';
-    }
-    return false;
   }
-}
+  console.log("Geolocation is not supported by this browser.");
+  const textElement = document.getElementById("text");
+  if (textElement) {
+    textElement.innerHTML = "Geolocation is not supported by this browser.";
+  }
+  return false;
+};
 
 let entryDisplayInterval: ReturnType<typeof setInterval>;
 
@@ -141,27 +157,29 @@ const showSleepEntry = (entryData: GetLastSleepRouteResponse) => {
 
   const lastSleepEntryIsStop = !!entryData.lastSleepEntry.Duration;
   if (!lastSleepEntryIsStop) {
-    const replaceConfirmationButton = document.getElementById("replaceConfirmationButton");
+    const replaceConfirmationButton = document.getElementById(
+      "replaceConfirmationButton"
+    );
     if (replaceConfirmationButton) {
       replaceConfirmationButton.removeAttribute("disabled");
     }
   }
   startEntryDisplay(entryData);
-}
+};
 
 const updateEntryDisplay = (entryData: GetLastSleepRouteResponse) => {
-  const [date, time] = entryData.lastSleepEntry['UTC time'].split(" ");
-  const formattedUTCDate = date + "T" + time + "Z";
+  const [date, time] = entryData.lastSleepEntry["UTC time"].split(" ");
+  const formattedUTCDate = `${date}T${time}Z`;
 
-  const timeDiff = new Date().getTime() - new Date(formattedUTCDate).getTime();
+  const timeDiff = Date.now() - new Date(formattedUTCDate).getTime();
 
   const lastSleepEntryIsStop = !!entryData.lastSleepEntry.Duration;
 
-  const textElement = document.getElementById('text');
+  const textElement = document.getElementById("text");
   if (textElement) {
     textElement.innerHTML = `
     <div>
-      ${lastSleepEntryIsStop ? '🌞 Awake' : '😴 Asleep'} for ${formatDuration(timeDiff)}
+      ${lastSleepEntryIsStop ? "🌞 Awake" : "😴 Asleep"} for ${formatDuration(timeDiff)}
     </div>
     <br>
     <div>
@@ -175,7 +193,7 @@ const updateEntryDisplay = (entryData: GetLastSleepRouteResponse) => {
     </div>
   `;
   }
-}
+};
 
 const startEntryDisplay = (entryData: GetLastSleepRouteResponse) => {
   // Initial start
@@ -183,53 +201,66 @@ const startEntryDisplay = (entryData: GetLastSleepRouteResponse) => {
 
   // Loop
   clearInterval(entryDisplayInterval);
-  entryDisplayInterval = setInterval(() => updateEntryDisplay(entryData), 1000);
-}
+  const SECOND = 1000;
+  entryDisplayInterval = setInterval(
+    () => updateEntryDisplay(entryData),
+    SECOND
+  );
+};
 
 const enableButtons = () => {
   const logSleepButton = document.getElementById("logSleepButton");
   if (logSleepButton) {
     logSleepButton.removeAttribute("disabled");
   }
-  const replaceConfirmationButton = document.getElementById("replaceConfirmationButton");
+  const replaceConfirmationButton = document.getElementById(
+    "replaceConfirmationButton"
+  );
   if (replaceConfirmationButton) {
     replaceConfirmationButton.removeAttribute("disabled");
   }
-}
+};
 
 const disableButtons = () => {
   const logSleepButton = document.getElementById("logSleepButton");
   if (logSleepButton) {
     logSleepButton.setAttribute("disabled", "true");
   }
-  const replaceConfirmationButton = document.getElementById("replaceConfirmationButton");
+  const replaceConfirmationButton = document.getElementById(
+    "replaceConfirmationButton"
+  );
   if (replaceConfirmationButton) {
     replaceConfirmationButton.setAttribute("disabled", "true");
   }
-}
+};
 
 const logSleepButtonAction = () => {
   disableButtons();
   clearInterval(entryDisplayInterval);
   submitPosition(onWatchSuccess(submitAndProcessSleepEntry));
-}
+};
 
 const replaceLastSleepButtonAction = () => {
   disableButtons();
   clearInterval(entryDisplayInterval);
   submitPosition(onWatchSuccess(submitAndProcessSleepEntryReplace));
-}
+};
 
 const activateButtons = () => {
   const logSleepButton = document.getElementById("logSleepButton");
   if (logSleepButton) {
-    logSleepButton.addEventListener('click', logSleepButtonAction);
+    logSleepButton.addEventListener("click", logSleepButtonAction);
   }
-  const replaceLastSleepButton = document.getElementById("replaceLastSleepButton");
+  const replaceLastSleepButton = document.getElementById(
+    "replaceLastSleepButton"
+  );
   if (replaceLastSleepButton) {
-    replaceLastSleepButton.addEventListener('click', replaceLastSleepButtonAction);
+    replaceLastSleepButton.addEventListener(
+      "click",
+      replaceLastSleepButtonAction
+    );
   }
-}
+};
 
 const loadLastSleepEntry = async () => {
   const apiResponse = await getLastSleepEntry();
@@ -238,7 +269,7 @@ const loadLastSleepEntry = async () => {
     showSleepEntry(lastEntryData);
   } else {
     console.error(apiResponse);
-    const textElement = document.getElementById('text');
+    const textElement = document.getElementById("text");
     if (textElement) {
       textElement.innerHTML = apiResponse.message;
     }
