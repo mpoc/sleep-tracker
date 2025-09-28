@@ -1,6 +1,4 @@
-import path from "node:path";
 import { serve } from "bun";
-import dotenv from "dotenv-safe";
 import { checkReminderLoop } from "./checkReminderLoop";
 import {
   checkRequestApiKey,
@@ -12,11 +10,6 @@ import {
 import { handleError } from "./error";
 import sleepHtml from "./views/sleep.html";
 
-dotenv.config({
-  path: path.resolve(__dirname, "..", "secret/.env"),
-  example: path.resolve(__dirname, "..", "secret/.env.example"),
-});
-
 const server = serve({
   port: "8000",
   routes: {
@@ -27,7 +20,7 @@ const server = serve({
       },
       async GET(req) {
         checkRequestApiKey(req);
-        return getSleepRoute(req);
+        return getSleepRoute();
       },
     },
     "/api/sleep/replace": {
@@ -39,7 +32,7 @@ const server = serve({
     "/api/sleep/last": {
       async GET(req) {
         checkRequestApiKey(req);
-        return getLastSleepRoute(req);
+        return getLastSleepRoute();
       },
     },
     "/": sleepHtml,

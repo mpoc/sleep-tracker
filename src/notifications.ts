@@ -1,3 +1,4 @@
+import { env } from "./config";
 import { ApiError } from "./error";
 import type { Notification, SheetsSleepEntry } from "./types";
 import { millisecondsToHours, sheetsSleepEntryIsStop } from "./utils";
@@ -7,7 +8,7 @@ const sendNotification = async (notification: Notification) => {
     await fetch("https://api.pushbullet.com/v2/pushes", {
       method: "POST",
       headers: {
-        "Access-Token": process.env.PUSHBULLET_API_KEY!,
+        "Access-Token": env.PUSHBULLET_API_KEY,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
