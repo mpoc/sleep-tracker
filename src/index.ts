@@ -39,14 +39,6 @@ const server = serve({
       }
     },
     "/": sleepHtml,
-    "/*": async (req) => {
-      const url = new URL(req.url);
-      const staticFile = Bun.file(`./src/static${url.pathname}`);
-      if (await staticFile.exists()) {
-        return new Response(staticFile);
-      }
-      return new Response("Not Found", { status: 404 });
-    },
   },
   error(error) {
     return handleError(error);
