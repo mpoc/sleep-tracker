@@ -229,8 +229,9 @@ const getNewToken = async (
         reject(err);
         if (!token) {
           reject();
+          return;
         }
-        oAuth2Client.setCredentials(token!);
+        oAuth2Client.setCredentials(token);
 
         fs.writeFileSync(TOKEN_PATH, JSON.stringify(token));
 
