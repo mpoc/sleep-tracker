@@ -17,7 +17,7 @@ import {
   type GeolocationPosition,
   GeolocationPositionSchema,
   type GoogleSheetsAppendUpdates,
-  type SheetsSleepEntry,
+  SheetsSleepEntry,
   type SleepEntry,
 } from "./types";
 import { getTimezoneFromCoords } from "./utils";
@@ -61,7 +61,7 @@ export const logSleepRoute = async (req: Request) => {
 export const getSleepRoute = async () => {
   const sheetsObj = await getSheetsObj();
 
-  const result: SheetsSleepEntry[] = await getObjectArray(
+  const result = await getObjectArray(
     sheetsObj,
     env.SPREADSHEET_ID,
     env.SPREADSHEET_RANGE
@@ -69,7 +69,7 @@ export const getSleepRoute = async () => {
     throw new ApiError("Failed to retrieve rows", error);
   });
 
-  const response = result;
+  const response = SheetsSleepEntry.array().parse(result);
 
   return successResponse(response, "Successfully retrieved sleep entries");
 };
