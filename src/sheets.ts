@@ -12,11 +12,28 @@ const CRED_PATH = "secret/credentials.json";
 const TOKEN_PATH = "secret/token.json";
 const SCOPES = ["https://www.googleapis.com/auth/spreadsheets"];
 
+let cachedSheetsObj: sheets_v4.Sheets | undefined;
+let cachedAuth: OAuth2Client | undefined;
+
+const getAuth = async (): Promise<OAuth2Client> => {
+  if (cachedAuth) {
+    return cachedAuth;
+  }
+
+  const cred = JSON.parse(fs.readFileSync(CRED_PATH, "utf8"));
+  cachedAuth = await authorize(cred);
+  return cachedAuth;
+};
+
 export const getSheetsObj = async () => {
+  if (cachedSheetsObj) {
+    return cachedSheetsObj;
+  }
+
   try {
-    const cred = JSON.parse(fs.readFileSync(CRED_PATH, "utf8"));
-    const auth = await authorize(cred);
-    return sheets({ version: "v4", auth });
+    const auth = await getAuth();
+    cachedSheetsObj = sheets({ version: "v4", auth });
+    return cachedSheetsObj;
   } catch (error) {
     throw new ApiError("Failed to login to Google", error);
   }
