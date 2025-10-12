@@ -1,3 +1,4 @@
+import assert from "node:assert/strict";
 import moment from "moment-timezone";
 import { successResponse } from "./apiUtils";
 import { env } from "./config";
@@ -41,7 +42,7 @@ export const logSleepRoute = async (req: Request) => {
     throw new ApiError("Failed to append rows to Google Sheet", error);
   });
 
-  const updatedRows = await getObjectArrayHeader(
+  const updatedRowsResponse = await getObjectArrayHeader(
     sheetsObj,
     env.SPREADSHEET_ID,
     result.updatedRange
@@ -49,13 +50,13 @@ export const logSleepRoute = async (req: Request) => {
     throw new ApiError("Failed to retrieve row after writing", error);
   });
 
-  const response = {
-    updatedRow: updatedRows[0] as SheetsSleepEntry,
-  };
+  const updatedRows = SheetsSleepEntry.array().parse(updatedRowsResponse);
+  const updatedRow = updatedRows.at(0);
+  assert(updatedRow, "Updated row should be present");
 
-  await sendEntryNotification(response.updatedRow);
+  sendEntryNotification(updatedRow);
 
-  return successResponse(response, "Successfully added sleep entry");
+  return successResponse({ updatedRow }, "Successfully added sleep entry");
 };
 
 export const getSleepRoute = async () => {
@@ -121,7 +122,7 @@ export const replaceLastSleepRoute = async (req: Request) => {
 
   const rangeToUpdate = getLastRowRange(rows);
 
-  const result: GoogleSheetsAppendUpdates = await update(
+  const result = await update(
     sheetsObj,
     env.SPREADSHEET_ID,
     rangeToUpdate,
@@ -130,7 +131,9 @@ export const replaceLastSleepRoute = async (req: Request) => {
     throw new ApiError("Failed to update rows", error);
   });
 
-  const updatedRows = await getObjectArrayHeader(
+  assert(result.updatedRange, "Updated range should be present");
+
+  const updatedRowsResponse = await getObjectArrayHeader(
     sheetsObj,
     env.SPREADSHEET_ID,
     result.updatedRange
@@ -138,13 +141,16 @@ export const replaceLastSleepRoute = async (req: Request) => {
     throw new ApiError("Failed to retrieve row after updating", error);
   });
 
-  const response = {
-    updatedRow: updatedRows[0] as SheetsSleepEntry,
-  };
+  const updatedRows = SheetsSleepEntry.array().parse(updatedRowsResponse);
+  const updatedRow = updatedRows.at(0);
+  assert(updatedRow, "Updated row should be present");
 
-  await sendEntryNotification(response.updatedRow);
+  sendEntryNotification(updatedRow);
 
-  return successResponse(response, "Successfully replaced last sleep entry");
+  return successResponse(
+    { updatedRow },
+    "Successfully replaced last sleep entry"
+  );
 };
 
 const getSleepEntryFromGeolocationPosition = (
