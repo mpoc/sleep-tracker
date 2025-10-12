@@ -23,22 +23,14 @@ const app = new Elysia()
 
     return Response.json({ message: error.toString() }, { status: 500 });
   })
-  .post("/api/sleep", (req) => {
-    checkRequestApiKey(req.request);
-    return logSleepRoute(req.request);
-  })
-  .get("/api/sleep", (req) => {
-    checkRequestApiKey(req.request);
-    return getSleepRoute();
-  })
-  .put("/api/sleep/replace", (req) => {
-    checkRequestApiKey(req.request);
-    return replaceLastSleepRoute(req.request);
-  })
-  .get("/api/sleep/last", (req) => {
-    checkRequestApiKey(req.request);
-    return getLastSleepRoute();
-  })
+  .group("/api", (route) =>
+    route
+      .guard({ beforeHandle: ({ request }) => checkRequestApiKey(request) })
+      .post("/sleep", ({ request }) => logSleepRoute(request))
+      .get("/sleep", () => getSleepRoute())
+      .put("/sleep/replace", ({ request }) => replaceLastSleepRoute(request))
+      .get("/sleep/last", () => getLastSleepRoute())
+  )
   .get("/", sleepHtml)
   .get("/react", sleepReactHtml)
   .listen(PORT);

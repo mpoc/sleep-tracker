@@ -190,7 +190,7 @@ const getSleepEntryFromGeolocationPosition = (
 export const checkRequestApiKey = (req: Request) => {
   const { searchParams } = new URL(req.url);
   const apiKey = searchParams.get("apiKey");
-  if (apiKey != env.API_KEY) {
+  if (apiKey !== env.API_KEY) {
     throw new ApiError("Invalid API key");
   }
 };
