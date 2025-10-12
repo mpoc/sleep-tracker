@@ -152,21 +152,25 @@ export const deleteRow = async (
     endIndex: rowIndex,
   });
 
-export const toObjectArray = (array: any[][], header?: any[]): any[] => {
+type ArrayRow = unknown[];
+type ObjectRecord = Record<string, unknown>;
+
+export const toObjectArray = <T extends ObjectRecord = ObjectRecord>(
+  array: ArrayRow[],
+  header?: ArrayRow
+): T[] => {
+  // If no header provided, use first row as header
   if (!header) {
-    return toObjectArray(array, array.splice(0, 1)[0]);
-  }
-  const output = [] as any[];
-
-  for (const el of array) {
-    const entry = {} as any;
-    header.forEach((h, i) => {
-      entry[h] = el[i] ? el[i] : undefined;
-    });
-    output.push(entry);
+    const [firstRow, ...rest] = array;
+    return toObjectArray<T>(rest, firstRow);
   }
 
-  return output;
+  // Map each row to an object using the header as keys
+  return array.map((row) =>
+    Object.fromEntries(
+      header.map((key, index) => [key, row[index] ?? undefined])
+    )
+  ) as T[];
 };
 
 const authorize = async (cred: any): Promise<OAuth2Client> => {
