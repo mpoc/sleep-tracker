@@ -52,8 +52,7 @@ export const logSleepRoute = async (req: Request) => {
     throw new ApiError("Failed to retrieve row after writing", error);
   });
 
-  const updatedRows = SheetsSleepEntry.array().parse(updatedRowsResponse);
-  const updatedRow = updatedRows.at(0);
+  const [updatedRow] = SheetsSleepEntry.array().parse(updatedRowsResponse);
   assert(updatedRow, "Updated row should be present");
 
   sendEntryNotification(updatedRow);
@@ -143,8 +142,7 @@ export const replaceLastSleepRoute = async (req: Request) => {
     throw new ApiError("Failed to retrieve row after updating", error);
   });
 
-  const updatedRows = SheetsSleepEntry.array().parse(updatedRowsResponse);
-  const updatedRow = updatedRows.at(0);
+  const [updatedRow] = SheetsSleepEntry.array().parse(updatedRowsResponse);
   assert(updatedRow, "Updated row should be present");
 
   sendEntryNotification(updatedRow);
