@@ -1,15 +1,11 @@
+import ms from "ms";
 import { getLastSleep } from "./controller";
 import { sendReminderNotification } from "./notifications";
-import {
-  millisecondsSinceSleepEntry,
-  millisecondsToHours,
-  minutesToMilliseconds,
-  sheetsSleepEntryIsStop,
-} from "./utils";
+import { millisecondsSinceSleepEntry, sheetsSleepEntryIsStop } from "./utils";
 
-const HOURS_BEFORE_START_REMINDER = 15.5;
-const HOURS_BEFORE_STOP_REMINDER = 8.5;
-const REMINDER_CHECK_INTERVAL_MINUTES = 5;
+const TIME_BEFORE_START_REMINDER = "15.5 hours";
+const TIME_BEFORE_STOP_REMINDER = "8.5 hours";
+const REMINDER_CHECK_INTERVAL = "5 minutes";
 
 let reminderNotificationSent = false;
 
@@ -21,14 +17,12 @@ const checkReminderNotification = async () => {
   );
 
   const msDiff = millisecondsSinceSleepEntry(lastSleepData.lastSleepEntry);
-  const hoursDiff = millisecondsToHours(msDiff);
 
-  const hoursBeforeReminder = lastSleepEntryIsStop
-    ? HOURS_BEFORE_START_REMINDER
-    : HOURS_BEFORE_STOP_REMINDER;
+  const timeBeforeReminder = lastSleepEntryIsStop
+    ? TIME_BEFORE_START_REMINDER
+    : TIME_BEFORE_STOP_REMINDER;
 
-  // console.log(`${new Date().toISOString()}: Checking ${lastSleepEntryIsStop ? 'start' : 'stop'} reminder notification ${hoursDiff} (${hoursBeforeReminder})`)
-  if (hoursDiff > hoursBeforeReminder) {
+  if (msDiff > ms(timeBeforeReminder)) {
     if (!reminderNotificationSent) {
       console.log(
         `${new Date().toISOString()}: Sending ${lastSleepEntryIsStop ? "start" : "stop"} reminder notification`
@@ -43,8 +37,5 @@ const checkReminderNotification = async () => {
 
 export const checkReminderLoop = () => {
   checkReminderNotification();
-  setTimeout(
-    checkReminderLoop,
-    minutesToMilliseconds(REMINDER_CHECK_INTERVAL_MINUTES)
-  );
+  setTimeout(checkReminderLoop, ms(REMINDER_CHECK_INTERVAL));
 };

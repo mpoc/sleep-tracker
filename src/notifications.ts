@@ -1,7 +1,8 @@
+import humanizeDuration from "humanize-duration";
 import { env } from "./config";
 import { ApiError } from "./error";
 import type { Notification, SheetsSleepEntry } from "./types";
-import { millisecondsToHours, sheetsSleepEntryIsStop } from "./utils";
+import { sheetsSleepEntryIsStop } from "./utils";
 
 const sendNotification = async (notification: Notification) => {
   try {
@@ -62,11 +63,14 @@ const getReminderNotificationText = (
   msSinceLastSleepEntry: number,
   lastEntryIsStop: boolean
 ): Notification => {
-  const roundFloat = (num: number) => Math.round(num * 10) / 10;
-  const hours = millisecondsToHours(msSinceLastSleepEntry);
+  const time = humanizeDuration(msSinceLastSleepEntry, {
+    units: ["h", "m"],
+    round: true,
+    delimiter: " and ",
+  });
   return {
     title: lastEntryIsStop ? "🥱 Time to go to sleep" : "⏰ Time to wake up",
-    body: `It has been ${roundFloat(hours)} hours since you ${lastEntryIsStop ? "woke up" : "fell asleep"}`,
+    body: `It has been ${time} since you ${lastEntryIsStop ? "woke up" : "fell asleep"}`,
   };
 };
 
