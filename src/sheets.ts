@@ -86,20 +86,15 @@ export const append = async (
   spreadsheetId: string,
   range: string,
   values: string[][]
-): Promise<any> =>
-  await new Promise((resolve, reject) => {
-    sheetsObj.spreadsheets.values.append(
-      {
-        spreadsheetId,
-        range,
-        valueInputOption: "USER_ENTERED",
-        requestBody: {
-          values,
-        },
-      },
-      (err: any, res: any) => (err ? reject(err) : resolve(res.data.updates))
-    );
+) => {
+  const response = await sheetsObj.spreadsheets.values.append({
+    spreadsheetId,
+    range,
+    valueInputOption: "USER_ENTERED",
+    requestBody: { values },
   });
+  return response.data.updates;
+};
 
 export const update = async (
   sheetsObj: sheets_v4.Sheets,

@@ -33,7 +33,7 @@ export const logSleepRoute = async (req: Request) => {
 
   const sheetsObj = await getSheetsObj();
 
-  const result: GoogleSheetsAppendUpdates = await append(
+  const result = await append(
     sheetsObj,
     env.SPREADSHEET_ID,
     env.SPREADSHEET_RANGE,
@@ -41,6 +41,9 @@ export const logSleepRoute = async (req: Request) => {
   ).catch((error) => {
     throw new ApiError("Failed to append rows to Google Sheet", error);
   });
+
+  assert(result, "Append result should be present");
+  assert(result.updatedRange, "Updated range should be present");
 
   const updatedRowsResponse = await getObjectArrayHeader(
     sheetsObj,
