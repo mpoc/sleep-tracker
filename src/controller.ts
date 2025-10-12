@@ -11,7 +11,7 @@ import {
   getObjectArray,
   getObjectArrayHeader,
   getRowCount,
-  getSheetsObj,
+  getSheets,
   update,
 } from "./sheets";
 import {
@@ -30,10 +30,10 @@ export const logSleepRoute = async (req: Request) => {
 
   const valuesToAppend = [Object.values(entry)];
 
-  const sheetsObj = await getSheetsObj();
+  const sheets = await getSheets();
 
   const result = await append(
-    sheetsObj,
+    sheets,
     env.SPREADSHEET_ID,
     env.SPREADSHEET_RANGE,
     valuesToAppend
@@ -45,7 +45,7 @@ export const logSleepRoute = async (req: Request) => {
   assert(result.updatedRange, "Updated range should be present");
 
   const updatedRowsResponse = await getObjectArrayHeader(
-    sheetsObj,
+    sheets,
     env.SPREADSHEET_ID,
     result.updatedRange
   ).catch((error) => {
@@ -62,10 +62,10 @@ export const logSleepRoute = async (req: Request) => {
 };
 
 export const getSleepRoute = async () => {
-  const sheetsObj = await getSheetsObj();
+  const sheets = await getSheets();
 
   const result = await getObjectArray(
-    sheetsObj,
+    sheets,
     env.SPREADSHEET_ID,
     env.SPREADSHEET_RANGE
   ).catch((error: Error) => {
@@ -78,13 +78,13 @@ export const getSleepRoute = async () => {
 };
 
 export const getLastSleep = async () => {
-  const sheetsObj = await getSheetsObj();
+  const sheets = await getSheets();
 
-  const lastRow = getLastRow(sheetsObj, env.SPREADSHEET_ID).catch((error) => {
+  const lastRow = getLastRow(sheets, env.SPREADSHEET_ID).catch((error) => {
     throw new ApiError("Failed to retrieve last row", error);
   });
 
-  const rowCount = getRowCount(sheetsObj, env.SPREADSHEET_ID).catch((error) => {
+  const rowCount = getRowCount(sheets, env.SPREADSHEET_ID).catch((error) => {
     throw new ApiError("Failed to retrieve row count", error);
   });
 
@@ -112,10 +112,10 @@ export const replaceLastSleepRoute = async (req: Request) => {
 
   const valuesToAppend = [Object.values(entry)];
 
-  const sheetsObj = await getSheetsObj();
+  const sheets = await getSheets();
 
   const rows = await getArray(
-    sheetsObj,
+    sheets,
     env.SPREADSHEET_ID,
     env.SPREADSHEET_RANGE
   ).catch((error: Error) => {
@@ -125,7 +125,7 @@ export const replaceLastSleepRoute = async (req: Request) => {
   const rangeToUpdate = getLastRowRange(rows);
 
   const result = await update(
-    sheetsObj,
+    sheets,
     env.SPREADSHEET_ID,
     rangeToUpdate,
     valuesToAppend
@@ -136,7 +136,7 @@ export const replaceLastSleepRoute = async (req: Request) => {
   assert(result.updatedRange, "Updated range should be present");
 
   const updatedRowsResponse = await getObjectArrayHeader(
-    sheetsObj,
+    sheets,
     env.SPREADSHEET_ID,
     result.updatedRange
   ).catch((error) => {

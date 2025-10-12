@@ -25,7 +25,7 @@ const getAuth = async (): Promise<OAuth2Client> => {
   return cachedAuth;
 };
 
-export const getSheetsObj = async () => {
+export const getSheets = async () => {
   if (cachedSheetsObj) {
     return cachedSheetsObj;
   }
