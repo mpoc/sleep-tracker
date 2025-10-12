@@ -101,6 +101,7 @@ export const append = async (
     range,
     valueInputOption: "USER_ENTERED",
     requestBody: { values },
+    includeValuesInResponse: true,
   });
   return response.data.updates;
 };
@@ -167,7 +168,7 @@ export const deleteRow = async (
     endIndex: rowIndex,
   });
 
-type ArrayRow = unknown[];
+type ArrayRow = unknown[] | readonly unknown[];
 type ObjectRecord = Record<string, unknown>;
 
 export const toObjectArray = <T extends ObjectRecord = ObjectRecord>(

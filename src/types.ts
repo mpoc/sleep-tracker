@@ -24,6 +24,15 @@ export type SleepEntry = {
   durationString: string;
 };
 
+export const SheetsSleepEntryHeaders = [
+  "Timezone local time",
+  "Latitude",
+  "Longitude",
+  "Timezone",
+  "UTC time",
+  "Duration",
+] as const;
+
 export const SheetsSleepEntry = z.object({
   "Timezone local time": z.string(),
   Latitude: z.string(),

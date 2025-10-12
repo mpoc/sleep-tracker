@@ -12,12 +12,14 @@ import {
   getObjectArrayHeader,
   getRowCount,
   getSheets,
+  toObjectArray,
   update,
 } from "./sheets";
 import {
   type GeolocationPosition,
   GeolocationPositionSchema,
   SheetsSleepEntry,
+  SheetsSleepEntryHeaders,
   type SleepEntry,
 } from "./types";
 import { getTimezoneFromCoords } from "./utils";
@@ -41,16 +43,10 @@ export const logSleepRoute = async (req: Request) => {
     throw new ApiError("Failed to append rows to Google Sheet", error);
   });
 
-  assert(result, "Append result should be present");
-  assert(result.updatedRange, "Updated range should be present");
-
-  const updatedRowsResponse = await getObjectArrayHeader(
-    sheets,
-    env.SPREADSHEET_ID,
-    result.updatedRange
-  ).catch((error) => {
-    throw new ApiError("Failed to retrieve row after writing", error);
-  });
+  const updatedRowsResponse = toObjectArray(
+    result?.updatedData?.values ?? [],
+    SheetsSleepEntryHeaders
+  );
 
   const [updatedRow] = SheetsSleepEntry.array().parse(updatedRowsResponse);
   assert(updatedRow, "Updated row should be present");
