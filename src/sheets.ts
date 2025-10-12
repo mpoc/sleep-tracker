@@ -152,7 +152,7 @@ export const deleteRow = async (
     endIndex: rowIndex,
   });
 
-const toObjectArray = (array: any[][], header?: any[]): any[] => {
+export const toObjectArray = (array: any[][], header?: any[]): any[] => {
   if (!header) {
     return toObjectArray(array, array.splice(0, 1)[0]);
   }
