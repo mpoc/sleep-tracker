@@ -48,7 +48,7 @@ docker-compose up -d
 
 ## How to log sleep
 
-Go to `http://localhost:8000/sleep?apiKey=<API_KEY>` to see the app.
+Go to `http://localhost:8000/?apiKey=<API_KEY>` to see the app.
 
 Note that in order to log the sleep entry location, it will have run over HTTPS.
 Without HTTPS, this error will happen when trying to access the location:
