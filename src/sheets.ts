@@ -1,3 +1,4 @@
+import assert from "node:assert/strict";
 import fs from "node:fs";
 import readline from "node:readline";
 import { OAuth2Client } from "google-auth-library";
@@ -5,6 +6,7 @@ import type { sheets_v4 } from "googleapis";
 // https://github.com/googleapis/google-api-nodejs-client/issues/2187
 import { sheets } from "googleapis/build/src/apis/sheets";
 import { ApiError } from "./error";
+import { SheetsLastRowResponse, SheetsRowCountResponse } from "./types";
 
 const CRED_PATH = "secret/credentials.json";
 const TOKEN_PATH = "secret/token.json";
@@ -48,6 +50,29 @@ export const getObjectArrayHeader = async (
     await getArray(sheetsObj, spreadsheetId, range),
     (await getArray(sheetsObj, spreadsheetId, "1:1"))[0]
   );
+
+export const getLastRow = async (
+  sheetsObj: sheets_v4.Sheets,
+  spreadsheetId: string,
+  range = "lastRow!A:Z"
+) => {
+  const lastRowResult = await getObjectArray(sheetsObj, spreadsheetId, range);
+
+  const lastRow = SheetsLastRowResponse.parse(lastRowResult).at(0);
+  assert(lastRow);
+  return lastRow;
+};
+
+export const getRowCount = async (
+  sheetsObj: sheets_v4.Sheets,
+  spreadsheetId: string,
+  range = "rowCount!A:A"
+) => {
+  const rowCountResult = await getObjectArray(sheetsObj, spreadsheetId, range);
+  const rowCount = SheetsRowCountResponse.parse(rowCountResult).at(0);
+  assert(rowCount);
+  return rowCount.rowCount;
+};
 
 export const append = async (
   sheetsObj: sheets_v4.Sheets,

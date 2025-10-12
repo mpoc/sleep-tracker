@@ -24,14 +24,23 @@ export type SleepEntry = {
   durationString: string;
 };
 
-export type SheetsSleepEntry = {
-  "Timezone local time": string;
-  Latitude: string;
-  Longitude: string;
-  Timezone: string;
-  "UTC time": string;
-  Duration: string;
-};
+export const SheetsSleepEntry = z.object({
+  "Timezone local time": z.string(),
+  Latitude: z.string(),
+  Longitude: z.string(),
+  Timezone: z.string(),
+  "UTC time": z.string(),
+  Duration: z.string().optional(),
+});
+
+export type SheetsSleepEntry = z.infer<typeof SheetsSleepEntry>;
+
+export const SheetsLastRowResponse = z.tuple([SheetsSleepEntry]);
+export const SheetsRowCountResponse = z.tuple([
+  z.object({
+    rowCount: z.string().nonempty().transform(Number),
+  }),
+]);
 
 export type Notification = {
   title: string;

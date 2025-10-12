@@ -1,4 +1,3 @@
-import assert from "node:assert/strict";
 import moment from "moment-timezone";
 import { successResponse } from "./apiUtils";
 import { env } from "./config";
@@ -7,8 +6,10 @@ import { sendEntryNotification } from "./notifications";
 import {
   append,
   getArray,
+  getLastRow,
   getObjectArray,
   getObjectArrayHeader,
+  getRowCount,
   getSheetsObj,
   update,
 } from "./sheets";
@@ -76,20 +77,17 @@ export const getSleepRoute = async () => {
 export const getLastSleep = async () => {
   const sheetsObj = await getSheetsObj();
 
-  const result: SheetsSleepEntry[] = await getObjectArray(
-    sheetsObj,
-    env.SPREADSHEET_ID,
-    env.SPREADSHEET_RANGE
-  ).catch((error: Error) => {
-    throw new ApiError("Failed to retrieve rows", error);
+  const lastRow = getLastRow(sheetsObj, env.SPREADSHEET_ID).catch((error) => {
+    throw new ApiError("Failed to retrieve last row", error);
   });
 
-  const lastSleepEntry = result.at(-1);
-  assert(lastSleepEntry);
+  const rowCount = getRowCount(sheetsObj, env.SPREADSHEET_ID).catch((error) => {
+    throw new ApiError("Failed to retrieve row count", error);
+  });
 
   const lastSleepData = {
-    lastSleepEntry,
-    numberOfSleepEntries: result.length,
+    lastSleepEntry: await lastRow,
+    numberOfSleepEntries: await rowCount,
   };
 
   return lastSleepData;
