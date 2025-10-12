@@ -26,21 +26,14 @@ export const getArray = async (
   sheetsObj: sheets_v4.Sheets,
   spreadsheetId: string,
   range: string
-) =>
-  await new Promise<any[][]>((resolve, reject) => {
-    sheetsObj.spreadsheets.values.get({ spreadsheetId, range }, (err, res) => {
-      if (err) {
-        return reject(err);
-      }
-      if (!res) {
-        return reject(new Error("No response from Google Sheets API"));
-      }
-      if (!res.data.values) {
-        return resolve([]);
-      }
-      return resolve(res.data.values);
-    });
+) => {
+  const response = await sheetsObj.spreadsheets.values.get({
+    spreadsheetId,
+    range,
   });
+  assert(response.data.values);
+  return response.data.values;
+};
 
 export const getObjectArray = async (
   sheetsObj: sheets_v4.Sheets,
