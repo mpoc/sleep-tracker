@@ -103,8 +103,14 @@ export const replaceLastSleepRoute = async (req: Request) => {
     await req.json()
   );
   const entry = getSleepEntryFromGeolocationPosition(data);
-
-  const valuesToAppend = [Object.values(entry)];
+  const rowToAppend = [
+    entry.localTime,
+    entry.latitude,
+    entry.longitude,
+    entry.timezone,
+    entry.utcTime,
+    entry.durationString,
+  ];
 
   const sheets = await getSheets();
 
@@ -116,14 +122,14 @@ export const replaceLastSleepRoute = async (req: Request) => {
     throw new ApiError("Failed to retrieve rows", error);
   });
 
-  const rangeToUpdate = getLastRowRange(rows);
+  const rangeToUpdate = getLastRowRange({
+    rowCount: rows.length,
+    columnCount: rows[0]!.length,
+  });
 
-  const result = await update(
-    sheets,
-    env.SPREADSHEET_ID,
-    rangeToUpdate,
-    valuesToAppend
-  ).catch((error) => {
+  const result = await update(sheets, env.SPREADSHEET_ID, rangeToUpdate, [
+    rowToAppend,
+  ]).catch((error) => {
     throw new ApiError("Failed to update rows", error);
   });
 
@@ -191,15 +197,20 @@ export const checkRequestApiKey = (req: Request) => {
   }
 };
 
-const getLastRowRange = (rows: any[]) => {
+const getLastRowRange = ({
+  rowCount,
+  columnCount,
+}: {
+  rowCount: number;
+  columnCount: number;
+}) => {
   const A_CHAR_CODE = "A".charCodeAt(0);
   const Z_CHAR_CODE = "Z".charCodeAt(0);
 
-  const lastColumnCharNumber = A_CHAR_CODE + (rows[0].length - 1);
+  const lastColumnCharNumber = A_CHAR_CODE + columnCount - 1;
   // Limit in case there's columns in AA+ territory
   const limitedColumnCharNumber =
     lastColumnCharNumber > Z_CHAR_CODE ? Z_CHAR_CODE : lastColumnCharNumber;
   const lastColumn = String.fromCharCode(limitedColumnCharNumber);
-  const lastRowRange = `A${rows.length}:${lastColumn}`;
-  return lastRowRange;
+  return `A${rowCount}:${lastColumn}`;
 };
