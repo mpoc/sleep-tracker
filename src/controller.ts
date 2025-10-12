@@ -17,7 +17,6 @@ import {
 import {
   type GeolocationPosition,
   GeolocationPositionSchema,
-  type GoogleSheetsAppendUpdates,
   SheetsSleepEntry,
   type SleepEntry,
 } from "./types";
