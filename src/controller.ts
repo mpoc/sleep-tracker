@@ -6,7 +6,6 @@ import { ApiError } from "./error";
 import { sendEntryNotification } from "./notifications";
 import {
   append,
-  getArray,
   getLastRow,
   getObjectArray,
   getProperties,
