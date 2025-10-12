@@ -115,9 +115,7 @@ export const update = async (
     spreadsheetId,
     range,
     valueInputOption: "USER_ENTERED",
-    requestBody: {
-      values,
-    },
+    requestBody: { values },
   });
   return response.data;
 };
