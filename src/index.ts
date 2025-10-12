@@ -1,4 +1,4 @@
-import { serve } from "bun";
+import { Elysia } from "elysia";
 import { checkReminderLoop } from "./checkReminderLoop";
 import {
   checkRequestApiKey,
@@ -11,39 +11,36 @@ import { handleError } from "./error";
 import sleepHtml from "./views/sleep.html";
 import sleepReactHtml from "./views/sleepReact.html";
 
-const server = serve({
-  port: "8000",
-  routes: {
-    "/api/sleep": {
-      async POST(req) {
-        checkRequestApiKey(req);
-        return logSleepRoute(req);
-      },
-      async GET(req) {
-        checkRequestApiKey(req);
-        return getSleepRoute();
-      },
-    },
-    "/api/sleep/replace": {
-      async PUT(req) {
-        checkRequestApiKey(req);
-        return replaceLastSleepRoute(req);
-      },
-    },
-    "/api/sleep/last": {
-      async GET(req) {
-        checkRequestApiKey(req);
-        return getLastSleepRoute();
-      },
-    },
-    "/": sleepHtml,
-    "/react": sleepReactHtml,
-  },
-  error(error) {
-    return handleError(error);
-  },
-});
+const PORT = 8000;
 
-console.log(`Server is listening on ${server.url}`);
+const app = new Elysia()
+  .onError(({ error, code }) => {
+    if (code === "INTERNAL_SERVER_ERROR") {
+      return handleError(error);
+    }
+
+    return Response.json({ message: error.toString() }, { status: 500 });
+  })
+  .post("/api/sleep", (req) => {
+    checkRequestApiKey(req.request);
+    return logSleepRoute(req.request);
+  })
+  .get("/api/sleep", (req) => {
+    checkRequestApiKey(req.request);
+    return getSleepRoute();
+  })
+  .put("/api/sleep/replace", (req) => {
+    checkRequestApiKey(req.request);
+    return replaceLastSleepRoute(req.request);
+  })
+  .get("/api/sleep/last", (req) => {
+    checkRequestApiKey(req.request);
+    return getLastSleepRoute();
+  })
+  .get("/", sleepHtml)
+  .get("/react", sleepReactHtml)
+  .listen(PORT);
+
+console.log(`Server is listening on ${app.server?.url}`);
 
 checkReminderLoop();

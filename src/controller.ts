@@ -1,5 +1,4 @@
 import assert from "node:assert/strict";
-import type { BunRequest } from "bun";
 import moment from "moment-timezone";
 import { successResponse } from "./apiUtils";
 import { env } from "./config";
@@ -22,7 +21,7 @@ import {
 } from "./types";
 import { getTimezoneFromCoords } from "./utils";
 
-export const logSleepRoute = async (req: BunRequest) => {
+export const logSleepRoute = async (req: Request) => {
   const data: GeolocationPosition = GeolocationPositionSchema.parse(
     await req.json()
   );
@@ -104,7 +103,7 @@ export const getLastSleepRoute = async () => {
   );
 };
 
-export const replaceLastSleepRoute = async (req: BunRequest) => {
+export const replaceLastSleepRoute = async (req: Request) => {
   const data: GeolocationPosition = GeolocationPositionSchema.parse(
     await req.json()
   );
@@ -190,7 +189,7 @@ const getSleepEntryFromGeolocationPosition = (
   return entry;
 };
 
-export const checkRequestApiKey = (req: BunRequest) => {
+export const checkRequestApiKey = (req: Request) => {
   const { searchParams } = new URL(req.url);
   const apiKey = searchParams.get("apiKey");
   if (apiKey != env.API_KEY) {
