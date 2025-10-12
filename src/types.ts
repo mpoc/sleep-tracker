@@ -45,9 +45,10 @@ export const SheetsSleepEntry = z.object({
 export type SheetsSleepEntry = z.infer<typeof SheetsSleepEntry>;
 
 export const SheetsLastRowResponse = z.tuple([SheetsSleepEntry]);
-export const SheetsRowCountResponse = z.tuple([
+export const SheetsPropertiesResponse = z.tuple([
   z.object({
     rowCount: z.string().nonempty().transform(Number),
+    lastRowNumber: z.string().nonempty().transform(Number),
   }),
 ]);
 

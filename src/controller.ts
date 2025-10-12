@@ -9,8 +9,7 @@ import {
   getArray,
   getLastRow,
   getObjectArray,
-  getObjectArrayHeader,
-  getRowCount,
+  getProperties,
   getSheets,
   toObjectArray,
   update,
@@ -79,16 +78,16 @@ export const getLastSleep = async () => {
     throw new ApiError("Failed to retrieve last row", error);
   });
 
-  const rowCount = getRowCount(sheets, env.SPREADSHEET_ID).catch((error) => {
-    throw new ApiError("Failed to retrieve row count", error);
-  });
+  const properties = getProperties(sheets, env.SPREADSHEET_ID).catch(
+    (error) => {
+      throw new ApiError("Failed to retrieve properties", error);
+    }
+  );
 
-  const lastSleepData = {
+  return {
     lastSleepEntry: await lastRow,
-    numberOfSleepEntries: await rowCount,
+    numberOfSleepEntries: (await properties).rowCount,
   };
-
-  return lastSleepData;
 };
 
 export const getLastSleepRoute = async () => {
@@ -128,15 +127,10 @@ export const replaceLastSleepRoute = async (req: Request) => {
     throw new ApiError("Failed to update rows", error);
   });
 
-  assert(result.updatedRange, "Updated range should be present");
-
-  const updatedRowsResponse = await getObjectArrayHeader(
-    sheets,
-    env.SPREADSHEET_ID,
-    result.updatedRange
-  ).catch((error) => {
-    throw new ApiError("Failed to retrieve row after updating", error);
-  });
+  const updatedRowsResponse = toObjectArray(
+    result?.updatedData?.values ?? [],
+    SheetsSleepEntryHeaders
+  );
 
   const [updatedRow] = SheetsSleepEntry.array().parse(updatedRowsResponse);
   assert(updatedRow, "Updated row should be present");

@@ -6,7 +6,7 @@ import type { sheets_v4 } from "googleapis";
 // https://github.com/googleapis/google-api-nodejs-client/issues/2187
 import { sheets } from "googleapis/build/src/apis/sheets";
 import { ApiError } from "./error";
-import { SheetsLastRowResponse, SheetsRowCountResponse } from "./types";
+import { SheetsLastRowResponse, SheetsPropertiesResponse } from "./types";
 
 const CRED_PATH = "secret/credentials.json";
 const TOKEN_PATH = "secret/token.json";
@@ -79,15 +79,15 @@ export const getLastRow = async (
   return lastRow;
 };
 
-export const getRowCount = async (
+export const getProperties = async (
   sheetsObj: sheets_v4.Sheets,
   spreadsheetId: string,
-  range = "rowCount!A:A"
+  range = "properties!A:Z"
 ) => {
-  const rowCountResult = await getObjectArray(sheetsObj, spreadsheetId, range);
-  const rowCount = SheetsRowCountResponse.parse(rowCountResult).at(0);
-  assert(rowCount);
-  return rowCount.rowCount;
+  const result = await getObjectArray(sheetsObj, spreadsheetId, range);
+  const [properties] = SheetsPropertiesResponse.parse(result);
+  assert(properties);
+  return properties;
 };
 
 export const append = async (
@@ -117,6 +117,7 @@ export const update = async (
     range,
     valueInputOption: "USER_ENTERED",
     requestBody: { values },
+    includeValuesInResponse: true,
   });
   return response.data;
 };
