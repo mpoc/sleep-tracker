@@ -39,14 +39,13 @@ export const getObjectArray = async (
   sheetsObj: sheets_v4.Sheets,
   spreadsheetId: string,
   range: string
-): Promise<any[]> =>
-  toObjectArray(await getArray(sheetsObj, spreadsheetId, range));
+) => toObjectArray(await getArray(sheetsObj, spreadsheetId, range));
 
 export const getObjectArrayHeader = async (
   sheetsObj: sheets_v4.Sheets,
   spreadsheetId: string,
   range: string
-): Promise<any[]> => {
+) => {
   const headerArray = getArray(sheetsObj, spreadsheetId, "1:1");
   const dataArray = getArray(sheetsObj, spreadsheetId, range);
   return toObjectArray(await dataArray, (await headerArray)[0]);
