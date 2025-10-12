@@ -125,36 +125,33 @@ export const deleteRows = async ({
   sheetId: number;
   startIndex: number;
   endIndex: number;
-}): Promise<any> =>
-  await new Promise((resolve, reject) => {
-    sheetsObj.spreadsheets.batchUpdate(
-      {
-        spreadsheetId,
-        requestBody: {
-          requests: [
-            {
-              deleteDimension: {
-                range: {
-                  sheetId,
-                  dimension: "ROWS",
-                  startIndex,
-                  endIndex,
-                },
-              },
+}) => {
+  const response = await sheetsObj.spreadsheets.batchUpdate({
+    spreadsheetId,
+    requestBody: {
+      requests: [
+        {
+          deleteDimension: {
+            range: {
+              sheetId,
+              dimension: "ROWS",
+              startIndex,
+              endIndex,
             },
-          ],
+          },
         },
-      },
-      (err: any, res: any) => (err ? reject(err) : resolve(res.data))
-    );
+      ],
+    },
   });
+  return response.data;
+};
 
 export const deleteRow = async (
   sheetsObj: sheets_v4.Sheets,
   spreadsheetId: string,
   sheetId: number,
   rowIndex: number
-): Promise<any> =>
+) =>
   deleteRows({
     sheetsObj,
     spreadsheetId,
