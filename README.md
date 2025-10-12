@@ -10,7 +10,7 @@ A simple progressive web app to track sleep.
 
 Secrets have to be set up before running the project.
 
-Environment variables for `secret/.env` file:
+Environment variables for `.env` file:
 
 1. `API_KEY` - API key that client will have to provide in order to be able to access the sleep tracker webpage
 1. `SPREADSHEET_ID` - Google Sheets spreadsheet ID, e.g. the ID for a spreadsheet with the link https://docs.google.com/spreadsheets/d/13Nig7emkfeSDraasAERmsc82k2i3y4Csdfcazj0kUPcUY/ would be `13Nig7emkfeSDraasAERmsc82k2i3y4Csdfcazj0kUPcUY`
@@ -29,16 +29,15 @@ This command can be used to generate the initial `secret/token.json` file:
 docker run -it --rm -v `pwd`/secret:/usr/src/sleep-tracker/secret -p 8002:8000 mpoc/sleep-tracker
 ```
 
-After running it, navigate to `http://localhost:8000/sleep?apiKey=<API_KEY>` to trigger the Google login.
+After running it, navigate to `http://localhost:8000/?apiKey=<API_KEY>` to trigger the Google login.
 
 ## How to run
 
 ### Running locally
 
 ```shell
-yarn install
-yarn compile
-yarn start
+bun install
+bun start
 ```
 
 ### Running using Docker
