@@ -1,3 +1,4 @@
+import { logger } from "@bogeychan/elysia-logger";
 import { Elysia } from "elysia";
 import { checkReminderLoop } from "./checkReminderLoop";
 import {
@@ -14,6 +15,7 @@ import sleepReactHtml from "./views/sleepReact.html";
 const PORT = 8000;
 
 const app = new Elysia()
+  .use(logger())
   .onError(({ error, code }) => {
     if (code === "INTERNAL_SERVER_ERROR") {
       return handleError(error);
