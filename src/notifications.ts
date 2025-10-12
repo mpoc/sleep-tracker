@@ -64,9 +64,8 @@ const getReminderNotificationText = (
   lastEntryIsStop: boolean
 ): Notification => {
   const time = humanizeDuration(msSinceLastSleepEntry, {
-    units: ["h", "m"],
-    round: true,
-    delimiter: " and ",
+    units: ["h"],
+    maxDecimalPoints: 1,
   });
   return {
     title: lastEntryIsStop ? "🥱 Time to go to sleep" : "⏰ Time to wake up",
