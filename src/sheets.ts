@@ -26,13 +26,21 @@ export const getArray = async (
   sheetsObj: sheets_v4.Sheets,
   spreadsheetId: string,
   range: string
-): Promise<any[][]> =>
-  (await new Promise((resolve, reject) => {
-    sheetsObj.spreadsheets.values.get(
-      { spreadsheetId, range },
-      (err: any, res: any) => (err ? reject(err) : resolve(res.data.values))
-    );
-  })) as any[][];
+) =>
+  await new Promise<any[][]>((resolve, reject) => {
+    sheetsObj.spreadsheets.values.get({ spreadsheetId, range }, (err, res) => {
+      if (err) {
+        return reject(err);
+      }
+      if (!res) {
+        return reject(new Error("No response from Google Sheets API"));
+      }
+      if (!res.data.values) {
+        return resolve([]);
+      }
+      return resolve(res.data.values);
+    });
+  });
 
 export const getObjectArray = async (
   sheetsObj: sheets_v4.Sheets,
@@ -57,7 +65,6 @@ export const getLastRow = async (
   range = "lastRow!A:Z"
 ) => {
   const lastRowResult = await getObjectArray(sheetsObj, spreadsheetId, range);
-
   const lastRow = SheetsLastRowResponse.parse(lastRowResult).at(0);
   assert(lastRow);
   return lastRow;
