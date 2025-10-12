@@ -106,20 +106,30 @@ export const update = async (
   spreadsheetId: string,
   range: string,
   values: string[][]
-): Promise<any> =>
-  await new Promise((resolve, reject) => {
-    sheetsObj.spreadsheets.values.update(
-      {
-        spreadsheetId,
-        range,
-        valueInputOption: "USER_ENTERED",
-        requestBody: {
-          values,
+) =>
+  await new Promise<sheets_v4.Schema$UpdateValuesResponse>(
+    (resolve, reject) => {
+      sheetsObj.spreadsheets.values.update(
+        {
+          spreadsheetId,
+          range,
+          valueInputOption: "USER_ENTERED",
+          requestBody: {
+            values,
+          },
         },
-      },
-      (err: any, res: any) => (err ? reject(err) : resolve(res.data))
-    );
-  });
+        (err, res) => {
+          if (err) {
+            return reject(err);
+          }
+          if (!res) {
+            return reject(new Error("No response from Google Sheets API"));
+          }
+          return resolve(res.data);
+        }
+      );
+    }
+  );
 
 export const deleteRows = async ({
   sheetsObj,
