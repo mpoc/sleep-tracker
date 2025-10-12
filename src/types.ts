@@ -48,7 +48,7 @@ export const SheetsLastRowResponse = z.tuple([SheetsSleepEntry]);
 export const SheetsPropertiesResponse = z.tuple([
   z.object({
     rowCount: z.string().nonempty().transform(Number),
-    lastRowNumber: z.string().nonempty().transform(Number),
+    sleepEntryCount: z.string().nonempty().transform(Number),
   }),
 ]);
 

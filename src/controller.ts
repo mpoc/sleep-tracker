@@ -86,7 +86,7 @@ export const getLastSleep = async () => {
 
   return {
     lastSleepEntry: await lastRow,
-    numberOfSleepEntries: (await properties).rowCount,
+    numberOfSleepEntries: (await properties).sleepEntryCount,
   };
 };
 
@@ -103,7 +103,7 @@ export const replaceLastSleepRoute = async (req: Request) => {
     await req.json()
   );
   const entry = getSleepEntryFromGeolocationPosition(data);
-  const rowToAppend = [
+  const rowToUpdate = [
     entry.localTime,
     entry.latitude,
     entry.longitude,
@@ -114,21 +114,19 @@ export const replaceLastSleepRoute = async (req: Request) => {
 
   const sheets = await getSheets();
 
-  const rows = await getArray(
-    sheets,
-    env.SPREADSHEET_ID,
-    env.SPREADSHEET_RANGE
-  ).catch((error: Error) => {
-    throw new ApiError("Failed to retrieve rows", error);
-  });
+  const properties = await getProperties(sheets, env.SPREADSHEET_ID).catch(
+    (error) => {
+      throw new ApiError("Failed to retrieve properties", error);
+    }
+  );
 
   const rangeToUpdate = getLastRowRange({
-    rowCount: rows.length,
-    columnCount: rows[0]!.length,
+    rowCount: properties.rowCount,
+    columnCount: rowToUpdate.length,
   });
 
   const result = await update(sheets, env.SPREADSHEET_ID, rangeToUpdate, [
-    rowToAppend,
+    rowToUpdate,
   ]).catch((error) => {
     throw new ApiError("Failed to update rows", error);
   });
