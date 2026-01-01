@@ -16,7 +16,7 @@
     "@types/pug": "^2.0.10",
     "@types/react": "^19.2.7",
     "@types/react-dom": "^19.2.3",
-    "ultracite": "5.4.4"
+    "ultracite": "^6.5.1"
   },
   "dependencies": {
     "@bogeychan/elysia-logger": "^0.1.10",
