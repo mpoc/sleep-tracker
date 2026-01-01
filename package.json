@@ -20,6 +20,7 @@
   },
   "dependencies": {
     "@bogeychan/elysia-logger": "^0.1.10",
+    "@elysiajs/static": "^1.4.7",
     "elysia": "^1.4.19",
     "geo-tz": "^8.1.4",
     "googleapis": "^160.0.0",

@@ -1,4 +1,5 @@
 import { logger } from "@bogeychan/elysia-logger";
+import { staticPlugin } from "@elysiajs/static";
 import { Elysia } from "elysia";
 import { checkReminderLoop } from "./checkReminderLoop";
 import {
@@ -33,6 +34,7 @@ const app = new Elysia()
   )
   .get("/", sleepHtml)
   .get("/react", sleepReactHtml)
+  .use(staticPlugin({ assets: "./src/static/", prefix: "/" }))
   .listen(PORT);
 
 console.log(`Server is listening on ${app.server?.url}`);
