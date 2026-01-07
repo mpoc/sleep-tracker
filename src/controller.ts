@@ -15,18 +15,14 @@ import {
 } from "./sheets";
 import {
   type GeolocationPosition,
-  GeolocationPositionSchema,
   SheetsSleepEntry,
   SheetsSleepEntryHeaders,
   type SleepEntry,
 } from "./types";
 import { getTimezoneFromCoords } from "./utils";
 
-export const logSleepRoute = async (req: Request) => {
-  const data: GeolocationPosition = GeolocationPositionSchema.parse(
-    await req.json()
-  );
-  const entry = getSleepEntryFromGeolocationPosition(data);
+export const logSleepRoute = async (position: GeolocationPosition) => {
+  const entry = getSleepEntryFromGeolocationPosition(position);
 
   const valuesToAppend = [Object.values(entry)];
 
@@ -97,11 +93,8 @@ export const getLastSleepRoute = async () => {
   );
 };
 
-export const replaceLastSleepRoute = async (req: Request) => {
-  const data: GeolocationPosition = GeolocationPositionSchema.parse(
-    await req.json()
-  );
-  const entry = getSleepEntryFromGeolocationPosition(data);
+export const replaceLastSleepRoute = async (position: GeolocationPosition) => {
+  const entry = getSleepEntryFromGeolocationPosition(position);
   const rowToUpdate = [
     entry.localTime,
     entry.latitude,

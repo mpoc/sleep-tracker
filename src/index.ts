@@ -10,6 +10,7 @@ import {
   replaceLastSleepRoute,
 } from "./controller";
 import { handleError } from "./error";
+import { GeolocationPositionSchema } from "./types";
 import sleepHtml from "./views/sleep.html";
 import sleepReactHtml from "./views/sleepReact.html";
 
@@ -27,9 +28,13 @@ const app = new Elysia()
   .group("/api", (route) =>
     route
       .guard({ beforeHandle: ({ request }) => checkRequestApiKey(request) })
-      .post("/sleep", ({ request }) => logSleepRoute(request))
+      .post("/sleep", ({ body }) => logSleepRoute(body), {
+        body: GeolocationPositionSchema,
+      })
       .get("/sleep", () => getSleepRoute())
-      .put("/sleep/replace", ({ request }) => replaceLastSleepRoute(request))
+      .put("/sleep/replace", ({ body }) => replaceLastSleepRoute(body), {
+        body: GeolocationPositionSchema,
+      })
       .get("/sleep/last", () => getLastSleepRoute())
   )
   .get("/", sleepHtml)
