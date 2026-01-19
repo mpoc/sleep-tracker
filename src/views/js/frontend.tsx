@@ -3,7 +3,7 @@ import { createRoot } from "react-dom/client";
 import { App } from "./app.tsx";
 
 if ("serviceWorker" in navigator) {
-  navigator.serviceWorker.register("/static/sw.js");
+  navigator.serviceWorker.register("/sw.js");
 }
 
 document.addEventListener("DOMContentLoaded", () => {

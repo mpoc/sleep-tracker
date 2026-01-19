@@ -13,7 +13,7 @@ import { getAutoLog } from "./params.js";
 import { formatDuration, prettyObjectString, printPosition } from "./utils.js";
 
 if ("serviceWorker" in navigator) {
-  navigator.serviceWorker.register("/static/sw.js");
+  navigator.serviceWorker.register("/sw.js");
 }
 
 const processSleepApiResponse = (data: ApiResponse<LogSleepRouteResponse>) => {

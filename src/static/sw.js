@@ -2,9 +2,9 @@ const CACHE_NAME = "sleep-tracker-v1";
 
 const PRECACHE_ASSETS = [
   "/",
-  "/static/manifest.webmanifest",
-  "/static/android-chrome-192x192.png",
-  "/static/android-chrome-512x512.png",
+  "/manifest.webmanifest",
+  "/android-chrome-192x192.png",
+  "/android-chrome-512x512.png",
 ];
 
 self.addEventListener("install", (event) => {
