@@ -12,6 +12,10 @@ import {
 import { getAutoLog } from "./params.js";
 import { formatDuration, prettyObjectString, printPosition } from "./utils.js";
 
+if ("serviceWorker" in navigator) {
+  navigator.serviceWorker.register("/static/sw.js");
+}
+
 const processSleepApiResponse = (data: ApiResponse<LogSleepRouteResponse>) => {
   if (data.success) {
     const insertedRowText = prettyObjectString(data.data.updatedRow);
