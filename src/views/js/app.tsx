@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+import { useInterval } from "usehooks-ts";
 import type { GetLastSleepRouteResponse, SheetsSleepEntry } from "../../types";
 import {
   getLastSleepEntry,
@@ -29,14 +30,12 @@ export const App = () => {
   const [, setTick] = useState(0); // Forces re-render for duration updates
 
   const watchIdRef = useRef<number | null>(null);
-  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  const clearDisplayInterval = useCallback(() => {
-    if (intervalRef.current) {
-      clearInterval(intervalRef.current);
-      intervalRef.current = null;
-    }
-  }, []);
+  // Tick interval runs only when idle (for duration counter updates)
+  useInterval(
+    () => setTick((t) => t + 1),
+    status.type === "idle" ? 1000 : null
+  );
 
   const clearGeolocationWatch = useCallback(() => {
     if (watchIdRef.current !== null) {
@@ -44,14 +43,6 @@ export const App = () => {
       watchIdRef.current = null;
     }
   }, []);
-
-  const startTickInterval = useCallback(() => {
-    clearDisplayInterval();
-    const SECOND = 1000;
-    intervalRef.current = setInterval(() => {
-      setTick((t) => t + 1);
-    }, SECOND);
-  }, [clearDisplayInterval]);
 
   const handleApiSuccess = useCallback(
     (action: "inserted" | "replaced", entry: SheetsSleepEntry) => {
@@ -163,32 +154,28 @@ export const App = () => {
   );
 
   const logSleepButtonAction = useCallback(() => {
-    clearDisplayInterval();
     submitPosition(submitAndProcessSleepEntry);
-  }, [clearDisplayInterval, submitPosition, submitAndProcessSleepEntry]);
+  }, [submitPosition, submitAndProcessSleepEntry]);
 
   const replaceLastSleepButtonAction = useCallback(() => {
-    clearDisplayInterval();
     submitPosition(submitAndProcessSleepEntryReplace);
-  }, [clearDisplayInterval, submitPosition, submitAndProcessSleepEntryReplace]);
+  }, [submitPosition, submitAndProcessSleepEntryReplace]);
 
   const loadLastSleepEntry = useCallback(async () => {
     const apiResponse = await getLastSleepEntry();
     if (apiResponse.success) {
       setStatus({ type: "idle", entryData: apiResponse.data });
-      startTickInterval();
     } else {
       console.error(apiResponse);
       setStatus({ type: "error", message: apiResponse.message });
     }
-  }, [startTickInterval]);
+  }, []);
 
   // Initial load effect
   useEffect(() => {
     loadLastSleepEntry();
 
     return () => {
-      clearDisplayInterval();
       clearGeolocationWatch();
     };
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
