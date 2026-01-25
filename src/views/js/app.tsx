@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useInterval } from "usehooks-ts";
 import type { GetLastSleepRouteResponse, SheetsSleepEntry } from "../../types";
 import {
@@ -6,7 +6,11 @@ import {
   replaceLastSleepEntry,
   submitSleepEntry,
 } from "./api.js";
-import { formatDuration, printPosition } from "./utils.js";
+import {
+  useGeolocationWatch,
+  type GeolocationProgress,
+} from "./hooks/useGeolocationWatch.js";
+import { formatDuration } from "./utils.js";
 
 const REQUIRED_ACCURACY = 40;
 const ALLOWED_TIMESTAMP_AGE = 5000;
@@ -15,8 +19,10 @@ const ALLOWED_TIMESTAMP_AGE = 5000;
 type AppStatus =
   | { type: "loading" }
   | { type: "idle"; entryData: GetLastSleepRouteResponse }
+  | { type: "locating" }
   | { type: "locatingTimestamp"; timestampAge: number }
   | { type: "locatingAccuracy"; currentAccuracy: number }
+  | { type: "locatingError"; message: string }
   | { type: "saving" }
   | {
       type: "submitted";
@@ -29,7 +35,10 @@ export const App = () => {
   const [status, setStatus] = useState<AppStatus>({ type: "loading" });
   const [, setTick] = useState(0); // Forces re-render for duration updates
 
-  const watchIdRef = useRef<number | null>(null);
+  const { watchForPosition } = useGeolocationWatch({
+    requiredAccuracy: REQUIRED_ACCURACY,
+    maxTimestampAge: ALLOWED_TIMESTAMP_AGE,
+  });
 
   // Tick interval runs only when idle (for duration counter updates)
   useInterval(
@@ -37,129 +46,54 @@ export const App = () => {
     status.type === "idle" ? 1000 : null
   );
 
-  const clearGeolocationWatch = useCallback(() => {
-    if (watchIdRef.current !== null) {
-      navigator.geolocation.clearWatch(watchIdRef.current);
-      watchIdRef.current = null;
+  const handleProgress = useCallback((progress: GeolocationProgress) => {
+    switch (progress.type) {
+      case "waitingForTimestamp":
+        setStatus({ type: "locatingTimestamp", timestampAge: progress.timestampAge });
+        break;
+      case "waitingForAccuracy":
+        setStatus({ type: "locatingAccuracy", currentAccuracy: progress.currentAccuracy });
+        break;
+      case "error":
+        // Non-fatal error (timeout, position unavailable) - show but keep trying
+        setStatus({ type: "locatingError", message: progress.message });
+        break;
     }
   }, []);
 
-  const handleApiSuccess = useCallback(
-    (action: "inserted" | "replaced", entry: SheetsSleepEntry) => {
-      setStatus({ type: "submitted", action, entry });
-    },
-    []
-  );
+  const logSleepButtonAction = useCallback(async () => {
+    setStatus({ type: "locating" });
+    try {
+      const position = await watchForPosition(handleProgress);
+      setStatus({ type: "saving" });
 
-  const handleApiError = useCallback((message: string) => {
-    console.error(message);
-    setStatus({ type: "error", message });
-  }, []);
-
-  const checkTimestamp = useCallback(
-    (position: GeolocationPosition): boolean => {
-      const timestampAge = Date.now() - position.timestamp;
-      const timestampRecent = timestampAge < ALLOWED_TIMESTAMP_AGE;
-      if (!timestampRecent) {
-        setStatus({ type: "locatingTimestamp", timestampAge });
-      }
-      return timestampRecent;
-    },
-    []
-  );
-
-  const checkAccuracy = useCallback(
-    (position: GeolocationPosition): boolean => {
-      const accuracyAchieved = position.coords.accuracy < REQUIRED_ACCURACY;
-      if (!accuracyAchieved) {
-        setStatus({
-          type: "locatingAccuracy",
-          currentAccuracy: position.coords.accuracy,
-        });
-      }
-      return accuracyAchieved;
-    },
-    []
-  );
-
-  const watchError = useCallback((err: GeolocationPositionError) => {
-    console.log(`ERROR(${err.code}): ${err.message}`);
-    setStatus({ type: "error", message: `ERROR(${err.code}): ${err.message}` });
-  }, []);
-
-  const submitPosition = useCallback(
-    (onSuccess: (position: GeolocationPosition) => Promise<void>) => {
-      if (!navigator.geolocation) {
-        console.log("Geolocation is not supported by this browser.");
-        setStatus({
-          type: "error",
-          message: "Geolocation is not supported by this browser.",
-        });
-        return;
-      }
-
-      const options = {
-        enableHighAccuracy: true,
-        timeout: 5000,
-        maximumAge: 0,
-      };
-
-      const onWatchSuccess = async (position: GeolocationPosition) => {
-        printPosition(position);
-
-        if (!checkTimestamp(position)) {
-          return;
-        }
-        if (!checkAccuracy(position)) {
-          return;
-        }
-
-        setStatus({ type: "saving" });
-        clearGeolocationWatch();
-
-        await onSuccess(position);
-      };
-
-      watchIdRef.current = navigator.geolocation.watchPosition(
-        onWatchSuccess,
-        watchError,
-        options
-      );
-    },
-    [checkTimestamp, checkAccuracy, clearGeolocationWatch, watchError]
-  );
-
-  const submitAndProcessSleepEntry = useCallback(
-    async (position: GeolocationPosition) => {
       const response = await submitSleepEntry(position);
       if (response.success) {
-        handleApiSuccess("inserted", response.data.updatedRow);
+        setStatus({ type: "submitted", action: "inserted", entry: response.data.updatedRow });
       } else {
-        handleApiError(response.message);
+        setStatus({ type: "error", message: response.message });
       }
-    },
-    [handleApiSuccess, handleApiError]
-  );
+    } catch (error) {
+      setStatus({ type: "error", message: (error as Error).message });
+    }
+  }, [watchForPosition, handleProgress]);
 
-  const submitAndProcessSleepEntryReplace = useCallback(
-    async (position: GeolocationPosition) => {
+  const replaceLastSleepButtonAction = useCallback(async () => {
+    setStatus({ type: "locating" });
+    try {
+      const position = await watchForPosition(handleProgress);
+      setStatus({ type: "saving" });
+
       const response = await replaceLastSleepEntry(position);
       if (response.success) {
-        handleApiSuccess("replaced", response.data.updatedRow);
+        setStatus({ type: "submitted", action: "replaced", entry: response.data.updatedRow });
       } else {
-        handleApiError(response.message);
+        setStatus({ type: "error", message: response.message });
       }
-    },
-    [handleApiSuccess, handleApiError]
-  );
-
-  const logSleepButtonAction = useCallback(() => {
-    submitPosition(submitAndProcessSleepEntry);
-  }, [submitPosition, submitAndProcessSleepEntry]);
-
-  const replaceLastSleepButtonAction = useCallback(() => {
-    submitPosition(submitAndProcessSleepEntryReplace);
-  }, [submitPosition, submitAndProcessSleepEntryReplace]);
+    } catch (error) {
+      setStatus({ type: "error", message: (error as Error).message });
+    }
+  }, [watchForPosition, handleProgress]);
 
   const loadLastSleepEntry = useCallback(async () => {
     const apiResponse = await getLastSleepEntry();
@@ -174,10 +108,6 @@ export const App = () => {
   // Initial load effect
   useEffect(() => {
     loadLastSleepEntry();
-
-    return () => {
-      clearGeolocationWatch();
-    };
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Derive button states from status
@@ -268,6 +198,9 @@ const StatusDisplay: React.FC<StatusDisplayProps> = ({ status }) => {
     case "idle":
       return <IdleDisplay entryData={status.entryData} />;
 
+    case "locating":
+      return <div>Getting location...</div>;
+
     case "locatingTimestamp":
       return (
         <div>
@@ -283,6 +216,15 @@ const StatusDisplay: React.FC<StatusDisplayProps> = ({ status }) => {
           Current accuracy: {status.currentAccuracy} meters
           <br />
           Required accuracy: {REQUIRED_ACCURACY} meters
+          <br />
+          Trying again...
+        </div>
+      );
+
+    case "locatingError":
+      return (
+        <div>
+          {status.message}
           <br />
           Trying again...
         </div>
