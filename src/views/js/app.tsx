@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useInterval } from "usehooks-ts";
 import type { GetLastSleepRouteResponse, SheetsSleepEntry } from "../../types";
 import {
@@ -7,22 +7,28 @@ import {
   submitSleepEntry,
 } from "./api.js";
 import {
-  useGeolocationWatch,
   type GeolocationProgress,
+  useGeolocationWatch,
 } from "./hooks/useGeolocationWatch.js";
 import { formatDuration } from "./utils.js";
 
 const REQUIRED_ACCURACY = 40;
 const ALLOWED_TIMESTAMP_AGE = 5000;
 
+// Common fields for all locating states
+type LocatingInfo = {
+  startTime: number;
+  attempts: number;
+};
+
 // Discriminated union for all possible app states
 type AppStatus =
   | { type: "loading" }
   | { type: "idle"; entryData: GetLastSleepRouteResponse }
-  | { type: "locating" }
-  | { type: "locatingTimestamp"; timestampAge: number }
-  | { type: "locatingAccuracy"; currentAccuracy: number }
-  | { type: "locatingError"; message: string }
+  | { type: "locating"; info: LocatingInfo }
+  | { type: "locatingTimestamp"; timestampAge: number; info: LocatingInfo }
+  | { type: "locatingAccuracy"; currentAccuracy: number; info: LocatingInfo }
+  | { type: "locatingError"; message: string; info: LocatingInfo }
   | { type: "saving" }
   | {
       type: "submitted";
@@ -33,43 +39,67 @@ type AppStatus =
 
 export const App = () => {
   const [status, setStatus] = useState<AppStatus>({ type: "loading" });
-  const [, setTick] = useState(0); // Forces re-render for duration updates
+  const [, setTick] = useState(0); // Forces re-render for duration/elapsed updates
+  const locatingInfoRef = useRef<LocatingInfo>({ startTime: 0, attempts: 0 });
 
   const { watchForPosition } = useGeolocationWatch({
     requiredAccuracy: REQUIRED_ACCURACY,
     maxTimestampAge: ALLOWED_TIMESTAMP_AGE,
   });
 
-  // Tick interval runs only when idle (for duration counter updates)
+  // Check if currently in any locating state
+  const isLocating =
+    status.type === "locating" ||
+    status.type === "locatingTimestamp" ||
+    status.type === "locatingAccuracy" ||
+    status.type === "locatingError";
+
+  // Tick interval runs when idle (for duration) or locating (for elapsed time)
   useInterval(
     () => setTick((t) => t + 1),
-    status.type === "idle" ? 1000 : null
+    status.type === "idle" || isLocating ? 1000 : null
   );
 
   const handleProgress = useCallback((progress: GeolocationProgress) => {
+    locatingInfoRef.current.attempts += 1;
+    const info = { ...locatingInfoRef.current };
+
     switch (progress.type) {
       case "waitingForTimestamp":
-        setStatus({ type: "locatingTimestamp", timestampAge: progress.timestampAge });
+        setStatus({
+          type: "locatingTimestamp",
+          timestampAge: progress.timestampAge,
+          info,
+        });
         break;
       case "waitingForAccuracy":
-        setStatus({ type: "locatingAccuracy", currentAccuracy: progress.currentAccuracy });
+        setStatus({
+          type: "locatingAccuracy",
+          currentAccuracy: progress.currentAccuracy,
+          info,
+        });
         break;
       case "error":
         // Non-fatal error (timeout, position unavailable) - show but keep trying
-        setStatus({ type: "locatingError", message: progress.message });
+        setStatus({ type: "locatingError", message: progress.message, info });
         break;
     }
   }, []);
 
   const logSleepButtonAction = useCallback(async () => {
-    setStatus({ type: "locating" });
+    locatingInfoRef.current = { startTime: Date.now(), attempts: 0 };
+    setStatus({ type: "locating", info: locatingInfoRef.current });
     try {
       const position = await watchForPosition(handleProgress);
       setStatus({ type: "saving" });
 
       const response = await submitSleepEntry(position);
       if (response.success) {
-        setStatus({ type: "submitted", action: "inserted", entry: response.data.updatedRow });
+        setStatus({
+          type: "submitted",
+          action: "inserted",
+          entry: response.data.updatedRow,
+        });
       } else {
         setStatus({ type: "error", message: response.message });
       }
@@ -79,14 +109,19 @@ export const App = () => {
   }, [watchForPosition, handleProgress]);
 
   const replaceLastSleepButtonAction = useCallback(async () => {
-    setStatus({ type: "locating" });
+    locatingInfoRef.current = { startTime: Date.now(), attempts: 0 };
+    setStatus({ type: "locating", info: locatingInfoRef.current });
     try {
       const position = await watchForPosition(handleProgress);
       setStatus({ type: "saving" });
 
       const response = await replaceLastSleepEntry(position);
       if (response.success) {
-        setStatus({ type: "submitted", action: "replaced", entry: response.data.updatedRow });
+        setStatus({
+          type: "submitted",
+          action: "replaced",
+          entry: response.data.updatedRow,
+        });
       } else {
         setStatus({ type: "error", message: response.message });
       }
@@ -186,6 +221,33 @@ const SubmittedDisplay: React.FC<SubmittedDisplayProps> = ({
   </>
 );
 
+type LocatingProgressProps = {
+  info: LocatingInfo;
+  children: React.ReactNode;
+};
+
+const LocatingProgress: React.FC<LocatingProgressProps> = ({
+  info,
+  children,
+}) => {
+  const elapsedSeconds = Math.floor((Date.now() - info.startTime) / 1000);
+
+  return (
+    <div>
+      <div className="d-flex mb-2 gap-2 align-items-center">
+        <div className="spinner-border spinner-border-sm" role="status">
+          <span className="visually-hidden">Loading...</span>
+        </div>
+        <span>Getting location...</span>
+      </div>
+      <div className="small text-body-secondary">
+        Elapsed: {elapsedSeconds}s | Attempts: {info.attempts}
+      </div>
+      {children && <div className="mt-2">{children}</div>}
+    </div>
+  );
+};
+
 type StatusDisplayProps = {
   status: AppStatus;
 };
@@ -199,35 +261,38 @@ const StatusDisplay: React.FC<StatusDisplayProps> = ({ status }) => {
       return <IdleDisplay entryData={status.entryData} />;
 
     case "locating":
-      return <div>Getting location...</div>;
+      return (
+        <LocatingProgress info={status.info}>
+          <span className="text-body-secondary">
+            Waiting for position data...
+          </span>
+        </LocatingProgress>
+      );
 
     case "locatingTimestamp":
       return (
-        <div>
-          Timestamp too old ({status.timestampAge} milliseconds)
-          <br />
-          Trying again...
-        </div>
+        <LocatingProgress info={status.info}>
+          <span className="text-warning">
+            Timestamp too old ({status.timestampAge}ms), retrying...
+          </span>
+        </LocatingProgress>
       );
 
     case "locatingAccuracy":
       return (
-        <div>
-          Current accuracy: {status.currentAccuracy} meters
-          <br />
-          Required accuracy: {REQUIRED_ACCURACY} meters
-          <br />
-          Trying again...
-        </div>
+        <LocatingProgress info={status.info}>
+          <span className="text-warning">
+            Accuracy: {Math.round(status.currentAccuracy)}m (need &lt;
+            {REQUIRED_ACCURACY}m)
+          </span>
+        </LocatingProgress>
       );
 
     case "locatingError":
       return (
-        <div>
-          {status.message}
-          <br />
-          Trying again...
-        </div>
+        <LocatingProgress info={status.info}>
+          <span className="text-danger">{status.message}</span>
+        </LocatingProgress>
       );
 
     case "saving":
