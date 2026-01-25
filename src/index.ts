@@ -37,8 +37,8 @@ const app = new Elysia()
       })
       .get("/sleep/last", () => getLastSleepRoute())
   )
-  .get("/", sleepHtml)
-  .get("/react", sleepReactHtml)
+  .get("/", sleepReactHtml)
+  .get("/legacy", sleepHtml)
   .use(staticPlugin({ assets: "./src/static/", prefix: "/" }))
   .listen(PORT);
 
