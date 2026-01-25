@@ -1,49 +1,35 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import type {
-  ApiResponse,
-  GetLastSleepRouteResponse,
-  LogSleepRouteResponse,
-  ReplaceLastSleepRouteResponse,
-} from "../../types";
+import type { GetLastSleepRouteResponse, SheetsSleepEntry } from "../../types";
 import {
   getLastSleepEntry,
   replaceLastSleepEntry,
   submitSleepEntry,
 } from "./api.js";
-import { formatDuration, prettyObjectString, printPosition } from "./utils.js";
+import { formatDuration, printPosition } from "./utils.js";
 
 const REQUIRED_ACCURACY = 40;
 const ALLOWED_TIMESTAMP_AGE = 5000;
 
-type AppState = {
-  text: string;
-  logButtonDisabled: boolean;
-  replaceButtonDisabled: boolean;
-  entryData: GetLastSleepRouteResponse | null;
-};
+// Discriminated union for all possible app states
+type AppStatus =
+  | { type: "loading" }
+  | { type: "idle"; entryData: GetLastSleepRouteResponse }
+  | { type: "locatingTimestamp"; timestampAge: number }
+  | { type: "locatingAccuracy"; currentAccuracy: number }
+  | { type: "saving" }
+  | {
+      type: "submitted";
+      action: "inserted" | "replaced";
+      entry: SheetsSleepEntry;
+    }
+  | { type: "error"; message: string };
 
 export const App = () => {
-  const [state, setState] = useState<AppState>({
-    text: "Getting last sleep log...",
-    logButtonDisabled: true,
-    replaceButtonDisabled: true,
-    entryData: null,
-  });
+  const [status, setStatus] = useState<AppStatus>({ type: "loading" });
+  const [, setTick] = useState(0); // Forces re-render for duration updates
 
   const watchIdRef = useRef<number | null>(null);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
-
-  const setText = (text: string) => {
-    setState((prev) => ({ ...prev, text }));
-  };
-
-  const disableButtons = useCallback(() => {
-    setState((prev) => ({
-      ...prev,
-      logButtonDisabled: true,
-      replaceButtonDisabled: true,
-    }));
-  }, []);
 
   const clearDisplayInterval = useCallback(() => {
     if (intervalRef.current) {
@@ -59,71 +45,65 @@ export const App = () => {
     }
   }, []);
 
-  const processSleepApiResponse = useCallback(
-    (data: ApiResponse<LogSleepRouteResponse>) => {
-      if (data.success) {
-        const insertedRowText = prettyObjectString(data.data.updatedRow);
-        setText(`Inserted row:<br>${insertedRowText}`);
-      } else {
-        console.error(data);
-        setText(data.message);
-      }
+  const startTickInterval = useCallback(() => {
+    clearDisplayInterval();
+    const SECOND = 1000;
+    intervalRef.current = setInterval(() => {
+      setTick((t) => t + 1);
+    }, SECOND);
+  }, [clearDisplayInterval]);
+
+  const handleApiSuccess = useCallback(
+    (action: "inserted" | "replaced", entry: SheetsSleepEntry) => {
+      setStatus({ type: "submitted", action, entry });
     },
     []
   );
 
-  const processReplaceApiResponse = useCallback(
-    (data: ApiResponse<ReplaceLastSleepRouteResponse>) => {
-      if (data.success) {
-        const insertedRowText = prettyObjectString(data.data.updatedRow);
-        setText(`Replaced row:<br>${insertedRowText}`);
-      } else {
-        console.error(data);
-        setText(data.message);
+  const handleApiError = useCallback((message: string) => {
+    console.error(message);
+    setStatus({ type: "error", message });
+  }, []);
+
+  const checkTimestamp = useCallback(
+    (position: GeolocationPosition): boolean => {
+      const timestampAge = Date.now() - position.timestamp;
+      const timestampRecent = timestampAge < ALLOWED_TIMESTAMP_AGE;
+      if (!timestampRecent) {
+        setStatus({ type: "locatingTimestamp", timestampAge });
       }
+      return timestampRecent;
     },
     []
   );
 
-  const checkTimestamp = useCallback((position: GeolocationPosition) => {
-    const timestampAge = Date.now() - position.timestamp;
-    const timestampRecent = timestampAge < ALLOWED_TIMESTAMP_AGE;
-    if (!timestampRecent) {
-      setText(
-        `Timestamp too old (${timestampAge} milliseconds)<br>Trying again...`
-      );
-    }
-    return timestampRecent;
-  }, []);
-
-  const checkAccuracy = useCallback((position: GeolocationPosition) => {
-    const accuracyAchieved = position.coords.accuracy < REQUIRED_ACCURACY;
-    if (!accuracyAchieved) {
-      setText(
-        `Current accuracy: ${position.coords.accuracy} meters<br>Required accuracy: ${REQUIRED_ACCURACY} meters<br>Trying again...`
-      );
-    }
-    return accuracyAchieved;
-  }, []);
-
-  const geolocationAvailable = useCallback(() => {
-    if (navigator.geolocation) {
-      return true;
-    }
-    console.log("Geolocation is not supported by this browser.");
-    setText("Geolocation is not supported by this browser.");
-    return false;
-  }, []);
+  const checkAccuracy = useCallback(
+    (position: GeolocationPosition): boolean => {
+      const accuracyAchieved = position.coords.accuracy < REQUIRED_ACCURACY;
+      if (!accuracyAchieved) {
+        setStatus({
+          type: "locatingAccuracy",
+          currentAccuracy: position.coords.accuracy,
+        });
+      }
+      return accuracyAchieved;
+    },
+    []
+  );
 
   const watchError = useCallback((err: GeolocationPositionError) => {
-    const errorText = `ERROR(${err.code}): ${err.message}`;
-    console.log(errorText);
-    setText(errorText);
+    console.log(`ERROR(${err.code}): ${err.message}`);
+    setStatus({ type: "error", message: `ERROR(${err.code}): ${err.message}` });
   }, []);
 
   const submitPosition = useCallback(
     (onSuccess: (position: GeolocationPosition) => Promise<void>) => {
-      if (!geolocationAvailable()) {
+      if (!navigator.geolocation) {
+        console.log("Geolocation is not supported by this browser.");
+        setStatus({
+          type: "error",
+          message: "Geolocation is not supported by this browser.",
+        });
         return;
       }
 
@@ -143,7 +123,7 @@ export const App = () => {
           return;
         }
 
-        setText("Accuracy and timestamp OK, saving...");
+        setStatus({ type: "saving" });
         clearGeolocationWatch();
 
         await onSuccess(position);
@@ -155,151 +135,189 @@ export const App = () => {
         options
       );
     },
-    [
-      geolocationAvailable,
-      checkTimestamp,
-      checkAccuracy,
-      clearGeolocationWatch,
-      watchError,
-    ]
+    [checkTimestamp, checkAccuracy, clearGeolocationWatch, watchError]
   );
 
   const submitAndProcessSleepEntry = useCallback(
     async (position: GeolocationPosition) => {
       const response = await submitSleepEntry(position);
-      processSleepApiResponse(response);
+      if (response.success) {
+        handleApiSuccess("inserted", response.data.updatedRow);
+      } else {
+        handleApiError(response.message);
+      }
     },
-    [processSleepApiResponse]
+    [handleApiSuccess, handleApiError]
   );
 
   const submitAndProcessSleepEntryReplace = useCallback(
     async (position: GeolocationPosition) => {
       const response = await replaceLastSleepEntry(position);
-      processReplaceApiResponse(response);
+      if (response.success) {
+        handleApiSuccess("replaced", response.data.updatedRow);
+      } else {
+        handleApiError(response.message);
+      }
     },
-    [processReplaceApiResponse]
+    [handleApiSuccess, handleApiError]
   );
 
   const logSleepButtonAction = useCallback(() => {
-    disableButtons();
     clearDisplayInterval();
     submitPosition(submitAndProcessSleepEntry);
-  }, [
-    disableButtons,
-    clearDisplayInterval,
-    submitPosition,
-    submitAndProcessSleepEntry,
-  ]);
+  }, [clearDisplayInterval, submitPosition, submitAndProcessSleepEntry]);
 
   const replaceLastSleepButtonAction = useCallback(() => {
-    disableButtons();
     clearDisplayInterval();
     submitPosition(submitAndProcessSleepEntryReplace);
-  }, [
-    disableButtons,
-    clearDisplayInterval,
-    submitPosition,
-    submitAndProcessSleepEntryReplace,
-  ]);
-
-  const updateEntryDisplay = useCallback(
-    (entryData: GetLastSleepRouteResponse) => {
-      const [date, time] = entryData.lastSleepEntry["UTC time"].split(" ");
-      const formattedUTCDate = `${date}T${time}Z`;
-
-      const timeDiff = Date.now() - new Date(formattedUTCDate).getTime();
-
-      const lastSleepEntryIsStop = !!entryData.lastSleepEntry.Duration;
-
-      const newText = `
-      <div>
-        ${lastSleepEntryIsStop ? "🌞 Awake" : "😴 Asleep"} for ${formatDuration(timeDiff)}
-      </div>
-      <br>
-      <div>
-        Last sleep entry:
-        <br>
-        ${prettyObjectString(entryData.lastSleepEntry)}
-      </div>
-      <br>
-      <div>
-        Sleep entries in total: ${entryData.numberOfSleepEntries}
-      </div>
-    `;
-      setText(newText);
-    },
-    []
-  );
-
-  const startEntryDisplay = useCallback(
-    (entryData: GetLastSleepRouteResponse) => {
-      updateEntryDisplay(entryData);
-
-      clearDisplayInterval();
-      const SECOND = 1000;
-      intervalRef.current = setInterval(
-        () => updateEntryDisplay(entryData),
-        SECOND
-      );
-    },
-    [updateEntryDisplay, clearDisplayInterval]
-  );
-
-  const showSleepEntry = useCallback(
-    (entryData: GetLastSleepRouteResponse) => {
-      const lastSleepEntryIsStop = !!entryData.lastSleepEntry.Duration;
-
-      setState((prev) => ({
-        ...prev,
-        logButtonDisabled: false,
-        replaceButtonDisabled: lastSleepEntryIsStop,
-        entryData,
-      }));
-
-      startEntryDisplay(entryData);
-    },
-    [startEntryDisplay]
-  );
+  }, [clearDisplayInterval, submitPosition, submitAndProcessSleepEntryReplace]);
 
   const loadLastSleepEntry = useCallback(async () => {
     const apiResponse = await getLastSleepEntry();
     if (apiResponse.success) {
-      const lastEntryData = apiResponse.data;
-      showSleepEntry(lastEntryData);
+      setStatus({ type: "idle", entryData: apiResponse.data });
+      startTickInterval();
     } else {
       console.error(apiResponse);
-      setText(apiResponse.message);
+      setStatus({ type: "error", message: apiResponse.message });
     }
-  }, [showSleepEntry]);
+  }, [startTickInterval]);
 
   // Initial load effect
   useEffect(() => {
     loadLastSleepEntry();
 
-    // Cleanup on unmount
     return () => {
       clearDisplayInterval();
       clearGeolocationWatch();
     };
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
+  // Derive button states from status
+  const logButtonDisabled = status.type !== "idle";
+  const replaceButtonDisabled =
+    status.type !== "idle" || !!status.entryData.lastSleepEntry.Duration;
+
   return (
     <div className="m-1">
       <LayoutTable
-        logButtonDisabled={state.logButtonDisabled}
+        logButtonDisabled={logButtonDisabled}
         onLogSleep={logSleepButtonAction}
         onReplaceSleep={replaceLastSleepButtonAction}
-        replaceButtonDisabled={state.replaceButtonDisabled}
-        text={state.text}
+        replaceButtonDisabled={replaceButtonDisabled}
+        status={status}
       />
     </div>
   );
 };
 
+// --- Display Components ---
+
+type SleepEntryDetailsProps = {
+  entry: SheetsSleepEntry;
+};
+
+const SleepEntryDetails: React.FC<SleepEntryDetailsProps> = ({ entry }) => (
+  <div>
+    {Object.entries(entry).map(([key, value]) => (
+      <div key={key}>
+        {key}: {value}
+      </div>
+    ))}
+  </div>
+);
+
+type IdleDisplayProps = {
+  entryData: GetLastSleepRouteResponse;
+};
+
+const IdleDisplay: React.FC<IdleDisplayProps> = ({ entryData }) => {
+  const [date, time] = entryData.lastSleepEntry["UTC time"].split(" ");
+  const formattedUTCDate = `${date}T${time}Z`;
+  const timeDiff = Date.now() - new Date(formattedUTCDate).getTime();
+  const isAwake = !!entryData.lastSleepEntry.Duration;
+
+  return (
+    <>
+      <div>
+        {isAwake ? "🌞 Awake" : "😴 Asleep"} for {formatDuration(timeDiff)}
+      </div>
+      <br />
+      <div>
+        Last sleep entry:
+        <br />
+        <SleepEntryDetails entry={entryData.lastSleepEntry} />
+      </div>
+      <br />
+      <div>Sleep entries in total: {entryData.numberOfSleepEntries}</div>
+    </>
+  );
+};
+
+type SubmittedDisplayProps = {
+  action: "inserted" | "replaced";
+  entry: SheetsSleepEntry;
+};
+
+const SubmittedDisplay: React.FC<SubmittedDisplayProps> = ({
+  action,
+  entry,
+}) => (
+  <>
+    <div>{action === "inserted" ? "Inserted" : "Replaced"} row:</div>
+    <SleepEntryDetails entry={entry} />
+  </>
+);
+
+type StatusDisplayProps = {
+  status: AppStatus;
+};
+
+const StatusDisplay: React.FC<StatusDisplayProps> = ({ status }) => {
+  switch (status.type) {
+    case "loading":
+      return <div>Getting last sleep log...</div>;
+
+    case "idle":
+      return <IdleDisplay entryData={status.entryData} />;
+
+    case "locatingTimestamp":
+      return (
+        <div>
+          Timestamp too old ({status.timestampAge} milliseconds)
+          <br />
+          Trying again...
+        </div>
+      );
+
+    case "locatingAccuracy":
+      return (
+        <div>
+          Current accuracy: {status.currentAccuracy} meters
+          <br />
+          Required accuracy: {REQUIRED_ACCURACY} meters
+          <br />
+          Trying again...
+        </div>
+      );
+
+    case "saving":
+      return <div>Accuracy and timestamp OK, saving...</div>;
+
+    case "submitted":
+      return <SubmittedDisplay action={status.action} entry={status.entry} />;
+
+    case "error":
+      return <div>{status.message}</div>;
+  }
+};
+
+// --- Layout Components ---
+
 type LayoutTableProps = {
   logButtonDisabled: boolean;
   replaceButtonDisabled: boolean;
-  text: string;
+  status: AppStatus;
   onLogSleep: () => void;
   onReplaceSleep: () => void;
 };
@@ -307,7 +325,7 @@ type LayoutTableProps = {
 const LayoutTable: React.FC<LayoutTableProps> = ({
   logButtonDisabled,
   replaceButtonDisabled,
-  text,
+  status,
   onLogSleep,
   onReplaceSleep,
 }) => (
@@ -326,7 +344,7 @@ const LayoutTable: React.FC<LayoutTableProps> = ({
       </tr>
       <tr>
         <td>
-          <Text text={text} />
+          <StatusDisplay status={status} />
         </td>
       </tr>
     </tbody>
@@ -345,7 +363,6 @@ const LogSleepButton: React.FC<LogSleepButtonProps> = ({
   <button
     className="btn btn-success btn-lg"
     disabled={disabled}
-    id="logSleepButton"
     onClick={onClick}
     type="button"
   >
@@ -365,7 +382,6 @@ const ReplaceConfirmationButton: React.FC<ReplaceConfirmationButtonProps> = ({
     data-bs-target="#confirmationModal"
     data-bs-toggle="modal"
     disabled={disabled}
-    id="replaceConfirmationButton"
     type="button"
   >
     Replace last sleep entry
@@ -381,9 +397,7 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = ({ onConfirm }) => (
     <div className="modal-dialog modal-dialog-centered">
       <div className="modal-content">
         <div className="modal-header">
-          <h5 className="modal-title" id="confirmationModalLabel">
-            Confirm replace
-          </h5>
+          <h5 className="modal-title">Confirm replace</h5>
           <button
             aria-label="Close"
             className="btn-close"
@@ -405,7 +419,6 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = ({ onConfirm }) => (
           <button
             className="btn btn-primary"
             data-bs-dismiss="modal"
-            id="replaceLastSleepButton"
             onClick={onConfirm}
             type="button"
           >
@@ -415,12 +428,4 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = ({ onConfirm }) => (
       </div>
     </div>
   </div>
-);
-
-type TextProps = {
-  text: string;
-};
-
-const Text: React.FC<TextProps> = ({ text }) => (
-  <div dangerouslySetInnerHTML={{ __html: text }} id="text" />
 );
