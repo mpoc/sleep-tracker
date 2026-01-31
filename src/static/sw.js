@@ -1,3 +1,8 @@
+/// <reference lib="webworker" />
+
+/** @type {ServiceWorkerGlobalScope} */
+const sw = /** @type {any} */ (self);
+
 const CACHE_NAME = "sleep-tracker-v4";
 
 const PRECACHE_ASSETS = [
@@ -6,13 +11,13 @@ const PRECACHE_ASSETS = [
   "/android-chrome-512x512.png",
 ];
 
-self.addEventListener("install", (event) => {
+sw.addEventListener("install", (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => cache.addAll(PRECACHE_ASSETS))
   );
 });
 
-self.addEventListener("activate", (event) => {
+sw.addEventListener("activate", (event) => {
   event.waitUntil(
     caches
       .keys()
@@ -26,13 +31,13 @@ self.addEventListener("activate", (event) => {
   );
 });
 
-self.addEventListener("fetch", (event) => {
+sw.addEventListener("fetch", (event) => {
   event.respondWith(
     caches.match(event.request).then((cached) => cached || fetch(event.request))
   );
 });
 
-self.addEventListener("push", (event) => {
+sw.addEventListener("push", (event) => {
   if (!event.data) {
     return;
   }
@@ -44,14 +49,14 @@ self.addEventListener("push", (event) => {
     badge: "/android-chrome-192x192.png",
     vibrate: [100, 50, 100],
     data: {
-      url: self.location.origin,
+      url: sw.location.origin,
     },
   };
 
-  event.waitUntil(self.registration.showNotification(data.title, options));
+  event.waitUntil(sw.registration.showNotification(data.title, options));
 });
 
-self.addEventListener("notificationclick", (event) => {
+sw.addEventListener("notificationclick", (event) => {
   event.notification.close();
 
   const url = event.notification.data?.url || "/";
@@ -62,7 +67,7 @@ self.addEventListener("notificationclick", (event) => {
       .then((windowClients) => {
         // Focus existing window if found
         for (const client of windowClients) {
-          if (client.url.includes(self.location.origin) && "focus" in client) {
+          if (client.url.includes(sw.location.origin) && "focus" in client) {
             return client.focus();
           }
         }
