@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { timingSafeEqual } from "node:crypto";
 import moment from "moment-timezone";
 import { env } from "./config";
+import { UnauthorizedError } from "./error";
 import { sendEntryNotification } from "./notifications";
 import { addSubscription, removeSubscription } from "./pushSubscriptions";
 import {
@@ -174,11 +175,11 @@ const getSleepEntryFromGeolocationPosition = (
 
 export const checkRequestApiKey = (apiKey?: string) => {
   if (!apiKey) {
-    throw new Error("Invalid API key");
+    throw new UnauthorizedError("Invalid API key");
   }
 
   if (apiKey.length !== env.API_KEY.length) {
-    throw new Error("Invalid API key");
+    throw new UnauthorizedError("Invalid API key");
   }
 
   const apiKeyValid = timingSafeEqual(
@@ -186,7 +187,7 @@ export const checkRequestApiKey = (apiKey?: string) => {
     Buffer.from(env.API_KEY)
   );
   if (!apiKeyValid) {
-    throw new Error("Invalid API key");
+    throw new UnauthorizedError("Invalid API key");
   }
 };
 

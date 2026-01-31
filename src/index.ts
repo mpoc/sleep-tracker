@@ -13,6 +13,7 @@ import {
   subscribeRoute,
   unsubscribeRoute,
 } from "./controller";
+import { UnauthorizedError } from "./error";
 import {
   GeolocationPositionSchema,
   PushSubscription,
@@ -31,10 +32,15 @@ new Elysia()
       },
     })
   )
-  .onError(({ error, set }) => {
+  .error({ UnauthorizedError })
+  .onError(({ code, error, set }) => {
+    console.error(error);
     const message = Error.isError(error) ? error.message : String(error);
-    console.error(message);
-    set.status = 500;
+    if (code === "UnauthorizedError") {
+      set.status = 401;
+    } else {
+      set.status = 500;
+    }
     return { error: message };
   })
   .group("/api", (route) =>
