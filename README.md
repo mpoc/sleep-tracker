@@ -16,6 +16,8 @@ Environment variables for `.env` file:
 1. `SPREADSHEET_ID` - Google Sheets spreadsheet ID, e.g. the ID for a spreadsheet with the link https://docs.google.com/spreadsheets/d/13Nig7emkfeSDraasAERmsc82k2i3y4Csdfcazj0kUPcUY/ would be `13Nig7emkfeSDraasAERmsc82k2i3y4Csdfcazj0kUPcUY`
 1. `SPREADSHEET_RANGE` - The name of the Google Sheets spreadsheet, e.g. `Sheet1`
 1. `PUSHBULLET_API_KEY` - PushBullet API key to send a notification after creating/deleting a sleep entry
+1. `PUSHBULLET_ENABLED` - Enable PushBullet notifications (default: `true`)
+1. `WEB_PUSH_ENABLED` - Enable Web Push notifications (default: `false`, requires VAPID keys)
 
 Google Sheets API OAuth client credentials for `secret/credentials.json` file also have to be generated at https://console.cloud.google.com/apis/api/sheets.googleapis.com/credentials.
 The client ID has to be of type Desktop app.
@@ -30,6 +32,16 @@ docker run -it --rm -v `pwd`/secret:/usr/src/sleep-tracker/secret -p 8002:8000 m
 ```
 
 After running it, navigate to `http://localhost:8000/?apiKey=<API_KEY>` to trigger the Google login.
+
+### Web Push notifications (optional)
+
+To enable native push notifications, generate VAPID keys:
+
+```shell
+bun run scripts/generate-vapid-keys.ts
+```
+
+This creates `secret/vapid-keys.json`. Then set `WEB_PUSH_ENABLED=true` in your `.env` file.
 
 ## How to run
 
