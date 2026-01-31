@@ -3,7 +3,7 @@
 /** @type {ServiceWorkerGlobalScope} */
 const sw = /** @type {any} */ (self);
 
-const CACHE_NAME = "sleep-tracker-v4";
+const CACHE_NAME = "sleep-tracker-v5";
 
 const PRECACHE_ASSETS = [
   "/manifest.webmanifest",
