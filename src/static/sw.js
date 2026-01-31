@@ -47,7 +47,7 @@ sw.addEventListener("push", (event) => {
     body: data.body,
     icon: "/android-chrome-192x192.png",
     badge: "/android-chrome-192x192.png",
-    vibrate: [100, 50, 100],
+    vibrate: [50, 25, 50, 25, 50],
     data: {
       url: sw.location.origin,
     },
