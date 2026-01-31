@@ -1,3 +1,4 @@
+import { bearer } from "@elysiajs/bearer";
 import { staticPlugin } from "@elysiajs/static";
 import { Elysia } from "elysia";
 import logixlysia from "logixlysia";
@@ -41,7 +42,8 @@ new Elysia()
   })
   .group("/api", (route) =>
     route
-      .guard({ beforeHandle: ({ request }) => checkRequestApiKey(request) })
+      .use(bearer())
+      .guard({ beforeHandle: ({ bearer }) => checkRequestApiKey(bearer) })
       .post("/sleep", ({ body }) => logSleepRoute(body), {
         body: GeolocationPositionSchema,
       })

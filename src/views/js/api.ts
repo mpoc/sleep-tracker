@@ -3,18 +3,18 @@ import { getApiKey } from "./params.js";
 
 export const getSleepEntries = async () => {
   const apiKey = getApiKey();
-  const url = getEndpointUrl("api/sleep", apiKey);
+  const url = getEndpointUrl("api/sleep");
 
-  return await fetch(url)
+  return await fetch(url, { headers: getAuthHeaders(apiKey) })
     .then((res) => res.json())
     .catch((err) => console.error(err));
 };
 
 export const getLastSleepEntry = async () => {
   const apiKey = getApiKey();
-  const url = getEndpointUrl("api/sleep/last", apiKey);
+  const url = getEndpointUrl("api/sleep/last");
 
-  const response = await fetch(url)
+  const response = await fetch(url, { headers: getAuthHeaders(apiKey) })
     .then((res) => res.json())
     .catch((err) => console.error(err));
 
@@ -35,16 +35,17 @@ export const submitSleepEntry = async (position: GeolocationPosition) => {
     timestamp: position.timestamp,
   };
 
+  const apiKey = getApiKey();
+  const url = getEndpointUrl("api/sleep");
+
   const options = {
     method: "POST",
     body: JSON.stringify(json),
     headers: {
       "Content-Type": "application/json",
+      ...getAuthHeaders(apiKey),
     },
   };
-
-  const apiKey = getApiKey();
-  const url = getEndpointUrl("api/sleep", apiKey);
 
   return await fetch(url, options)
     .then((res) => res.json())
@@ -65,36 +66,40 @@ export const replaceLastSleepEntry = async (position: GeolocationPosition) => {
     timestamp: position.timestamp,
   };
 
+  const apiKey = getApiKey();
+  const url = getEndpointUrl("api/sleep/replace");
+
   const options = {
     method: "PUT",
     body: JSON.stringify(json),
     headers: {
       "Content-Type": "application/json",
+      ...getAuthHeaders(apiKey),
     },
   };
-
-  const apiKey = getApiKey();
-  const url = getEndpointUrl("api/sleep/replace", apiKey);
 
   return await fetch(url, options)
     .then((res) => res.json())
     .catch((err) => console.error(err));
 };
 
-const getEndpointUrl = (endpoint: string, apiKey?: string) => {
-  const url = new URL(endpoint, window.location.href);
+const getEndpointUrl = (endpoint: string) => {
+  return new URL(endpoint, window.location.href);
+};
+
+const getAuthHeaders = (apiKey?: string): Record<string, string> => {
   if (apiKey) {
-    url.searchParams.append("apiKey", apiKey);
+    return { Authorization: `Bearer ${apiKey}` };
   }
-  return url;
+  return {};
 };
 
 export const getVapidPublicKey = async (): Promise<string | null> => {
   const apiKey = getApiKey();
-  const url = getEndpointUrl("api/push/vapid-key", apiKey);
+  const url = getEndpointUrl("api/push/vapid-key");
 
   try {
-    const response = await fetch(url);
+    const response = await fetch(url, { headers: getAuthHeaders(apiKey) });
     const data = await response.json();
     if (data.success) {
       return data.data.publicKey;
@@ -109,13 +114,16 @@ export const subscribeToPush = async (
   subscription: PushSubscription
 ): Promise<boolean> => {
   const apiKey = getApiKey();
-  const url = getEndpointUrl("api/push/subscribe", apiKey);
+  const url = getEndpointUrl("api/push/subscribe");
 
   try {
     const response = await fetch(url, {
       method: "POST",
       body: JSON.stringify(subscription.toJSON()),
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+        ...getAuthHeaders(apiKey),
+      },
     });
     const data = await response.json();
     return data.success;
@@ -128,13 +136,16 @@ export const unsubscribeFromPush = async (
   endpoint: string
 ): Promise<boolean> => {
   const apiKey = getApiKey();
-  const url = getEndpointUrl("api/push/unsubscribe", apiKey);
+  const url = getEndpointUrl("api/push/unsubscribe");
 
   try {
     const response = await fetch(url, {
       method: "POST",
       body: JSON.stringify({ endpoint }),
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+        ...getAuthHeaders(apiKey),
+      },
     });
     const data = await response.json();
     return data.success;
