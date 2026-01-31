@@ -1,6 +1,6 @@
-import { logger } from "@bogeychan/elysia-logger";
 import { staticPlugin } from "@elysiajs/static";
 import { Elysia } from "elysia";
+import logixlysia from "logixlysia";
 import { checkReminderLoop } from "./checkReminderLoop";
 import {
   checkRequestApiKey,
@@ -23,8 +23,15 @@ import sleepReactHtml from "./views/sleepReact.html";
 
 const PORT = 8000;
 
-const app = new Elysia()
-  .use(logger())
+new Elysia()
+  .use(
+    logixlysia({
+      config: {
+        startupMessageFormat: "simple",
+        ip: true,
+      },
+    })
+  )
   .onError(({ error, code }) => {
     if (code === "INTERNAL_SERVER_ERROR") {
       return handleError(error);
@@ -55,7 +62,5 @@ const app = new Elysia()
   .get("/legacy", sleepHtml)
   .use(staticPlugin({ assets: "./src/static/", prefix: "/" }))
   .listen(PORT);
-
-console.log(`Server is listening on ${app.server?.url}`);
 
 checkReminderLoop();
