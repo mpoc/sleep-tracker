@@ -1,15 +1,6 @@
 import type { ApiResponse, GetLastSleepRouteResponse } from "../../types.js";
 import { getApiKey } from "./params.js";
 
-export const getSleepEntries = async () => {
-  const apiKey = getApiKey();
-  const url = getEndpointUrl("api/sleep");
-
-  return await fetch(url, { headers: getAuthHeaders(apiKey) })
-    .then((res) => res.json())
-    .catch((err) => console.error(err));
-};
-
 export const getLastSleepEntry = async () => {
   const apiKey = getApiKey();
   const url = getEndpointUrl("api/sleep/last");

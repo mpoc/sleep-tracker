@@ -19,7 +19,6 @@ import {
   PushSubscription,
   UnsubscribeRequest,
 } from "./types";
-import sleepHtml from "./views/sleep.html";
 import sleepReactHtml from "./views/sleepReact.html";
 
 const PORT = 8000;
@@ -61,7 +60,6 @@ new Elysia()
       })
   )
   .get("/", sleepReactHtml)
-  .get("/legacy", sleepHtml)
   .use(staticPlugin({ assets: "./src/static/", prefix: "/" }))
   .listen(PORT);
 

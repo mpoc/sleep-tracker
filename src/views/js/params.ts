@@ -10,12 +10,3 @@ export const getApiKey = () => {
   const apiKey = searchParams.get("apiKey");
   return apiKey ?? undefined;
 };
-
-export const getAutoLog = () => {
-  const searchParams = new URLSearchParams(window.location.search);
-  if (!searchParams.has("autoLog")) {
-    return null;
-  }
-  const autoLog = searchParams.get("autoLog");
-  return autoLog;
-};

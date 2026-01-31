@@ -7,10 +7,6 @@ export const formatDuration = (duration: number) => {
   const minutes = Math.floor((secondsDiff / 60) % 60);
   const seconds = Math.floor(secondsDiff % 60);
 
-  // const hour = { singular: ' hour', plural: ' hours' };
-  // const minute = { singular: ' minute', plural: ' minutes' };
-  // const second = { singular: ' second', plural: ' seconds' };
-
   const hour = { singular: "h", plural: "h" };
   const minute = { singular: "m", plural: "m" };
   const second = { singular: "s", plural: "s" };
@@ -21,8 +17,6 @@ export const formatDuration = (duration: number) => {
   const secondsString =
     seconds + (seconds == 1 ? second.singular : second.plural);
 
-  // return hoursString + " " + minutesString + " " + secondsString;
-
   return (
     (hours == 0 ? "" : hoursString) +
     " " +
@@ -30,19 +24,4 @@ export const formatDuration = (duration: number) => {
     " " +
     secondsString
   );
-};
-
-export const prettyObjectString = (object: Record<string, any>) =>
-  Object.entries(object)
-    .map(([key, value]) => `${key}: ${value}`)
-    .join(",<br>");
-
-export const printPosition = (position: GeolocationPosition) => {
-  console.log(
-    `Timestamp: ${new Date(position.timestamp)} (${position.timestamp})`
-  );
-  console.log("Your current position is:");
-  console.log(`Latitude: ${position.coords.latitude}`);
-  console.log(`Longitude: ${position.coords.longitude}`);
-  console.log(`More or less ${position.coords.accuracy} meters.`);
 };

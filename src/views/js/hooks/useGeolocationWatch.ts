@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useRef } from "react";
-import { printPosition } from "../utils.js";
 
 export type GeolocationProgress =
   | { type: "waitingForTimestamp"; timestampAge: number }
@@ -45,7 +44,13 @@ export function useGeolocationWatch(options: UseGeolocationWatchOptions = {}) {
 
         watchIdRef.current = navigator.geolocation.watchPosition(
           (position) => {
-            printPosition(position);
+            console.log(
+              `Timestamp: ${new Date(position.timestamp)} (${position.timestamp})`
+            );
+            console.log("Your current position is:");
+            console.log(`Latitude: ${position.coords.latitude}`);
+            console.log(`Longitude: ${position.coords.longitude}`);
+            console.log(`More or less ${position.coords.accuracy} meters.`);
 
             // Check timestamp freshness
             const timestampAge = Date.now() - position.timestamp;
