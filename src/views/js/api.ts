@@ -9,6 +9,9 @@ import { getApiKey } from "./params.js";
 
 export const getLastSleepEntry = async () => {
   const apiKey = getApiKey();
+  if (!apiKey) {
+    throw new Error("No API key provided");
+  }
   const url = getEndpointUrl("api/sleep/last");
 
   const response = await fetch(url, { headers: getAuthHeaders(apiKey) });
@@ -20,6 +23,11 @@ export const getLastSleepEntry = async () => {
 };
 
 export const submitSleepEntry = async (position: GeolocationPosition) => {
+  const apiKey = getApiKey();
+  if (!apiKey) {
+    throw new Error("No API key provided");
+  }
+
   const json = {
     coords: {
       latitude: position.coords.latitude,
@@ -33,7 +41,6 @@ export const submitSleepEntry = async (position: GeolocationPosition) => {
     timestamp: position.timestamp,
   };
 
-  const apiKey = getApiKey();
   const url = getEndpointUrl("api/sleep");
 
   const response = await fetch(url, {
@@ -53,6 +60,11 @@ export const submitSleepEntry = async (position: GeolocationPosition) => {
 };
 
 export const replaceLastSleepEntry = async (position: GeolocationPosition) => {
+  const apiKey = getApiKey();
+  if (!apiKey) {
+    throw new Error("No API key provided");
+  }
+
   const json = {
     coords: {
       latitude: position.coords.latitude,
@@ -66,7 +78,6 @@ export const replaceLastSleepEntry = async (position: GeolocationPosition) => {
     timestamp: position.timestamp,
   };
 
-  const apiKey = getApiKey();
   const url = getEndpointUrl("api/sleep/replace");
 
   const response = await fetch(url, {
@@ -98,6 +109,9 @@ const getAuthHeaders = (apiKey?: string): Record<string, string> => {
 
 export const getVapidPublicKey = async () => {
   const apiKey = getApiKey();
+  if (!apiKey) {
+    return null;
+  }
   const url = getEndpointUrl("api/push/vapid-key");
 
   try {
@@ -115,6 +129,9 @@ export const subscribeToPush = async (
   subscription: PushSubscription
 ): Promise<boolean> => {
   const apiKey = getApiKey();
+  if (!apiKey) {
+    return false;
+  }
   const url = getEndpointUrl("api/push/subscribe");
 
   try {
@@ -136,6 +153,9 @@ export const unsubscribeFromPush = async (
   endpoint: string
 ): Promise<boolean> => {
   const apiKey = getApiKey();
+  if (!apiKey) {
+    return false;
+  }
   const url = getEndpointUrl("api/push/unsubscribe");
 
   try {
