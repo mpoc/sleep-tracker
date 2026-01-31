@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { jsonCodec } from "./utils";
 
 export const GeolocationPositionSchema = z.object({
   coords: z.object({
@@ -52,10 +53,12 @@ export const SheetsPropertiesResponse = z.tuple([
   }),
 ]);
 
-export type Notification = {
-  title: string;
-  body: string;
-};
+export const Notification = z.object({
+  title: z.string(),
+  body: z.string(),
+});
+export type Notification = z.infer<typeof Notification>;
+export const jsonToNotification = jsonCodec(Notification);
 
 export type GoogleSheetsAppendUpdates = {
   spreadsheetId: string;
@@ -80,11 +83,22 @@ export type ReplaceLastSleepRouteResponse = {
   updatedRow: SheetsSleepEntry;
 };
 
+export type VapidKeyRouteResponse = {
+  publicKey: string;
+};
+
+export type PushSubscribeRouteResponse = Record<string, never>;
+
+export type PushUnsubscribeRouteResponse = Record<string, never>;
+
 export type SuccessResponseData =
   | LogSleepRouteResponse
   | GetSleepRouteResponse
   | GetLastSleepRouteResponse
-  | ReplaceLastSleepRouteResponse;
+  | ReplaceLastSleepRouteResponse
+  | VapidKeyRouteResponse
+  | PushSubscribeRouteResponse
+  | PushUnsubscribeRouteResponse;
 
 export type ApiResponse<T extends SuccessResponseData = SuccessResponseData> =
   | {
@@ -96,3 +110,21 @@ export type ApiResponse<T extends SuccessResponseData = SuccessResponseData> =
       success: false;
       message: string;
     };
+
+export const PushSubscription = z.object({
+  endpoint: z.url(),
+  expirationTime: z.number().nullable().optional(),
+  keys: z.object({
+    p256dh: z.string(),
+    auth: z.string(),
+  }),
+});
+export type PushSubscription = z.infer<typeof PushSubscription>;
+export const jsonToPushSubscription = jsonCodec(PushSubscription);
+export const jsonToPushSubscriptions = jsonCodec(z.array(PushSubscription));
+
+export const UnsubscribeRequest = z.object({
+  endpoint: z.url(),
+});
+
+export type UnsubscribeRequest = z.infer<typeof UnsubscribeRequest>;

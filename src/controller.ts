@@ -4,6 +4,7 @@ import { successResponse } from "./apiUtils";
 import { env } from "./config";
 import { ApiError } from "./error";
 import { sendEntryNotification } from "./notifications";
+import { addSubscription, removeSubscription } from "./pushSubscriptions";
 import {
   append,
   getLastRow,
@@ -15,11 +16,13 @@ import {
 } from "./sheets";
 import {
   type GeolocationPosition,
+  type PushSubscription,
   SheetsSleepEntry,
   SheetsSleepEntryHeaders,
   type SleepEntry,
 } from "./types";
 import { getTimezoneFromCoords } from "./utils";
+import { getVapidPublicKey } from "./webPush";
 
 export const logSleepRoute = async (position: GeolocationPosition) => {
   const entry = getSleepEntryFromGeolocationPosition(position);
@@ -203,4 +206,22 @@ const getLastRowRange = ({
     lastColumnCharNumber > Z_CHAR_CODE ? Z_CHAR_CODE : lastColumnCharNumber;
   const lastColumn = String.fromCharCode(limitedColumnCharNumber);
   return `A${rowCount}:${lastColumn}`;
+};
+
+export const getVapidKeyRoute = () => {
+  const publicKey = getVapidPublicKey();
+  if (!publicKey) {
+    throw new ApiError("VAPID keys not configured");
+  }
+  return successResponse({ publicKey }, "VAPID public key retrieved");
+};
+
+export const subscribeRoute = async (subscription: PushSubscription) => {
+  await addSubscription(subscription);
+  return successResponse({}, "Subscription added");
+};
+
+export const unsubscribeRoute = async (body: { endpoint: string }) => {
+  await removeSubscription(body.endpoint);
+  return successResponse({}, "Subscription removed");
 };

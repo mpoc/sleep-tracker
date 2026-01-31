@@ -117,3 +117,4 @@ dist
 secret/*
 !secret/.env.example
 build/
+data/

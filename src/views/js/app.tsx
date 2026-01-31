@@ -6,6 +6,7 @@ import {
   replaceLastSleepEntry,
   submitSleepEntry,
 } from "./api.js";
+import { PushNotificationToggle } from "./components/PushNotificationToggle.js";
 import {
   type GeolocationProgress,
   useGeolocationWatch,
@@ -334,6 +335,11 @@ const LayoutTable: React.FC<LayoutTableProps> = ({
         <td>
           <ReplaceConfirmationButton disabled={replaceButtonDisabled} />
           <ConfirmationModal onConfirm={onReplaceSleep} />
+        </td>
+      </tr>
+      <tr>
+        <td>
+          <PushNotificationToggle />
         </td>
       </tr>
       <tr>

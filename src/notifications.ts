@@ -3,8 +3,13 @@ import { env } from "./config";
 import { ApiError } from "./error";
 import type { Notification, SheetsSleepEntry } from "./types";
 import { sheetsSleepEntryIsStop } from "./utils";
+import { sendWebPushNotification } from "./webPush";
 
-const sendNotification = async (notification: Notification) => {
+const sendPushBulletNotification = async (notification: Notification) => {
+  if (!(env.PUSHBULLET_ENABLED && env.PUSHBULLET_API_KEY)) {
+    return;
+  }
+
   try {
     await fetch("https://api.pushbullet.com/v2/pushes", {
       method: "POST",
@@ -19,7 +24,27 @@ const sendNotification = async (notification: Notification) => {
       }),
     });
   } catch (error) {
-    throw new ApiError("Failed to send notification", error);
+    console.error("Failed to send PushBullet notification:", error);
+  }
+};
+
+const sendNotification = async (notification: Notification) => {
+  const promises: Promise<void>[] = [];
+
+  if (env.PUSHBULLET_ENABLED) {
+    promises.push(sendPushBulletNotification(notification));
+  }
+
+  if (env.WEB_PUSH_ENABLED) {
+    promises.push(sendWebPushNotification(notification));
+  }
+
+  const results = await Promise.allSettled(promises);
+
+  // Check if all failed
+  const failures = results.filter((r) => r.status === "rejected");
+  if (failures.length === results.length && results.length > 0) {
+    throw new ApiError("Failed to send all notifications");
   }
 };
 

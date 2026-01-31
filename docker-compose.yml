@@ -10,3 +10,4 @@ services:
     env_file: .env
     volumes:
       - ./secret:/usr/src/sleep-tracker/secret
+      - ./data:/usr/src/sleep-tracker/data

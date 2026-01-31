@@ -6,11 +6,18 @@ import {
   checkRequestApiKey,
   getLastSleepRoute,
   getSleepRoute,
+  getVapidKeyRoute,
   logSleepRoute,
   replaceLastSleepRoute,
+  subscribeRoute,
+  unsubscribeRoute,
 } from "./controller";
 import { handleError } from "./error";
-import { GeolocationPositionSchema } from "./types";
+import {
+  GeolocationPositionSchema,
+  PushSubscription,
+  UnsubscribeRequest,
+} from "./types";
 import sleepHtml from "./views/sleep.html";
 import sleepReactHtml from "./views/sleepReact.html";
 
@@ -36,6 +43,13 @@ const app = new Elysia()
         body: GeolocationPositionSchema,
       })
       .get("/sleep/last", () => getLastSleepRoute())
+      .get("/push/vapid-key", () => getVapidKeyRoute())
+      .post("/push/subscribe", ({ body }) => subscribeRoute(body), {
+        body: PushSubscription,
+      })
+      .post("/push/unsubscribe", ({ body }) => unsubscribeRoute(body), {
+        body: UnsubscribeRequest,
+      })
   )
   .get("/", sleepReactHtml)
   .get("/legacy", sleepHtml)

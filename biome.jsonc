@@ -5,7 +5,8 @@
     "rules": {
       "suspicious": "off",
       "style": {
-        "useNamingConvention": "off"
+        "useNamingConvention": "off",
+        "useConsistentTypeDefinitions": "off"
       }
     }
   }

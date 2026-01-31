@@ -88,3 +88,57 @@ const getEndpointUrl = (endpoint: string, apiKey?: string) => {
   }
   return url;
 };
+
+export const getVapidPublicKey = async (): Promise<string | null> => {
+  const apiKey = getApiKey();
+  const url = getEndpointUrl("api/push/vapid-key", apiKey);
+
+  try {
+    const response = await fetch(url);
+    const data = await response.json();
+    if (data.success) {
+      return data.data.publicKey;
+    }
+    return null;
+  } catch {
+    return null;
+  }
+};
+
+export const subscribeToPush = async (
+  subscription: PushSubscription
+): Promise<boolean> => {
+  const apiKey = getApiKey();
+  const url = getEndpointUrl("api/push/subscribe", apiKey);
+
+  try {
+    const response = await fetch(url, {
+      method: "POST",
+      body: JSON.stringify(subscription.toJSON()),
+      headers: { "Content-Type": "application/json" },
+    });
+    const data = await response.json();
+    return data.success;
+  } catch {
+    return false;
+  }
+};
+
+export const unsubscribeFromPush = async (
+  endpoint: string
+): Promise<boolean> => {
+  const apiKey = getApiKey();
+  const url = getEndpointUrl("api/push/unsubscribe", apiKey);
+
+  try {
+    const response = await fetch(url, {
+      method: "POST",
+      body: JSON.stringify({ endpoint }),
+      headers: { "Content-Type": "application/json" },
+    });
+    const data = await response.json();
+    return data.success;
+  } catch {
+    return false;
+  }
+};
