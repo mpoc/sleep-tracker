@@ -13,7 +13,6 @@ import {
   subscribeRoute,
   unsubscribeRoute,
 } from "./controller";
-import { handleError } from "./error";
 import {
   GeolocationPositionSchema,
   PushSubscription,
@@ -32,12 +31,11 @@ new Elysia()
       },
     })
   )
-  .onError(({ error, code }) => {
-    if (code === "INTERNAL_SERVER_ERROR") {
-      return handleError(error);
-    }
-
-    return Response.json({ message: error.toString() }, { status: 500 });
+  .onError(({ error, set }) => {
+    const message = Error.isError(error) ? error.message : String(error);
+    console.error(message);
+    set.status = 500;
+    return { error: message };
   })
   .group("/api", (route) =>
     route

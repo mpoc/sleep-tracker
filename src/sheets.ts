@@ -5,7 +5,6 @@ import { OAuth2Client } from "google-auth-library";
 import type { sheets_v4 } from "googleapis";
 // https://github.com/googleapis/google-api-nodejs-client/issues/2187
 import { sheets } from "googleapis/build/src/apis/sheets";
-import { ApiError } from "./error";
 import { SheetsLastRowResponse, SheetsPropertiesResponse } from "./types";
 
 const CRED_PATH = "secret/credentials.json";
@@ -34,8 +33,8 @@ export const getSheets = async () => {
     const auth = await getAuth();
     cachedSheetsObj = sheets({ version: "v4", auth });
     return cachedSheetsObj;
-  } catch (error) {
-    throw new ApiError("Failed to login to Google", error);
+  } catch (cause) {
+    throw new Error("Failed to login to Google", { cause });
   }
 };
 

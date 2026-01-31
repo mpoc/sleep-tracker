@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { jsonCodec } from "./utils";
+import { jsonCodec } from "./jsonCodec";
 
 export const GeolocationPositionSchema = z.object({
   coords: z.object({
@@ -68,48 +68,38 @@ export type GoogleSheetsAppendUpdates = {
   updatedCells: number;
 };
 
-export type LogSleepRouteResponse = {
-  updatedRow: SheetsSleepEntry;
-};
+export const LogSleepRouteResponse = z.object({
+  updatedRow: SheetsSleepEntry,
+});
+export type LogSleepRouteResponse = z.infer<typeof LogSleepRouteResponse>;
 
-export type GetSleepRouteResponse = SheetsSleepEntry[];
+export const GetSleepRouteResponse = z.array(SheetsSleepEntry);
+export type GetSleepRouteResponse = z.infer<typeof GetSleepRouteResponse>;
 
-export type GetLastSleepRouteResponse = {
-  lastSleepEntry: SheetsSleepEntry;
-  numberOfSleepEntries: number;
-};
+export const GetLastSleepRouteResponse = z.object({
+  lastSleepEntry: SheetsSleepEntry,
+  numberOfSleepEntries: z.number(),
+});
+export type GetLastSleepRouteResponse = z.infer<typeof GetLastSleepRouteResponse>;
 
-export type ReplaceLastSleepRouteResponse = {
-  updatedRow: SheetsSleepEntry;
-};
+export const ReplaceLastSleepRouteResponse = z.object({
+  updatedRow: SheetsSleepEntry,
+});
+export type ReplaceLastSleepRouteResponse = z.infer<typeof ReplaceLastSleepRouteResponse>;
 
-export type VapidKeyRouteResponse = {
-  publicKey: string;
-};
+export const VapidKeyRouteResponse = z.object({
+  publicKey: z.string(),
+});
+export type VapidKeyRouteResponse = z.infer<typeof VapidKeyRouteResponse>;
 
 export type PushSubscribeRouteResponse = Record<string, never>;
 
 export type PushUnsubscribeRouteResponse = Record<string, never>;
 
-export type SuccessResponseData =
-  | LogSleepRouteResponse
-  | GetSleepRouteResponse
-  | GetLastSleepRouteResponse
-  | ReplaceLastSleepRouteResponse
-  | VapidKeyRouteResponse
-  | PushSubscribeRouteResponse
-  | PushUnsubscribeRouteResponse;
-
-export type ApiResponse<T extends SuccessResponseData = SuccessResponseData> =
-  | {
-      success: true;
-      data: T;
-      message: string;
-    }
-  | {
-      success: false;
-      message: string;
-    };
+export const ErrorResponse = z.object({
+  error: z.string(),
+});
+export type ErrorResponse = z.infer<typeof ErrorResponse>;
 
 export const PushSubscription = z.object({
   endpoint: z.url(),

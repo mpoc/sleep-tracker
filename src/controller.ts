@@ -1,9 +1,7 @@
 import assert from "node:assert/strict";
 import { timingSafeEqual } from "node:crypto";
 import moment from "moment-timezone";
-import { successResponse } from "./apiUtils";
 import { env } from "./config";
-import { ApiError } from "./error";
 import { sendEntryNotification } from "./notifications";
 import { addSubscription, removeSubscription } from "./pushSubscriptions";
 import {
@@ -37,8 +35,8 @@ export const logSleepRoute = async (position: GeolocationPosition) => {
     env.SPREADSHEET_ID,
     env.SPREADSHEET_RANGE,
     valuesToAppend
-  ).catch((error) => {
-    throw new ApiError("Failed to append rows to Google Sheet", error);
+  ).catch((cause) => {
+    throw new Error("Failed to append rows to Google Sheet", { cause });
   });
 
   const updatedRowsResponse = toObjectArray(
@@ -51,7 +49,7 @@ export const logSleepRoute = async (position: GeolocationPosition) => {
 
   sendEntryNotification(updatedRow);
 
-  return successResponse({ updatedRow }, "Successfully added sleep entry");
+  return { updatedRow };
 };
 
 export const getSleepRoute = async () => {
@@ -61,25 +59,23 @@ export const getSleepRoute = async () => {
     sheets,
     env.SPREADSHEET_ID,
     env.SPREADSHEET_RANGE
-  ).catch((error: Error) => {
-    throw new ApiError("Failed to retrieve rows", error);
+  ).catch((cause) => {
+    throw new Error("Failed to retrieve rows", { cause });
   });
 
-  const response = SheetsSleepEntry.array().parse(result);
-
-  return successResponse(response, "Successfully retrieved sleep entries");
+  return SheetsSleepEntry.array().parse(result);
 };
 
 export const getLastSleep = async () => {
   const sheets = await getSheets();
 
-  const lastRow = getLastRow(sheets, env.SPREADSHEET_ID).catch((error) => {
-    throw new ApiError("Failed to retrieve last row", error);
+  const lastRow = getLastRow(sheets, env.SPREADSHEET_ID).catch((cause) => {
+    throw new Error("Failed to retrieve last row", { cause });
   });
 
   const properties = getProperties(sheets, env.SPREADSHEET_ID).catch(
-    (error) => {
-      throw new ApiError("Failed to retrieve properties", error);
+    (cause) => {
+      throw new Error("Failed to retrieve properties", { cause });
     }
   );
 
@@ -90,11 +86,7 @@ export const getLastSleep = async () => {
 };
 
 export const getLastSleepRoute = async () => {
-  const lastSleepData = await getLastSleep();
-  return successResponse(
-    lastSleepData,
-    "Successfully retrieved last sleep entry"
-  );
+  return await getLastSleep();
 };
 
 export const replaceLastSleepRoute = async (position: GeolocationPosition) => {
@@ -111,8 +103,8 @@ export const replaceLastSleepRoute = async (position: GeolocationPosition) => {
   const sheets = await getSheets();
 
   const properties = await getProperties(sheets, env.SPREADSHEET_ID).catch(
-    (error) => {
-      throw new ApiError("Failed to retrieve properties", error);
+    (cause) => {
+      throw new Error("Failed to retrieve properties", { cause });
     }
   );
 
@@ -123,8 +115,8 @@ export const replaceLastSleepRoute = async (position: GeolocationPosition) => {
 
   const result = await update(sheets, env.SPREADSHEET_ID, rangeToUpdate, [
     rowToUpdate,
-  ]).catch((error) => {
-    throw new ApiError("Failed to update rows", error);
+  ]).catch((cause) => {
+    throw new Error("Failed to update rows", { cause });
   });
 
   const updatedRowsResponse = toObjectArray(
@@ -137,10 +129,7 @@ export const replaceLastSleepRoute = async (position: GeolocationPosition) => {
 
   sendEntryNotification(updatedRow);
 
-  return successResponse(
-    { updatedRow },
-    "Successfully replaced last sleep entry"
-  );
+  return { updatedRow };
 };
 
 const getSleepEntryFromGeolocationPosition = (
@@ -185,11 +174,11 @@ const getSleepEntryFromGeolocationPosition = (
 
 export const checkRequestApiKey = (apiKey?: string) => {
   if (!apiKey) {
-    throw new ApiError("Invalid API key");
+    throw new Error("Invalid API key");
   }
 
   if (apiKey.length !== env.API_KEY.length) {
-    throw new ApiError("Invalid API key");
+    throw new Error("Invalid API key");
   }
 
   const apiKeyValid = timingSafeEqual(
@@ -197,7 +186,7 @@ export const checkRequestApiKey = (apiKey?: string) => {
     Buffer.from(env.API_KEY)
   );
   if (!apiKeyValid) {
-    throw new ApiError("Invalid API key");
+    throw new Error("Invalid API key");
   }
 };
 
@@ -222,17 +211,17 @@ const getLastRowRange = ({
 export const getVapidKeyRoute = () => {
   const publicKey = getVapidPublicKey();
   if (!publicKey) {
-    throw new ApiError("VAPID keys not configured");
+    throw new Error("VAPID keys not configured");
   }
-  return successResponse({ publicKey }, "VAPID public key retrieved");
+  return { publicKey };
 };
 
 export const subscribeRoute = async (subscription: PushSubscription) => {
   await addSubscription(subscription);
-  return successResponse({}, "Subscription added");
+  return {};
 };
 
 export const unsubscribeRoute = async (body: { endpoint: string }) => {
   await removeSubscription(body.endpoint);
-  return successResponse({}, "Subscription removed");
+  return {};
 };

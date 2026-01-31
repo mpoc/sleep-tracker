@@ -94,18 +94,17 @@ export const App = () => {
       const position = await watchForPosition(handleProgress);
       setStatus({ type: "saving" });
 
-      const response = await submitSleepEntry(position);
-      if (response.success) {
-        setStatus({
-          type: "submitted",
-          action: "inserted",
-          entry: response.data.updatedRow,
-        });
-      } else {
-        setStatus({ type: "error", message: response.message });
-      }
+      const { updatedRow } = await submitSleepEntry(position);
+      setStatus({
+        type: "submitted",
+        action: "inserted",
+        entry: updatedRow,
+      });
     } catch (error) {
-      setStatus({ type: "error", message: (error as Error).message });
+      setStatus({
+        type: "error",
+        message: Error.isError(error) ? error.message : String(error),
+      });
     }
   }, [watchForPosition, handleProgress]);
 
@@ -116,28 +115,30 @@ export const App = () => {
       const position = await watchForPosition(handleProgress);
       setStatus({ type: "saving" });
 
-      const response = await replaceLastSleepEntry(position);
-      if (response.success) {
-        setStatus({
-          type: "submitted",
-          action: "replaced",
-          entry: response.data.updatedRow,
-        });
-      } else {
-        setStatus({ type: "error", message: response.message });
-      }
+      const { updatedRow } = await replaceLastSleepEntry(position);
+      setStatus({
+        type: "submitted",
+        action: "replaced",
+        entry: updatedRow,
+      });
     } catch (error) {
-      setStatus({ type: "error", message: (error as Error).message });
+      setStatus({
+        type: "error",
+        message: Error.isError(error) ? error.message : String(error),
+      });
     }
   }, [watchForPosition, handleProgress]);
 
   const loadLastSleepEntry = useCallback(async () => {
-    const apiResponse = await getLastSleepEntry();
-    if (apiResponse.success) {
-      setStatus({ type: "idle", entryData: apiResponse.data });
-    } else {
-      console.error(apiResponse);
-      setStatus({ type: "error", message: apiResponse.message });
+    try {
+      const entryData = await getLastSleepEntry();
+      setStatus({ type: "idle", entryData });
+    } catch (error) {
+      console.error(error);
+      setStatus({
+        type: "error",
+        message: Error.isError(error) ? error.message : String(error),
+      });
     }
   }, []);
 

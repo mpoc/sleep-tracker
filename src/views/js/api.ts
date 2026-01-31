@@ -1,15 +1,22 @@
-import type { ApiResponse, GetLastSleepRouteResponse } from "../../types.js";
+import {
+  ErrorResponse,
+  GetLastSleepRouteResponse,
+  LogSleepRouteResponse,
+  ReplaceLastSleepRouteResponse,
+  VapidKeyRouteResponse,
+} from "../../types.js";
 import { getApiKey } from "./params.js";
 
 export const getLastSleepEntry = async () => {
   const apiKey = getApiKey();
   const url = getEndpointUrl("api/sleep/last");
 
-  const response = await fetch(url, { headers: getAuthHeaders(apiKey) })
-    .then((res) => res.json())
-    .catch((err) => console.error(err));
-
-  return response as ApiResponse<GetLastSleepRouteResponse>;
+  const response = await fetch(url, { headers: getAuthHeaders(apiKey) });
+  if (!response.ok) {
+    const err = ErrorResponse.parse(await response.json());
+    throw new Error(err.error);
+  }
+  return GetLastSleepRouteResponse.parse(await response.json());
 };
 
 export const submitSleepEntry = async (position: GeolocationPosition) => {
@@ -29,18 +36,20 @@ export const submitSleepEntry = async (position: GeolocationPosition) => {
   const apiKey = getApiKey();
   const url = getEndpointUrl("api/sleep");
 
-  const options = {
+  const response = await fetch(url, {
     method: "POST",
     body: JSON.stringify(json),
     headers: {
       "Content-Type": "application/json",
       ...getAuthHeaders(apiKey),
     },
-  };
+  });
 
-  return await fetch(url, options)
-    .then((res) => res.json())
-    .catch((err) => console.error(err));
+  if (!response.ok) {
+    const err = ErrorResponse.parse(await response.json());
+    throw new Error(err.error);
+  }
+  return LogSleepRouteResponse.parse(await response.json());
 };
 
 export const replaceLastSleepEntry = async (position: GeolocationPosition) => {
@@ -60,18 +69,20 @@ export const replaceLastSleepEntry = async (position: GeolocationPosition) => {
   const apiKey = getApiKey();
   const url = getEndpointUrl("api/sleep/replace");
 
-  const options = {
+  const response = await fetch(url, {
     method: "PUT",
     body: JSON.stringify(json),
     headers: {
       "Content-Type": "application/json",
       ...getAuthHeaders(apiKey),
     },
-  };
+  });
 
-  return await fetch(url, options)
-    .then((res) => res.json())
-    .catch((err) => console.error(err));
+  if (!response.ok) {
+    const err = ErrorResponse.parse(await response.json());
+    throw new Error(err.error);
+  }
+  return ReplaceLastSleepRouteResponse.parse(await response.json());
 };
 
 const getEndpointUrl = (endpoint: string) => {
@@ -85,17 +96,16 @@ const getAuthHeaders = (apiKey?: string): Record<string, string> => {
   return {};
 };
 
-export const getVapidPublicKey = async (): Promise<string | null> => {
+export const getVapidPublicKey = async () => {
   const apiKey = getApiKey();
   const url = getEndpointUrl("api/push/vapid-key");
 
   try {
     const response = await fetch(url, { headers: getAuthHeaders(apiKey) });
-    const data = await response.json();
-    if (data.success) {
-      return data.data.publicKey;
+    if (!response.ok) {
+      return null;
     }
-    return null;
+    return VapidKeyRouteResponse.parse(await response.json()).publicKey;
   } catch {
     return null;
   }
@@ -116,8 +126,7 @@ export const subscribeToPush = async (
         ...getAuthHeaders(apiKey),
       },
     });
-    const data = await response.json();
-    return data.success;
+    return response.ok;
   } catch {
     return false;
   }
@@ -138,8 +147,7 @@ export const unsubscribeFromPush = async (
         ...getAuthHeaders(apiKey),
       },
     });
-    const data = await response.json();
-    return data.success;
+    return response.ok;
   } catch {
     return false;
   }

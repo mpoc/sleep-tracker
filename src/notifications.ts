@@ -1,6 +1,5 @@
 import humanizeDuration from "humanize-duration";
 import { env } from "./config";
-import { ApiError } from "./error";
 import type { Notification, SheetsSleepEntry } from "./types";
 import { sheetsSleepEntryIsStop } from "./utils";
 import { sendWebPushNotification } from "./webPush";
@@ -44,7 +43,7 @@ const sendNotification = async (notification: Notification) => {
   // Check if all failed
   const failures = results.filter((r) => r.status === "rejected");
   if (failures.length === results.length && results.length > 0) {
-    throw new ApiError("Failed to send all notifications");
+    throw new Error("Failed to send all notifications");
   }
 };
 

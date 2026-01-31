@@ -2,7 +2,6 @@
 // import { find as findTimezone } from 'geo-tz';
 const { find: findTimezone } = await import("geo-tz");
 
-import z from "zod";
 import type { SheetsSleepEntry } from "./types";
 
 export const sheetsSleepEntryIsStop = (entry: SheetsSleepEntry) =>
@@ -28,24 +27,3 @@ export const getTimezoneFromCoords = (lat: number, lng: number) => {
   }
   return timezone;
 };
-
-/**
- * Parses JSON strings into structured data and serializes back to JSON. This generic function accepts an output schema to validate the parsed JSON data.
- */
-export const jsonCodec = <T extends z.core.$ZodType>(schema: T) =>
-  z.codec(z.string(), schema, {
-    decode: (jsonString, ctx) => {
-      try {
-        return JSON.parse(jsonString);
-      } catch (err: any) {
-        ctx.issues.push({
-          code: "invalid_format",
-          format: "json",
-          input: jsonString,
-          message: err.message,
-        });
-        return z.NEVER;
-      }
-    },
-    encode: (value) => JSON.stringify(value),
-  });
