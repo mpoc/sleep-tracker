@@ -49,7 +49,7 @@ const getModel = () => {
     apiKey: env.AI_API_KEY,
     baseURL: env.AI_BASE_URL,
   });
-  return provider(env.AI_MODEL);
+  return provider.chat(env.AI_MODEL);
 };
 
 const formatSleepHistory = (entries: SheetsSleepEntry[]): string => {
