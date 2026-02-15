@@ -138,7 +138,7 @@ ${sleepHistory}
 - Don't repeat the same insight you already sent today (check the notifications sent today list).
 - Don't send notifications too close together — at least 2 hours apart.
 - Don't send notifications if the user just woke up (less than 2 hours awake).
-- Keep messages warm, concise (2-3 sentences max), and don't use emojis.
+- Keep messages warm, concise (2-3 sentences max). Feel free to use emojis to make notifications more expressive.
 - If there's nothing useful to say right now, don't send anything. It's fine to skip.
 
 Decide: should you send a notification right now? If yes, provide the title and body.`,
