@@ -1,5 +1,5 @@
 import { generateObject } from "ai";
-import { createOpenAI } from "@ai-sdk/openai";
+import { createAnthropic } from "@ai-sdk/anthropic";
 import ms from "ms";
 import { z } from "zod";
 import { env } from "./config";
@@ -45,11 +45,11 @@ const getModel = () => {
   if (!env.AI_API_KEY) {
     throw new Error("AI_API_KEY not configured");
   }
-  const provider = createOpenAI({
+  const provider = createAnthropic({
     apiKey: env.AI_API_KEY,
     baseURL: env.AI_BASE_URL,
   });
-  return provider.chat(env.AI_MODEL);
+  return provider(env.AI_MODEL);
 };
 
 const formatSleepHistory = (entries: SheetsSleepEntry[]): string => {
