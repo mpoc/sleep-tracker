@@ -5,10 +5,12 @@ import { z } from "zod";
 import { env } from "./config";
 import { getLastSleep, getRecentSleepEntries } from "./controller";
 import { sendNotification } from "./notifications";
-import type { Notification, SheetsSleepEntry } from "./types";
+import type { Notification, SheetsSleepEntry, SentNotification } from "./types";
+import { jsonToSentNotifications } from "./types";
 import { millisecondsSinceSleepEntry, sheetsSleepEntryIsStop } from "./utils";
 
 const AI_CHECK_INTERVAL = env.AI_CHECK_INTERVAL;
+const NOTIFICATIONS_PATH = "./data/sent-notifications.json";
 
 const AiNotificationResponse = z.object({
   sendNotification: z
@@ -24,21 +26,27 @@ const AiNotificationResponse = z.object({
     .describe("Notification body message (if sending)"),
 });
 
-interface SentNotification {
-  title: string;
-  body: string;
-  sentAt: Date;
-}
-
-let sentNotificationsToday: SentNotification[] = [];
-let lastResetDate: string | undefined;
-
-const resetDailyNotificationsIfNeeded = () => {
-  const today = new Date().toISOString().split("T")[0];
-  if (lastResetDate !== today) {
-    sentNotificationsToday = [];
-    lastResetDate = today;
+const loadRecentNotifications = async (): Promise<SentNotification[]> => {
+  const cutoff = Date.now() - 24 * 60 * 60 * 1000;
+  try {
+    const data = await Bun.file(NOTIFICATIONS_PATH).text();
+    const all = jsonToSentNotifications.decode(data);
+    return all.filter((n) => n.sentAt.valueOf() >= cutoff);
+  } catch {
+    return [];
   }
+};
+
+const appendNotification = async (n: SentNotification): Promise<void> => {
+  let all: SentNotification[] = [];
+  try {
+    const data = await Bun.file(NOTIFICATIONS_PATH).text();
+    all = jsonToSentNotifications.decode(data);
+  } catch {
+    // file doesn't exist yet
+  }
+  all.push(n);
+  await Bun.write(NOTIFICATIONS_PATH, jsonToSentNotifications.encode(all));
 };
 
 const getModel = () => {
@@ -109,15 +117,12 @@ const computeSleepStats = (entries: SheetsSleepEntry[]): string => {
   ].join("\n");
 };
 
-const formatSentNotifications = (): string => {
-  if (sentNotificationsToday.length === 0) {
-    return "No notifications sent today yet.";
+const formatSentNotifications = (recent: SentNotification[]): string => {
+  if (recent.length === 0) {
+    return "No recent notifications.";
   }
-  return sentNotificationsToday
-    .map(
-      (n) =>
-        `[${n.sentAt.toISOString()}] "${n.title}": ${n.body}`
-    )
+  return recent
+    .map((n) => `[${n.sentAt.toISOString()}] "${n.title}": ${n.body}`)
     .join("\n");
 };
 
@@ -131,7 +136,7 @@ const checkAiNotification = async () => {
     const lastEntry = lastSleepData.lastSleepEntry;
     const isAwake = sheetsSleepEntryIsStop(lastEntry);
 
-    resetDailyNotificationsIfNeeded();
+    const recentNotifications = await loadRecentNotifications();
 
     const recentEntries = await getRecentSleepEntries(20);
     const sleepHistory = formatSleepHistory(recentEntries);
@@ -142,14 +147,13 @@ const checkAiNotification = async () => {
       ? `Awake for ${hoursSinceLastEntry} hours`
       : `Asleep for ${hoursSinceLastEntry} hours (or forgot to log waking up)`;
 
-    const msSinceLastNotification =
-      sentNotificationsToday.length > 0
-        ? Date.now() -
-          sentNotificationsToday[sentNotificationsToday.length - 1].sentAt.valueOf()
-        : null;
+    const lastNotification = recentNotifications.at(-1);
+    const msSinceLastNotification = lastNotification
+      ? Date.now() - lastNotification.sentAt.valueOf()
+      : null;
     const timeSinceLastNotification = msSinceLastNotification
       ? `${(msSinceLastNotification / (1000 * 60)).toFixed(0)} minutes ago`
-      : "No notifications sent today yet";
+      : "No recent notifications";
 
     const now = new Date();
     const userTimezone = lastEntry.Timezone;
@@ -170,10 +174,10 @@ If ANY of the above apply, you MUST return sendNotification: false. Do not reaso
 - Current time: ${localTime} (${userTimezone}, ${now.toLocaleDateString("en-US", { timeZone: userTimezone, weekday: "long" })})
 - User status: ${currentState}
 - Last notification sent: ${timeSinceLastNotification}
-- Notifications sent today: ${sentNotificationsToday.length}
+- Notifications in last 24h: ${recentNotifications.length}
 
-## Notifications already sent today
-${formatSentNotifications()}
+## Notifications already sent in last 24 hours
+${formatSentNotifications(recentNotifications)}
 
 ## Sleep stats
 ${computeSleepStats(recentEntries)}
@@ -216,7 +220,7 @@ Review the hard rules first. If any apply, return sendNotification: false immedi
 
       await sendNotification(notification);
 
-      sentNotificationsToday.push({
+      await appendNotification({
         title: result.title,
         body: result.body,
         sentAt: now,

@@ -101,6 +101,14 @@ export const ErrorResponse = z.object({
 });
 export type ErrorResponse = z.infer<typeof ErrorResponse>;
 
+export const SentNotification = z.object({
+  title: z.string(),
+  body: z.string(),
+  sentAt: z.coerce.date(),
+});
+export type SentNotification = z.infer<typeof SentNotification>;
+export const jsonToSentNotifications = jsonCodec(z.array(SentNotification));
+
 export const PushSubscription = z.object({
   endpoint: z.url(),
   expirationTime: z.number().nullable().optional(),
