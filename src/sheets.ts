@@ -168,6 +168,26 @@ export const deleteRow = async (
     endIndex: rowIndex,
   });
 
+export const getLastNRows = async (
+  sheetsObj: sheets_v4.Sheets,
+  spreadsheetId: string,
+  fullRange: string,
+  n: number
+) => {
+  const properties = await getProperties(sheetsObj, spreadsheetId);
+  const { rowCount } = properties;
+
+  const sheetName = fullRange.split("!")[0];
+  const startRow = Math.max(2, rowCount - n + 1);
+  const dataRange = `${sheetName}!A${startRow}:Z${rowCount}`;
+  const headerRange = `${sheetName}!1:1`;
+
+  const headerArray = getArray(sheetsObj, spreadsheetId, headerRange);
+  const dataArray = getArray(sheetsObj, spreadsheetId, dataRange);
+
+  return toObjectArray(await dataArray, (await headerArray)[0]);
+};
+
 type ArrayRow = unknown[] | readonly unknown[];
 type ObjectRecord = Record<string, unknown>;
 

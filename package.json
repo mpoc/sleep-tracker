@@ -20,8 +20,10 @@
     "ultracite": "^7.1.1"
   },
   "dependencies": {
+    "@ai-sdk/anthropic": "^3.0.44",
     "@elysiajs/bearer": "^1.4.2",
     "@elysiajs/static": "^1.4.7",
+    "ai": "^6.0.86",
     "elysia": "^1.4.22",
     "geo-tz": "^8.1.5",
     "googleapis": "^171.0.0",

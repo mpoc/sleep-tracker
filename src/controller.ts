@@ -7,6 +7,7 @@ import { sendEntryNotification } from "./notifications";
 import { addSubscription, removeSubscription } from "./pushSubscriptions";
 import {
   append,
+  getLastNRows,
   getLastRow,
   getObjectArray,
   getProperties,
@@ -53,8 +54,43 @@ export const logSleepRoute = async (position: GeolocationPosition) => {
   return { updatedRow };
 };
 
-export const getSleepRoute = async () => {
+export const getRecentSleepEntries = async (count: number) => {
   const sheets = await getSheets();
+  const result = await getLastNRows(
+    sheets,
+    env.SPREADSHEET_ID,
+    env.SPREADSHEET_RANGE,
+    count
+  ).catch((cause) => {
+    throw new Error("Failed to retrieve recent rows", { cause });
+  });
+  return SheetsSleepEntry.array().parse(result);
+};
+
+export const getSleepRoute = async (options?: {
+  offset?: number;
+  limit?: number;
+}) => {
+  const sheets = await getSheets();
+
+  if (options?.limit !== undefined) {
+    const effectiveCount = options.limit + (options.offset ?? 0);
+    const result = await getLastNRows(
+      sheets,
+      env.SPREADSHEET_ID,
+      env.SPREADSHEET_RANGE,
+      effectiveCount
+    ).catch((cause) => {
+      throw new Error("Failed to retrieve rows", { cause });
+    });
+
+    const parsed = SheetsSleepEntry.array().parse(result);
+
+    if (options.offset) {
+      return parsed.slice(0, parsed.length - options.offset);
+    }
+    return parsed;
+  }
 
   const result = await getObjectArray(
     sheets,

@@ -2,6 +2,7 @@ import { bearer } from "@elysiajs/bearer";
 import { staticPlugin } from "@elysiajs/static";
 import { Elysia } from "elysia";
 import logixlysia from "logixlysia";
+import { aiNotificationLoop } from "./aiNotifications";
 import { checkReminderLoop } from "./checkReminderLoop";
 import {
   checkRequestApiKey,
@@ -50,7 +51,11 @@ new Elysia()
       .post("/sleep", ({ body }) => logSleepRoute(body), {
         body: GeolocationPositionSchema,
       })
-      .get("/sleep", () => getSleepRoute())
+      .get("/sleep", ({ query }) => {
+        const offset = query.offset ? Number(query.offset) : undefined;
+        const limit = query.limit ? Number(query.limit) : undefined;
+        return getSleepRoute({ offset, limit });
+      })
       .put("/sleep/replace", ({ body }) => replaceLastSleepRoute(body), {
         body: GeolocationPositionSchema,
       })
@@ -68,3 +73,4 @@ new Elysia()
   .listen(PORT);
 
 checkReminderLoop();
+aiNotificationLoop();
