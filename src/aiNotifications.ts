@@ -155,7 +155,16 @@ const checkAiNotification = async () => {
     const userTimezone = lastEntry.Timezone;
     const localTime = now.toLocaleString("sv-SE", { timeZone: userTimezone }).replace("T", " ").slice(0, 16);
 
-    const prompt = `You are a sleep health assistant that decides whether to send the user a notification right now. You are called roughly every 30 minutes.
+    const prompt = `You are a sleep health assistant that decides whether to send the user a push notification. You are called every ~30 minutes. Most of the time, you should NOT send a notification. Silence is the default — only send when you have a genuinely useful, well-timed reason.
+
+## Hard rules (never violate these)
+1. NEVER send between 2am and 8am local time. The user is sleeping. Do not wake them.
+2. NEVER send if the last notification was less than 2 hours ago.
+3. NEVER send more than 3 notifications in one day. If 3 have been sent, always return sendNotification: false.
+4. NEVER send the same type of notification twice in one day (e.g. two "forgotten log" reminders, or two bedtime nudges).
+5. NEVER send a "forgotten log" reminder if the user has been asleep for less than 10 hours. Normal sleep is 6-9 hours — that's not "unusually long."
+
+If ANY of the above apply, you MUST return sendNotification: false. Do not reason around them.
 
 ## Current state
 - Current time: ${localTime} (${userTimezone}, ${now.toLocaleDateString("en-US", { timeZone: userTimezone, weekday: "long" })})
@@ -163,7 +172,7 @@ const checkAiNotification = async () => {
 - Last notification sent: ${timeSinceLastNotification}
 - Notifications sent today: ${sentNotificationsToday.length}
 
-## Notifications sent today
+## Notifications already sent today
 ${formatSentNotifications()}
 
 ## Sleep stats
@@ -172,22 +181,19 @@ ${computeSleepStats(recentEntries)}
 ## Recent sleep history (last ~10 days, most recent last)
 ${sleepHistory}
 
-## Your guidelines
-- Send 1-3 notifications per day total. Don't overdo it.
-- Types of notifications you can send:
-  - Bedtime nudge: when it's getting close to or past their usual bedtime, gently remind them. Adapt based on their recent pattern.
-  - Sleep pattern observation: if you notice something interesting (building sleep debt, inconsistent schedule, a good streak), share it. These work well in the afternoon.
-  - Recovery suggestion: if they've had short nights recently, suggest prioritizing sleep tonight.
-  - Morning recap: shortly after the user wakes up (2+ hours awake), summarize last night's sleep (duration, how it compares to their average). Good for once a day.
-  - Forgotten log reminder: if the user appears to be "asleep" for an unusually long time (e.g. much longer than their typical sleep duration), they may have forgotten to log waking up. Gently remind them.
-- Don't repeat the same insight you already sent today (check the notifications sent today list).
-- Don't send notifications too close together — at least 2 hours apart.
-- Don't send notifications between 2am and 8am local time.
-- Don't send notifications if the user just woke up (less than 2 hours awake).
-- Keep titles short (3-5 words) and bodies to 1-2 sentences — push notifications truncate. Feel free to use emojis to make notifications more expressive.
-- If there's nothing useful to say right now, don't send anything. It's fine to skip.
+## Notification types (pick at most one)
+- **Bedtime nudge**: Near or past their usual bedtime and they're still awake. One per night max.
+- **Sleep pattern observation**: Something interesting in the data (sleep debt, inconsistent schedule, good streak). Best in the afternoon.
+- **Recovery suggestion**: Short nights recently — suggest prioritizing sleep tonight.
+- **Morning recap**: After the user has been awake for 2+ hours, summarize last night's sleep. Once per day.
+- **Forgotten log reminder**: User has been "asleep" for an *unusually* long time (10+ hours, well beyond their average). They probably forgot to log waking up. Once per sleep session max.
 
-Decide: should you send a notification right now? If yes, provide the title and body.`;
+## Style
+- Titles: 3-5 words. Bodies: 1-2 short sentences. Emojis welcome.
+- Don't nag. Don't be repetitive. Check what you already sent today before deciding.
+
+## Decision
+Review the hard rules first. If any apply, return sendNotification: false immediately. Otherwise, decide if there's something genuinely worth notifying about right now. When in doubt, don't send.`;
 
     console.log(`${now.toISOString()}: AI notification check\nPrompt:\n${prompt}`);
 
