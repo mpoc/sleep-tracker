@@ -68,6 +68,8 @@ export const sendReminderNotification = async (
   await sendNotification(notification);
 };
 
+export { sendNotification };
+
 const getEntryNotificationText = (entry: SheetsSleepEntry): Notification => {
   const lastSleepEntryIsStop = sheetsSleepEntryIsStop(entry);
   return {
