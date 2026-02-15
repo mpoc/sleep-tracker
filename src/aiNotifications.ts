@@ -1,5 +1,5 @@
 import { generateObject } from "ai";
-import { createAnthropic } from "@ai-sdk/anthropic";
+import { createOpenAI } from "@ai-sdk/openai";
 import ms from "ms";
 import { z } from "zod";
 import { env } from "./config";
@@ -45,8 +45,11 @@ const getModel = () => {
   if (!env.AI_API_KEY) {
     throw new Error("AI_API_KEY not configured");
   }
-  const anthropic = createAnthropic({ apiKey: env.AI_API_KEY });
-  return anthropic(env.AI_MODEL);
+  const provider = createOpenAI({
+    apiKey: env.AI_API_KEY,
+    baseURL: env.AI_BASE_URL,
+  });
+  return provider(env.AI_MODEL);
 };
 
 const formatSleepHistory = (entries: SheetsSleepEntry[]): string => {
@@ -79,19 +82,18 @@ const checkAiNotification = async () => {
   try {
     const lastSleepData = await getLastSleep();
     const lastEntry = lastSleepData.lastSleepEntry;
-
-    // Only run while awake (last entry is a stop/wake entry)
-    if (!sheetsSleepEntryIsStop(lastEntry)) {
-      return;
-    }
+    const isAwake = sheetsSleepEntryIsStop(lastEntry);
 
     resetDailyNotificationsIfNeeded();
 
     const recentEntries = await getRecentSleepEntries(14);
     const sleepHistory = formatSleepHistory(recentEntries);
 
-    const msSinceWake = millisecondsSinceSleepEntry(lastEntry);
-    const hoursAwake = (msSinceWake / (1000 * 60 * 60)).toFixed(1);
+    const msSinceLastEntry = millisecondsSinceSleepEntry(lastEntry);
+    const hoursSinceLastEntry = (msSinceLastEntry / (1000 * 60 * 60)).toFixed(1);
+    const currentState = isAwake
+      ? `Awake for ${hoursSinceLastEntry} hours`
+      : `Asleep for ${hoursSinceLastEntry} hours (or forgot to log waking up)`;
 
     const msSinceLastNotification =
       sentNotificationsToday.length > 0
@@ -108,11 +110,11 @@ const checkAiNotification = async () => {
       model: getModel(),
       maxTokens: 300,
       schema: AiNotificationResponse,
-      prompt: `You are a sleep health assistant that decides whether to send the user a notification right now. You are called roughly every 30 minutes while the user is awake.
+      prompt: `You are a sleep health assistant that decides whether to send the user a notification right now. You are called roughly every 30 minutes.
 
 ## Current state
 - Current time: ${now.toISOString()}
-- User has been awake for: ${hoursAwake} hours
+- User status: ${currentState}
 - Last notification sent: ${timeSinceLastNotification}
 - Notifications sent today: ${sentNotificationsToday.length}
 
@@ -128,6 +130,7 @@ ${sleepHistory}
   - Bedtime nudge: when it's getting close to or past their usual bedtime, gently remind them. Adapt based on their recent pattern.
   - Sleep pattern observation: if you notice something interesting (building sleep debt, inconsistent schedule, a good streak), share it. These work well in the afternoon.
   - Recovery suggestion: if they've had short nights recently, suggest prioritizing sleep tonight.
+  - Forgotten log reminder: if the user appears to be "asleep" for an unusually long time (e.g. much longer than their typical sleep duration), they may have forgotten to log waking up. Gently remind them.
 - Don't repeat the same insight you already sent today (check the notifications sent today list).
 - Don't send notifications too close together — at least 2 hours apart.
 - Don't send notifications if the user just woke up (less than 2 hours awake).

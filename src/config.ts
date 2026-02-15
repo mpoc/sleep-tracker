@@ -9,7 +9,8 @@ export const env = z
     PUSHBULLET_ENABLED: z.stringbool(),
     WEB_PUSH_ENABLED: z.stringbool(),
     AI_API_KEY: z.string().optional(),
-    AI_MODEL: z.string().optional().default("claude-sonnet-4-20250514"),
+    AI_BASE_URL: z.string().optional(),
+    AI_MODEL: z.string().optional().default("kimi-k2.5"),
     AI_NOTIFICATIONS_ENABLED: z.stringbool().optional().default("false"),
   })
   .parse(process.env);
