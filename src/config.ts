@@ -11,6 +11,7 @@ export const env = z
     AI_API_KEY: z.string().optional(),
     AI_BASE_URL: z.string().optional(),
     AI_MODEL: z.string().optional().default("kimi-k2.5"),
+    AI_CHECK_INTERVAL: z.string().optional().default("30 minutes"),
     AI_NOTIFICATIONS_ENABLED: z.stringbool().optional().default("false"),
   })
   .parse(process.env);

@@ -8,7 +8,7 @@ import { sendNotification } from "./notifications";
 import type { Notification, SheetsSleepEntry } from "./types";
 import { millisecondsSinceSleepEntry, sheetsSleepEntryIsStop } from "./utils";
 
-const AI_CHECK_INTERVAL = "30 minutes";
+const AI_CHECK_INTERVAL = env.AI_CHECK_INTERVAL;
 
 const AiNotificationResponse = z.object({
   sendNotification: z
@@ -106,6 +106,10 @@ const checkAiNotification = async () => {
 
     const now = new Date();
 
+    console.log(
+      `${now.toISOString()}: AI notification check — ${currentState}, notifications today: ${sentNotificationsToday.length}, last notification: ${timeSinceLastNotification}`
+    );
+
     const { object: result } = await generateObject({
       model: getModel(),
       maxTokens: 300,
@@ -147,7 +151,7 @@ Decide: should you send a notification right now? If yes, provide the title and 
       };
 
       console.log(
-        `${now.toISOString()}: Sending AI notification: "${result.title}"`
+        `${now.toISOString()}: AI decided to send — "${result.title}": ${result.body}`
       );
 
       await sendNotification(notification);
@@ -157,6 +161,8 @@ Decide: should you send a notification right now? If yes, provide the title and 
         body: result.body,
         sentAt: now,
       });
+    } else {
+      console.log(`${now.toISOString()}: AI decided not to send a notification`);
     }
   } catch (error) {
     console.error("AI notification check failed:", error);
@@ -168,7 +174,7 @@ export const aiNotificationLoop = () => {
     return;
   }
 
-  console.log("Starting AI notification loop");
+  console.log(`Starting AI notification loop (interval: ${AI_CHECK_INTERVAL})`);
   checkAiNotification();
   setTimeout(aiNotificationLoop, ms(AI_CHECK_INTERVAL));
 };
