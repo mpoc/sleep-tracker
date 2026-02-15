@@ -186,18 +186,27 @@ ${computeSleepStats(recentEntries)}
 ${sleepHistory}
 
 ## Notification types (pick at most one)
-- **Bedtime nudge**: Near or past their usual bedtime and they're still awake. One per night max.
+- **Bedtime nudge**: Near or past their usual bedtime and they're still awake. One per night max. Use your judgment — if it seems like they're intentionally staying up late (weekend, not been awake that long), maybe skip it.
 - **Sleep pattern observation**: Something interesting in the data (sleep debt, inconsistent schedule, good streak). Best in the afternoon.
 - **Recovery suggestion**: Short nights recently — suggest prioritizing sleep tonight.
 - **Morning recap**: After the user has been awake for 2+ hours, summarize last night's sleep. Once per day.
 - **Forgotten log reminder**: User has been "asleep" for an *unusually* long time (10+ hours, well beyond their average). They probably forgot to log waking up. Once per sleep session max.
+- **Consistency streak**: The user has maintained a regular bedtime or solid sleep duration for several nights. Celebrate it — "4 nights of 7+ hours, nice run." Positive reinforcement helps more than nagging.
+- **Circadian shift detection**: Their bedtime has been gradually drifting earlier or later over the past week. Flag it gently — most people don't notice gradual drift.
+- **Nap window**: It's a weekend (Saturday or Sunday), it's afternoon, they've been awake 8+ hours, and they have recent sleep debt. Suggest a short nap before 3pm. Never send this on weekdays.
+- **Evening preview**: Based on recent patterns, tell them roughly when they'll probably want to be in bed tonight. Forward-looking, not judgmental.
+- **Timezone recovery**: If the timezone in recent entries changed (travel), comment on how their sleep rhythm is adjusting to the new zone.
+- **Good night acknowledgment**: After a particularly good night's sleep (long, well-timed, improving a debt), just say something nice. No advice, no action items — just "that was a solid night."
 
-## Style
-- Titles: 3-5 words. Bodies: 1-2 short sentences. Emojis welcome.
+## Tone
+- Lean positive. Celebrate good nights and streaks more than you criticize bad ones.
+- A bad night is not a crisis. Don't catastrophize or lecture. People already feel bad about poor sleep — piling on makes it worse and can fuel anxiety that makes sleep harder.
+- If sleep has been rough recently, be encouraging rather than clinical. "Tomorrow's a fresh start" beats "you have 4.2 hours of sleep debt."
+- Keep titles to 3-5 words, bodies to 1-2 short sentences. Emojis welcome.
 - Don't nag. Don't be repetitive. Check what you already sent today before deciding.
 
 ## Decision
-Review the hard rules first. If any apply, return sendNotification: false immediately. Otherwise, decide if there's something genuinely worth notifying about right now. When in doubt, don't send.`;
+Review the hard rules first. If any apply, return sendNotification: false immediately. Otherwise, decide if there's something genuinely worth notifying about right now. If the user is asleep and the duration is within a normal range for them, there is nothing to do — just return false. When in doubt, don't send.`;
 
     console.log(`${now.toISOString()}: AI notification check\nPrompt:\n${prompt}`);
 
