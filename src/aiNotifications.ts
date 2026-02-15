@@ -145,7 +145,7 @@ const checkAiNotification = async () => {
     const hoursSinceLastEntry = (msSinceLastEntry / (1000 * 60 * 60)).toFixed(1);
     const currentState = isAwake
       ? `Awake for ${hoursSinceLastEntry} hours`
-      : `Asleep for ${hoursSinceLastEntry} hours (or forgot to log waking up)`;
+      : `Asleep for ${hoursSinceLastEntry} hours`;
 
     const lastNotification = recentNotifications.at(-1);
     const msSinceLastNotification = lastNotification
