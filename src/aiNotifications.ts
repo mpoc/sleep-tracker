@@ -65,7 +65,7 @@ const formatSleepHistory = (entries: SheetsSleepEntry[]): string => {
     .map((entry) => {
       const type = entry.Duration ? "Woke up" : "Fell asleep";
       const duration = entry.Duration ? ` (slept ${entry.Duration})` : "";
-      return `${type}: ${entry["Timezone local time"]}${duration}`;
+      return `${type}: ${entry["Timezone local time"]} (${entry.Timezone})${duration}`;
     })
     .join("\n");
 };
