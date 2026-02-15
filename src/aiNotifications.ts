@@ -106,15 +106,7 @@ const checkAiNotification = async () => {
 
     const now = new Date();
 
-    console.log(
-      `${now.toISOString()}: AI notification check — ${currentState}, notifications today: ${sentNotificationsToday.length}, last notification: ${timeSinceLastNotification}`
-    );
-
-    const { object: result } = await generateObject({
-      model: getModel(),
-      maxTokens: 300,
-      schema: AiNotificationResponse,
-      prompt: `You are a sleep health assistant that decides whether to send the user a notification right now. You are called roughly every 30 minutes.
+    const prompt = `You are a sleep health assistant that decides whether to send the user a notification right now. You are called roughly every 30 minutes.
 
 ## Current state
 - Current time: ${now.toISOString()}
@@ -141,18 +133,26 @@ ${sleepHistory}
 - Keep messages warm, concise (2-3 sentences max). Feel free to use emojis to make notifications more expressive.
 - If there's nothing useful to say right now, don't send anything. It's fine to skip.
 
-Decide: should you send a notification right now? If yes, provide the title and body.`,
+Decide: should you send a notification right now? If yes, provide the title and body.`;
+
+    console.log(`${now.toISOString()}: AI notification check\nPrompt:\n${prompt}`);
+
+    const { object: result } = await generateObject({
+      model: getModel(),
+      maxTokens: 300,
+      schema: AiNotificationResponse,
+      prompt,
     });
+
+    console.log(
+      `${now.toISOString()}: AI response: ${JSON.stringify(result)}`
+    );
 
     if (result.sendNotification && result.title && result.body) {
       const notification: Notification = {
         title: result.title,
         body: result.body,
       };
-
-      console.log(
-        `${now.toISOString()}: AI decided to send — "${result.title}": ${result.body}`
-      );
 
       await sendNotification(notification);
 
@@ -161,8 +161,6 @@ Decide: should you send a notification right now? If yes, provide the title and 
         body: result.body,
         sentAt: now,
       });
-    } else {
-      console.log(`${now.toISOString()}: AI decided not to send a notification`);
     }
   } catch (error) {
     console.error("AI notification check failed:", error);
