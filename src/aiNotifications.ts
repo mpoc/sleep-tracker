@@ -7,7 +7,7 @@ import { getLastSleep, getRecentSleepEntries } from "./controller";
 import { sendNotification } from "./notifications";
 import type { Notification, SheetsSleepEntry, SentNotification } from "./types";
 import { jsonToSentNotifications } from "./types";
-import { millisecondsSinceSleepEntry, sheetsSleepEntryIsStop } from "./utils";
+import { circularStatsHours, millisecondsSinceSleepEntry, sheetsSleepEntryIsStop } from "./utils";
 
 const AI_CHECK_INTERVAL = env.AI_CHECK_INTERVAL;
 const NOTIFICATIONS_PATH = "./data/sent-notifications.json";
@@ -77,13 +77,13 @@ const parseUtcTime = (entry: SheetsSleepEntry): Date => {
 
 const computeSleepStats = (entries: SheetsSleepEntry[]): string => {
   // Find pairs: fell asleep (no Duration) followed by woke up (has Duration)
-  const sleepSessions: { start: Date; hours: number }[] = [];
+  const sleepSessions: { localTime: string; hours: number }[] = [];
   for (let i = 0; i < entries.length - 1; i++) {
     if (entries[i].Duration || !entries[i + 1].Duration) continue;
     const startTime = parseUtcTime(entries[i]);
     const endTime = parseUtcTime(entries[i + 1]);
     const hours = (endTime.valueOf() - startTime.valueOf()) / (1000 * 60 * 60);
-    if (hours > 0 && hours < 24) sleepSessions.push({ start: startTime, hours });
+    if (hours > 0 && hours < 24) sleepSessions.push({ localTime: entries[i]["Timezone local time"], hours });
   }
 
   if (sleepSessions.length === 0) return "Not enough data to compute stats.";
@@ -97,23 +97,22 @@ const computeSleepStats = (entries: SheetsSleepEntry[]): string => {
     .reduce((sum, h) => sum + Math.max(0, 8 - h), 0);
 
   const bedtimeHours = sleepSessions.map((s) => {
-    const h = s.start.getUTCHours() + s.start.getUTCMinutes() / 60;
-    // Shift past-midnight bedtimes (e.g. 1am -> 25) so averaging across midnight works
-    return h < 12 ? h + 24 : h;
+    const d = new Date(s.localTime);
+    return d.getHours() + d.getMinutes() / 60;
   });
-  const avgBedtime = bedtimeHours.reduce((a, b) => a + b, 0) / bedtimeHours.length;
-  const variance = bedtimeHours.reduce((sum, h) => sum + (h - avgBedtime) ** 2, 0) / bedtimeHours.length;
-  const stddev = Math.sqrt(variance);
+  const { meanHours, stdHours } = circularStatsHours(bedtimeHours);
   const fmtHour = (h: number) => {
-    const n = h >= 24 ? h - 24 : h;
-    return `${Math.floor(n)}:${String(Math.round((n % 1) * 60)).padStart(2, "0")}`;
+    const totalMinutes = Math.round(h * 60);
+    const hrs = Math.floor(totalMinutes / 60) % 24;
+    const mins = totalMinutes % 60;
+    return `${hrs}:${String(mins).padStart(2, "0")}`;
   };
 
   return [
     `Average sleep: ${avg.toFixed(1)}h`,
     `Range: ${shortest.toFixed(1)}h – ${longest.toFixed(1)}h`,
     `Recent sleep debt (last 5 nights, vs 8h target): ${recentDebt.toFixed(1)}h`,
-    `Average bedtime (UTC): ${fmtHour(avgBedtime)} (±${(stddev * 60).toFixed(0)} min spread)`,
+    `Average bedtime (local time): ${fmtHour(meanHours)} (±${(stdHours * 60).toFixed(0)} min spread)`,
   ].join("\n");
 };
 
