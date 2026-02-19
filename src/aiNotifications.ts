@@ -28,7 +28,7 @@ const AiNotificationResponse = z.object({
 });
 
 const loadRecentNotifications = async (): Promise<SentNotification[]> => {
-  const cutoff = Date.now() - 24 * 60 * 60 * 1000;
+  const cutoff = Date.now() - 7 * 24 * 60 * 60 * 1000;
   try {
     const data = await Bun.file(NOTIFICATIONS_PATH).text();
     const all = jsonToSentNotifications.decode(data);
@@ -140,6 +140,9 @@ export const checkAiNotification = async (options?: { force?: boolean }) => {
     const isAwake = sheetsSleepEntryIsStop(lastEntry);
 
     const recentNotifications = await loadRecentNotifications();
+    const last24h = recentNotifications.filter(
+      (n) => n.sentAt.valueOf() >= Date.now() - 24 * 60 * 60 * 1000
+    );
 
     const recentEntries = await getRecentSleepEntries(20);
     const sleepHistory = formatSleepHistory(recentEntries);
@@ -150,7 +153,7 @@ export const checkAiNotification = async (options?: { force?: boolean }) => {
       ? `Awake for ${hoursSinceLastEntry} hours`
       : `Asleep for ${hoursSinceLastEntry} hours`;
 
-    const lastNotification = recentNotifications.at(-1);
+    const lastNotification = last24h.at(-1);
     const msSinceLastNotification = lastNotification
       ? Date.now() - lastNotification.sentAt.valueOf()
       : null;
@@ -177,9 +180,9 @@ Most checks, you'll have nothing worth saying. That's fine. But when something g
 - Current time: ${localTime} (${userTimezone}, ${now.toLocaleDateString("en-US", { timeZone: userTimezone, weekday: "long" })})
 - User status: ${currentState}
 - Last notification sent: ${timeSinceLastNotification}
-- Notifications in last 24h: ${recentNotifications.length}
+- Notifications in last 24h: ${last24h.length}
 
-## Notifications already sent in last 24 hours
+## Notifications sent in last 7 days (with user feedback)
 ${formatSentNotifications(recentNotifications)}
 
 Each notification above shows user feedback (👍 useful / 👎 not useful / no feedback). Use this to calibrate what kinds of notifications the user actually finds valuable.
