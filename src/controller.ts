@@ -17,7 +17,7 @@ import {
 } from "./sheets";
 import {
   type GeolocationPosition,
-  jsonToSentNotifications,
+  jsonlToSentNotifications,
   type NotificationFeedbackRequest,
   type PushSubscription,
   SheetsSleepEntry,
@@ -265,14 +265,14 @@ export const unsubscribeRoute = async (body: { endpoint: string }) => {
   return {};
 };
 
-const NOTIFICATIONS_PATH = "./data/sent-notifications.json";
+const NOTIFICATIONS_PATH = "./data/sent-notifications.jsonl";
 
 export const notificationFeedbackRoute = async (
   body: NotificationFeedbackRequest
 ) => {
   console.log("Notification feedback received:", JSON.stringify(body));
   const data = await Bun.file(NOTIFICATIONS_PATH).text();
-  const all = jsonToSentNotifications.decode(data);
+  const all = jsonlToSentNotifications.decode(data);
 
   const entry = all.find((n) => n.id === body.id);
   if (!entry) {
@@ -286,14 +286,14 @@ export const notificationFeedbackRoute = async (
   entry.feedback = body.feedback;
   entry.feedbackGivenAt = new Date();
 
-  await Bun.write(NOTIFICATIONS_PATH, jsonToSentNotifications.encode(all));
+  await Bun.write(NOTIFICATIONS_PATH, jsonlToSentNotifications.encode(all));
 
   return {};
 };
 
 export const getNotificationRoute = async (id: string) => {
   const data = await Bun.file(NOTIFICATIONS_PATH).text();
-  const all = jsonToSentNotifications.decode(data);
+  const all = jsonlToSentNotifications.decode(data);
   const entry = all.find((n) => n.id === id);
   if (!entry) {
     throw new Error("Notification not found");

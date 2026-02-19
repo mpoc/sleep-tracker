@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { jsonCodec } from "./jsonCodec";
+import { jsonCodec, jsonlCodec } from "./jsonCodec";
 
 export const GeolocationPositionSchema = z.object({
   coords: z.object({
@@ -117,7 +117,7 @@ export const SentNotification = z.object({
   feedbackGivenAt: z.coerce.date().optional(),
 });
 export type SentNotification = z.infer<typeof SentNotification>;
-export const jsonToSentNotifications = jsonCodec(z.array(SentNotification));
+export const jsonlToSentNotifications = jsonlCodec(SentNotification);
 
 export const NotificationFeedbackRequest = z.object({
   id: z.string(),

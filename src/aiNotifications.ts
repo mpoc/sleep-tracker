@@ -1,3 +1,4 @@
+import { appendFile } from "node:fs/promises";
 import { createAnthropic } from "@ai-sdk/anthropic";
 import { generateObject } from "ai";
 import { randomUUIDv7 } from "bun";
@@ -7,7 +8,7 @@ import { env } from "./config";
 import { getLastSleep, getRecentSleepEntries } from "./controller";
 import { sendNotification } from "./notifications";
 import type { Notification, SentNotification, SheetsSleepEntry } from "./types";
-import { jsonToSentNotifications } from "./types";
+import { jsonlToSentNotifications } from "./types";
 import {
   circularStatsHours,
   millisecondsSinceSleepEntry,
@@ -15,7 +16,7 @@ import {
 } from "./utils";
 
 const AI_CHECK_INTERVAL = env.AI_CHECK_INTERVAL;
-const NOTIFICATIONS_PATH = "./data/sent-notifications.json";
+const NOTIFICATIONS_PATH = "./data/sent-notifications.jsonl";
 
 const AiNotificationResponse = z.object({
   sendNotification: z
@@ -35,7 +36,7 @@ const loadRecentNotifications = async (): Promise<SentNotification[]> => {
   const cutoff = Date.now() - 7 * 24 * 60 * 60 * 1000;
   try {
     const data = await Bun.file(NOTIFICATIONS_PATH).text();
-    const all = jsonToSentNotifications.decode(data);
+    const all = jsonlToSentNotifications.decode(data);
     return all.filter((n) => n.sentAt.valueOf() >= cutoff);
   } catch {
     return [];
@@ -43,15 +44,7 @@ const loadRecentNotifications = async (): Promise<SentNotification[]> => {
 };
 
 const appendNotification = async (n: SentNotification): Promise<void> => {
-  let all: SentNotification[] = [];
-  try {
-    const data = await Bun.file(NOTIFICATIONS_PATH).text();
-    all = jsonToSentNotifications.decode(data);
-  } catch {
-    // file doesn't exist yet
-  }
-  all.push(n);
-  await Bun.write(NOTIFICATIONS_PATH, jsonToSentNotifications.encode(all));
+  await appendFile(NOTIFICATIONS_PATH, jsonlToSentNotifications.encode([n]));
 };
 
 const getModel = () => {
