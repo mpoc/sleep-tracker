@@ -1,3 +1,4 @@
+import { randomUUIDv7 } from "bun";
 import { generateObject } from "ai";
 import { createAnthropic } from "@ai-sdk/anthropic";
 import ms from "ms";
@@ -121,11 +122,14 @@ const formatSentNotifications = (recent: SentNotification[]): string => {
     return "No recent notifications.";
   }
   return recent
-    .map((n) => `[${n.sentAt.toISOString()}] "${n.title}": ${n.body}`)
+    .map((n) => {
+      const fb = n.feedback ? ` [${n.feedback === "useful" ? "👍 useful" : "👎 not useful"}]` : " [no feedback]";
+      return `[${n.sentAt.toISOString()}] "${n.title}": ${n.body}${fb}`;
+    })
     .join("\n");
 };
 
-const checkAiNotification = async () => {
+export const checkAiNotification = async () => {
   if (!env.AI_NOTIFICATIONS_ENABLED || !env.AI_API_KEY) {
     return;
   }
@@ -177,6 +181,8 @@ Most checks, you'll have nothing worth saying. That's fine. But when something g
 
 ## Notifications already sent in last 24 hours
 ${formatSentNotifications(recentNotifications)}
+
+Each notification above shows user feedback (👍 useful / 👎 not useful / no feedback). Use this to calibrate what kinds of notifications the user actually finds valuable.
 
 ## Sleep stats
 ${computeSleepStats(recentEntries)}
@@ -242,14 +248,16 @@ If the guardrails rule it out, return sendNotification: false. Otherwise, look a
     );
 
     if (result.sendNotification && result.title && result.body) {
+      const id = randomUUIDv7();
       const notification: Notification = {
         title: result.title,
         body: result.body,
       };
 
-      await sendNotification(notification);
+      await sendNotification(notification, { id });
 
       await appendNotification({
+        id,
         title: result.title,
         body: result.body,
         sentAt: now,

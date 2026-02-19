@@ -101,13 +101,27 @@ export const ErrorResponse = z.object({
 });
 export type ErrorResponse = z.infer<typeof ErrorResponse>;
 
+export const NotificationFeedback = z.enum(["useful", "not-useful"]);
+export type NotificationFeedback = z.infer<typeof NotificationFeedback>;
+
 export const SentNotification = z.object({
+  id: z.string(),
   title: z.string(),
   body: z.string(),
   sentAt: z.coerce.date(),
+  feedback: NotificationFeedback.optional(),
+  feedbackGivenAt: z.coerce.date().optional(),
 });
 export type SentNotification = z.infer<typeof SentNotification>;
 export const jsonToSentNotifications = jsonCodec(z.array(SentNotification));
+
+export const NotificationFeedbackRequest = z.object({
+  id: z.string(),
+  feedback: NotificationFeedback,
+});
+export type NotificationFeedbackRequest = z.infer<typeof NotificationFeedbackRequest>;
+
+export type NotificationFeedbackRouteResponse = Record<string, never>;
 
 export const PushSubscription = z.object({
   endpoint: z.url(),

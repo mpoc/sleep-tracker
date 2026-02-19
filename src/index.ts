@@ -10,6 +10,7 @@ import {
   getSleepRoute,
   getVapidKeyRoute,
   logSleepRoute,
+  notificationFeedbackRoute,
   replaceLastSleepRoute,
   subscribeRoute,
   unsubscribeRoute,
@@ -17,6 +18,7 @@ import {
 import { UnauthorizedError } from "./error";
 import {
   GeolocationPositionSchema,
+  NotificationFeedbackRequest,
   PushSubscription,
   UnsubscribeRequest,
 } from "./types";
@@ -67,6 +69,11 @@ new Elysia()
       .post("/push/unsubscribe", ({ body }) => unsubscribeRoute(body), {
         body: UnsubscribeRequest,
       })
+  )
+  .post(
+    "/api/notifications/feedback",
+    ({ body }) => notificationFeedbackRoute(body),
+    { body: NotificationFeedbackRequest }
   )
   .get("/", sleepReactHtml)
   .use(staticPlugin({ assets: "./src/static/", prefix: "/" }))

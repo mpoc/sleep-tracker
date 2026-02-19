@@ -59,7 +59,8 @@ export const getVapidPublicKey = (): string | null => {
 };
 
 export const sendWebPushNotification = async (
-  notification: Notification
+  notification: Notification,
+  extra?: Record<string, unknown>
 ): Promise<void> => {
   if (!initializeWebPush()) {
     console.warn("Web push not initialized, skipping notification");
@@ -74,6 +75,7 @@ export const sendWebPushNotification = async (
   const payload = JSON.stringify({
     title: notification.title,
     body: notification.body,
+    ...extra,
   });
 
   const results = await Promise.allSettled(

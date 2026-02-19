@@ -27,7 +27,10 @@ const sendPushBulletNotification = async (notification: Notification) => {
   }
 };
 
-const sendNotification = async (notification: Notification) => {
+const sendNotification = async (
+  notification: Notification,
+  extra?: Record<string, unknown>
+) => {
   const promises: Promise<void>[] = [];
 
   if (env.PUSHBULLET_ENABLED) {
@@ -35,7 +38,7 @@ const sendNotification = async (notification: Notification) => {
   }
 
   if (env.WEB_PUSH_ENABLED) {
-    promises.push(sendWebPushNotification(notification));
+    promises.push(sendWebPushNotification(notification, extra));
   }
 
   const results = await Promise.allSettled(promises);

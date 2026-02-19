@@ -50,14 +50,35 @@ sw.addEventListener("push", (event) => {
     vibrate: [100, 50, 100],
     data: {
       url: sw.location.origin,
+      id: data.id,
     },
   };
+
+  if (data.id) {
+    options.actions = [
+      { action: "useful", title: "👍 Useful" },
+      { action: "not-useful", title: "👎 Not useful" },
+    ];
+  }
 
   event.waitUntil(sw.registration.showNotification(data.title, options));
 });
 
 sw.addEventListener("notificationclick", (event) => {
   event.notification.close();
+
+  const notificationId = event.notification.data?.id;
+
+  if (notificationId && (event.action === "useful" || event.action === "not-useful")) {
+    event.waitUntil(
+      fetch("/api/notifications/feedback", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: notificationId, feedback: event.action }),
+      }).catch((err) => console.error("Failed to send notification feedback:", err))
+    );
+    return;
+  }
 
   const url = event.notification.data?.url || "/";
 
