@@ -74,7 +74,7 @@ sw.addEventListener("notificationclick", (event) => {
       fetch("/api/notifications/feedback", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id: notificationId, feedback: event.action }),
+        body: JSON.stringify({ id: notificationId, feedback: event.action, debugAction: event.action }),
       }).catch((err) => console.error("Failed to send notification feedback:", err))
     );
     return;

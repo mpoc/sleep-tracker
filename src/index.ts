@@ -70,12 +70,17 @@ new Elysia()
         body: UnsubscribeRequest,
       })
   )
+  .onParse(({ request, contentType }) => {
+    if (request.url.includes("/api/notifications/feedback") && contentType === "application/json") {
+      return request.text().then((raw) => {
+        console.log("Raw feedback body:", raw);
+        return JSON.parse(raw);
+      });
+    }
+  })
   .post(
     "/api/notifications/feedback",
-    ({ body, request }) => {
-      request.clone().text().then((raw) => console.log("Raw feedback body:", raw));
-      return notificationFeedbackRoute(body);
-    },
+    ({ body }) => notificationFeedbackRoute(body),
     { body: NotificationFeedbackRequest }
   )
   .get("/", sleepReactHtml)
