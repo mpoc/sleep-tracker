@@ -1,14 +1,18 @@
-import { randomUUIDv7 } from "bun";
-import { generateObject } from "ai";
 import { createAnthropic } from "@ai-sdk/anthropic";
+import { generateObject } from "ai";
+import { randomUUIDv7 } from "bun";
 import ms from "ms";
 import { z } from "zod";
 import { env } from "./config";
 import { getLastSleep, getRecentSleepEntries } from "./controller";
 import { sendNotification } from "./notifications";
-import type { Notification, SheetsSleepEntry, SentNotification } from "./types";
+import type { Notification, SentNotification, SheetsSleepEntry } from "./types";
 import { jsonToSentNotifications } from "./types";
-import { circularStatsHours, millisecondsSinceSleepEntry, sheetsSleepEntryIsStop } from "./utils";
+import {
+  circularStatsHours,
+  millisecondsSinceSleepEntry,
+  sheetsSleepEntryIsStop,
+} from "./utils";
 
 const AI_CHECK_INTERVAL = env.AI_CHECK_INTERVAL;
 const NOTIFICATIONS_PATH = "./data/sent-notifications.json";
@@ -84,7 +88,11 @@ const computeSleepStats = (entries: SheetsSleepEntry[]): string => {
     const startTime = parseUtcTime(entries[i]);
     const endTime = parseUtcTime(entries[i + 1]);
     const hours = (endTime.valueOf() - startTime.valueOf()) / (1000 * 60 * 60);
-    if (hours > 0 && hours < 24) sleepSessions.push({ localTime: entries[i]["Timezone local time"], hours });
+    if (hours > 0 && hours < 24)
+      sleepSessions.push({
+        localTime: entries[i]["Timezone local time"],
+        hours,
+      });
   }
 
   if (sleepSessions.length === 0) return "Not enough data to compute stats.";
@@ -123,14 +131,16 @@ const formatSentNotifications = (recent: SentNotification[]): string => {
   }
   return recent
     .map((n) => {
-      const fb = n.feedback ? ` [${n.feedback === "useful" ? "👍 useful" : "👎 not useful"}]` : " [no feedback]";
+      const fb = n.feedback
+        ? ` [${n.feedback === "useful" ? "👍 useful" : "👎 not useful"}]`
+        : " [no feedback]";
       return `[${n.sentAt.toISOString()}] "${n.title}": ${n.body}${fb}`;
     })
     .join("\n");
 };
 
 export const checkAiNotification = async (options?: { force?: boolean }) => {
-  if (!env.AI_NOTIFICATIONS_ENABLED || !env.AI_API_KEY) {
+  if (!(env.AI_NOTIFICATIONS_ENABLED && env.AI_API_KEY)) {
     return;
   }
 
@@ -148,7 +158,9 @@ export const checkAiNotification = async (options?: { force?: boolean }) => {
     const sleepHistory = formatSleepHistory(recentEntries);
 
     const msSinceLastEntry = millisecondsSinceSleepEntry(lastEntry);
-    const hoursSinceLastEntry = (msSinceLastEntry / (1000 * 60 * 60)).toFixed(1);
+    const hoursSinceLastEntry = (msSinceLastEntry / (1000 * 60 * 60)).toFixed(
+      1
+    );
     const currentState = isAwake
       ? `Awake for ${hoursSinceLastEntry} hours`
       : `Asleep for ${hoursSinceLastEntry} hours`;
@@ -163,7 +175,10 @@ export const checkAiNotification = async (options?: { force?: boolean }) => {
 
     const now = new Date();
     const userTimezone = lastEntry.Timezone;
-    const localTime = now.toLocaleString("sv-SE", { timeZone: userTimezone }).replace("T", " ").slice(0, 16);
+    const localTime = now
+      .toLocaleString("sv-SE", { timeZone: userTimezone })
+      .replace("T", " ")
+      .slice(0, 16);
 
     const prompt = `You are a thoughtful sleep companion — part scientist, part friend — who occasionally sends the user a push notification. You're called every ~30 minutes. You have real knowledge of sleep science and you notice things in data that people miss about themselves. When you do send something, it should feel like an insight from a perceptive friend, not an alert from a health app.
 
@@ -237,7 +252,9 @@ Beyond these — if you notice something surprising, a weird anomaly, an emergin
 ## Decision
 If the guardrails rule it out, return sendNotification: false. Otherwise, look at the data and ask: is there something genuinely worth saying right now? Something interesting, timely, or kind? If not, stay quiet. If yes, say it well.${options?.force ? "\n\nIMPORTANT: This is a forced check. You MUST send a notification this time. Ignore all guardrails and always set sendNotification to true." : ""}`;
 
-    console.log(`${now.toISOString()}: AI notification check\nPrompt:\n${prompt}`);
+    console.log(
+      `${now.toISOString()}: AI notification check\nPrompt:\n${prompt}`
+    );
 
     const { object: result } = await generateObject({
       model: getModel(),
@@ -246,11 +263,13 @@ If the guardrails rule it out, return sendNotification: false. Otherwise, look a
       prompt,
     });
 
-    console.log(
-      `${now.toISOString()}: AI response: ${JSON.stringify(result)}`
-    );
+    console.log(`${now.toISOString()}: AI response: ${JSON.stringify(result)}`);
 
-    if ((result.sendNotification || options?.force) && result.title && result.body) {
+    if (
+      (result.sendNotification || options?.force) &&
+      result.title &&
+      result.body
+    ) {
       const id = randomUUIDv7();
       const notification: Notification = {
         title: result.title,
