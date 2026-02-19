@@ -80,12 +80,16 @@ export const GetLastSleepRouteResponse = z.object({
   lastSleepEntry: SheetsSleepEntry,
   numberOfSleepEntries: z.number(),
 });
-export type GetLastSleepRouteResponse = z.infer<typeof GetLastSleepRouteResponse>;
+export type GetLastSleepRouteResponse = z.infer<
+  typeof GetLastSleepRouteResponse
+>;
 
 export const ReplaceLastSleepRouteResponse = z.object({
   updatedRow: SheetsSleepEntry,
 });
-export type ReplaceLastSleepRouteResponse = z.infer<typeof ReplaceLastSleepRouteResponse>;
+export type ReplaceLastSleepRouteResponse = z.infer<
+  typeof ReplaceLastSleepRouteResponse
+>;
 
 export const VapidKeyRouteResponse = z.object({
   publicKey: z.string(),
@@ -119,7 +123,9 @@ export const NotificationFeedbackRequest = z.object({
   id: z.string(),
   feedback: NotificationFeedback,
 });
-export type NotificationFeedbackRequest = z.infer<typeof NotificationFeedbackRequest>;
+export type NotificationFeedbackRequest = z.infer<
+  typeof NotificationFeedbackRequest
+>;
 
 export type NotificationFeedbackRouteResponse = Record<string, never>;
 
