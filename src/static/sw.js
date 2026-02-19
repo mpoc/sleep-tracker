@@ -3,7 +3,7 @@
 /** @type {ServiceWorkerGlobalScope} */
 const sw = /** @type {any} */ (self);
 
-const CACHE_NAME = "sleep-tracker-v5";
+const CACHE_NAME = "sleep-tracker-v6";
 
 const PRECACHE_ASSETS = [
   "/manifest.webmanifest",
@@ -12,6 +12,8 @@ const PRECACHE_ASSETS = [
 ];
 
 sw.addEventListener("install", (event) => {
+  // Activate new SW immediately instead of waiting for all tabs to close
+  sw.skipWaiting();
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => cache.addAll(PRECACHE_ASSETS))
   );
@@ -28,6 +30,8 @@ sw.addEventListener("activate", (event) => {
             .map((key) => caches.delete(key))
         )
       )
+      // Take control of existing pages so they use the new SW right away
+      .then(() => sw.clients.claim())
   );
 });
 
@@ -74,7 +78,7 @@ sw.addEventListener("notificationclick", (event) => {
       fetch("/api/notifications/feedback", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id: notificationId, feedback: event.action, debugAction: event.action }),
+        body: JSON.stringify({ id: notificationId, feedback: event.action }),
       }).catch((err) => console.error("Failed to send notification feedback:", err))
     );
     return;
