@@ -72,7 +72,10 @@ new Elysia()
   )
   .post(
     "/api/notifications/feedback",
-    ({ body }) => notificationFeedbackRoute(body),
+    ({ body, request }) => {
+      request.clone().text().then((raw) => console.log("Raw feedback body:", raw));
+      return notificationFeedbackRoute(body);
+    },
     { body: NotificationFeedbackRequest }
   )
   .get("/", sleepReactHtml)

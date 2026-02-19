@@ -270,7 +270,7 @@ const NOTIFICATIONS_PATH = "./data/sent-notifications.json";
 export const notificationFeedbackRoute = async (
   body: NotificationFeedbackRequest
 ) => {
-  console.log(`Notification feedback received: id=${body.id}, feedback=${body.feedback}`);
+  console.log(`Notification feedback received:`, JSON.stringify(body));
   const data = await Bun.file(NOTIFICATIONS_PATH).text();
   const all = jsonToSentNotifications.decode(data);
 
