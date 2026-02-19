@@ -1,5 +1,5 @@
 import { checkAiNotification } from "../src/aiNotifications";
 
-console.log("Forcing AI notification check...");
-await checkAiNotification();
+console.log("Forcing AI notification...");
+await checkAiNotification({ force: true });
 console.log("Done.");

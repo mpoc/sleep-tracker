@@ -129,7 +129,7 @@ const formatSentNotifications = (recent: SentNotification[]): string => {
     .join("\n");
 };
 
-export const checkAiNotification = async () => {
+export const checkAiNotification = async (options?: { force?: boolean }) => {
   if (!env.AI_NOTIFICATIONS_ENABLED || !env.AI_API_KEY) {
     return;
   }
@@ -232,7 +232,7 @@ Beyond these — if you notice something surprising, a weird anomaly, an emergin
 - Keep it brief. Titles: 3-5 words. Bodies: 1-2 short sentences. Emojis welcome.
 
 ## Decision
-If the guardrails rule it out, return sendNotification: false. Otherwise, look at the data and ask: is there something genuinely worth saying right now? Something interesting, timely, or kind? If not, stay quiet. If yes, say it well.`;
+If the guardrails rule it out, return sendNotification: false. Otherwise, look at the data and ask: is there something genuinely worth saying right now? Something interesting, timely, or kind? If not, stay quiet. If yes, say it well.${options?.force ? "\n\nIMPORTANT: This is a forced check. You MUST send a notification this time. Ignore all guardrails and always set sendNotification to true." : ""}`;
 
     console.log(`${now.toISOString()}: AI notification check\nPrompt:\n${prompt}`);
 
@@ -247,7 +247,7 @@ If the guardrails rule it out, return sendNotification: false. Otherwise, look a
       `${now.toISOString()}: AI response: ${JSON.stringify(result)}`
     );
 
-    if (result.sendNotification && result.title && result.body) {
+    if ((result.sendNotification || options?.force) && result.title && result.body) {
       const id = randomUUIDv7();
       const notification: Notification = {
         title: result.title,
