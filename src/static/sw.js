@@ -3,7 +3,7 @@
 /** @type {ServiceWorkerGlobalScope} */
 const sw = /** @type {any} */ (self);
 
-const CACHE_NAME = "sleep-tracker-v6";
+const CACHE_NAME = "sleep-tracker-v7";
 
 const PRECACHE_ASSETS = [
   "/manifest.webmanifest",
@@ -59,10 +59,7 @@ sw.addEventListener("push", (event) => {
   };
 
   if (data.id) {
-    options.actions = [
-      { action: "useful", title: "👍 Useful" },
-      { action: "not-useful", title: "👎 Not useful" },
-    ];
+    options.actions = [{ action: "useful", title: "👍 Useful" }];
   }
 
   event.waitUntil(sw.registration.showNotification(data.title, options));
@@ -73,33 +70,24 @@ sw.addEventListener("notificationclick", (event) => {
 
   const notificationId = event.notification.data?.id;
 
-  if (notificationId && (event.action === "useful" || event.action === "not-useful")) {
+  // Action button pressed: send feedback directly
+  if (notificationId && event.action === "useful") {
     event.waitUntil(
       fetch("/api/notifications/feedback", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id: notificationId, feedback: event.action }),
-      }).catch((err) => console.error("Failed to send notification feedback:", err))
+        body: JSON.stringify({ id: notificationId, feedback: "useful" }),
+      }).catch((err) =>
+        console.error("Failed to send notification feedback:", err)
+      )
     );
     return;
   }
 
-  const url = event.notification.data?.url || "/";
+  // Body tap: open feedback page if notification has an id, otherwise open app
+  const url = notificationId
+    ? `/notification-feedback?id=${encodeURIComponent(notificationId)}`
+    : event.notification.data?.url || "/";
 
-  event.waitUntil(
-    clients
-      .matchAll({ type: "window", includeUncontrolled: true })
-      .then((windowClients) => {
-        // Focus existing window if found
-        for (const client of windowClients) {
-          if (client.url.includes(sw.location.origin) && "focus" in client) {
-            return client.focus();
-          }
-        }
-        // Open new window if none found
-        if (clients.openWindow) {
-          return clients.openWindow(url);
-        }
-      })
-  );
+  event.waitUntil(clients.openWindow(url));
 });

@@ -7,6 +7,7 @@ import { checkReminderLoop } from "./checkReminderLoop";
 import {
   checkRequestApiKey,
   getLastSleepRoute,
+  getNotificationRoute,
   getSleepRoute,
   getVapidKeyRoute,
   logSleepRoute,
@@ -70,11 +71,15 @@ new Elysia()
         body: UnsubscribeRequest,
       })
   )
+  .get("/api/notifications/:id", ({ params }) =>
+    getNotificationRoute(params.id)
+  )
   .post(
     "/api/notifications/feedback",
     ({ body }) => notificationFeedbackRoute(body),
     { body: NotificationFeedbackRequest }
   )
+  .get("/notification-feedback", sleepReactHtml)
   .get("/", sleepReactHtml)
   .use(staticPlugin({ assets: "./src/static/", prefix: "/" }))
   .listen(PORT);

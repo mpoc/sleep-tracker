@@ -17,12 +17,12 @@ import {
 } from "./sheets";
 import {
   type GeolocationPosition,
+  jsonToSentNotifications,
   type NotificationFeedbackRequest,
   type PushSubscription,
   SheetsSleepEntry,
   SheetsSleepEntryHeaders,
   type SleepEntry,
-  jsonToSentNotifications,
 } from "./types";
 import { getTimezoneFromCoords } from "./utils";
 import { getVapidPublicKey } from "./webPush";
@@ -270,7 +270,7 @@ const NOTIFICATIONS_PATH = "./data/sent-notifications.json";
 export const notificationFeedbackRoute = async (
   body: NotificationFeedbackRequest
 ) => {
-  console.log(`Notification feedback received:`, JSON.stringify(body));
+  console.log("Notification feedback received:", JSON.stringify(body));
   const data = await Bun.file(NOTIFICATIONS_PATH).text();
   const all = jsonToSentNotifications.decode(data);
 
@@ -289,4 +289,14 @@ export const notificationFeedbackRoute = async (
   await Bun.write(NOTIFICATIONS_PATH, jsonToSentNotifications.encode(all));
 
   return {};
+};
+
+export const getNotificationRoute = async (id: string) => {
+  const data = await Bun.file(NOTIFICATIONS_PATH).text();
+  const all = jsonToSentNotifications.decode(data);
+  const entry = all.find((n) => n.id === id);
+  if (!entry) {
+    throw new Error("Notification not found");
+  }
+  return { title: entry.title, body: entry.body };
 };
