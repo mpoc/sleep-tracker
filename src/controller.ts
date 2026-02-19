@@ -279,6 +279,10 @@ export const notificationFeedbackRoute = async (
     throw new Error("Notification not found");
   }
 
+  if (entry.feedback) {
+    return {};
+  }
+
   entry.feedback = body.feedback;
   entry.feedbackGivenAt = new Date();
 
