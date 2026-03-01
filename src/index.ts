@@ -90,6 +90,7 @@ new Elysia()
     ({ body }) => notificationFeedbackRoute(body),
     { body: NotificationFeedbackRequest }
   )
+  .get("/notifications", sleepReactHtml)
   .get("/notification-feedback", sleepReactHtml)
   .get("/", sleepReactHtml)
   .use(staticPlugin({ assets: "./src/static/", prefix: "/" }))

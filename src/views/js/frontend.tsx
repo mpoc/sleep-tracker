@@ -2,12 +2,16 @@ import "./styles.css";
 import { createRoot } from "react-dom/client";
 import { App } from "./app.tsx";
 import { NotificationFeedback } from "./components/NotificationFeedback.tsx";
+import { NotificationList } from "./components/NotificationList.tsx";
 
 if ("serviceWorker" in navigator) {
   navigator.serviceWorker.register("/sw.js");
 }
 
 const getPage = () => {
+  if (window.location.pathname === "/notifications") {
+    return <NotificationList />;
+  }
   if (window.location.pathname === "/notification-feedback") {
     return <NotificationFeedback />;
   }

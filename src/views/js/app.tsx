@@ -11,6 +11,7 @@ import {
   type GeolocationProgress,
   useGeolocationWatch,
 } from "./hooks/useGeolocationWatch.js";
+import { getApiKey } from "./params.js";
 import { formatDuration } from "./utils.js";
 
 const REQUIRED_ACCURACY = 40;
@@ -346,6 +347,16 @@ const LayoutTable: React.FC<LayoutTableProps> = ({
       <tr>
         <td>
           <StatusDisplay status={status} />
+        </td>
+      </tr>
+      <tr>
+        <td>
+          <a
+            className="small text-body-tertiary"
+            href={`/notifications?apiKey=${encodeURIComponent(getApiKey() ?? "")}`}
+          >
+            Notification history
+          </a>
         </td>
       </tr>
     </tbody>
