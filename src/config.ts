@@ -11,6 +11,6 @@ export const env = z
     AI_API_KEY: z.string().optional(),
     AI_MODEL: z.string().optional().default("google/gemini-3-flash-preview"),
     AI_CRON_SCHEDULE: z.string().optional().default("*/20 8-23,0-1 * * *"),
-    AI_NOTIFICATIONS_ENABLED: z.stringbool().optional().default("false"),
+    AI_NOTIFICATIONS_ENABLED: z.stringbool().optional().default(false),
   })
   .parse(process.env);
