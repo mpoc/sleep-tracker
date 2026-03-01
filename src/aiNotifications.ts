@@ -121,6 +121,16 @@ export const checkAiNotification = async (options?: { force?: boolean }) => {
   }
 
   try {
+    if (!options?.force) {
+      const recentForCooldown = await getRecentNotifications(ms("45 minutes"));
+      if (recentForCooldown.length) {
+        console.log(
+          `${new Date().toISOString()}: AI notification check skipped — cooldown (last sent ${Math.round((Date.now() - recentForCooldown.at(-1)!.sentAt.valueOf()) / ms("1 minute"))}m ago)`
+        );
+        return;
+      }
+    }
+
     const lastSleepData = await getLastSleep();
     const lastEntry = lastSleepData.lastSleepEntry;
     const isAwake = sheetsSleepEntryIsStop(lastEntry);
@@ -156,11 +166,13 @@ export const checkAiNotification = async (options?: { force?: boolean }) => {
 
     const prompt = `You are a thoughtful sleep companion — part scientist, part friend — who occasionally sends the user a push notification. You're called every ~30 minutes. You have real knowledge of sleep science and you notice things in data that people miss about themselves. When you send something, it should feel like an insight from a perceptive friend, not an alert from a health app.
 
-Not every check warrants a notification, but don't be overly conservative either. If there's something interesting, timely, encouraging, or just a nice observation — send it. You don't need a groundbreaking insight to justify reaching out. A simple "nice night" or a casual pattern observation is enough.
+Only send a notification if there's something genuinely new, timely, or worthwhile to say. A simple "nice night" or casual pattern observation can be enough — but if it echoes something you already sent recently, skip it.
 
 ## Guardrails
+- Most checks should result in NO notification. Silence is the expected default outcome.
 - Don't send between 2am and 8am local time.
-- Space notifications out — at least an hour apart, and don't repeat yourself. Check what you already sent today.
+- Space notifications at least 1 hour apart. Check "Today's notifications" below before deciding.
+- Never reuse a title from the last 48 hours. If the core insight is the same as a recent notification, don't send.
 - If they're asleep and the duration looks normal for them, there's nothing to say.
 - If they've been "asleep" for an unusually long time (well beyond their personal average), they probably forgot to log waking up — a gentle nudge is fine.
 - Max 4 notifications per day. Aim for 2-3 on a typical day.
@@ -169,12 +181,12 @@ Not every check warrants a notification, but don't be overly conservative either
 - Current time: ${localTime} (${userTimezone}, ${now.toLocaleDateString("en-US", { timeZone: userTimezone, weekday: "long" })})
 - User status: ${currentState}
 - Last notification sent: ${timeSinceLastNotification}
-- Notifications in last 24h: ${last24h.length}
+- Notifications in last 24h: ${last24h.length}${last24h.length > 0 ? `\n- Today's notifications: ${last24h.map((n) => `"${n.title}" (${Math.round((Date.now() - n.sentAt.valueOf()) / ms("1 hour"))}h ago)`).join(", ")}` : ""}
 
-## Notifications sent in last 7 days (with user feedback)
-${formatSentNotifications(recentNotifications)}
+## Notifications sent recently (with user feedback, most recent last)
+${formatSentNotifications(recentNotifications.slice(-15))}
 
-Each notification above shows user feedback (👍 useful / 👎 not useful / no feedback). Use this to calibrate what kinds of notifications the user actually finds valuable. Note: "no feedback" means the user didn't respond either way — treat it as neutral, not negative. The user wants to receive notifications regularly.
+Each notification above shows user feedback (👍 useful / 👎 not useful / no feedback). Before deciding, look at which notifications got 👍 vs 👎. Notice what the user actually finds valuable and avoid repeating patterns they've downvoted. "No feedback" means the user didn't respond either way — treat it as neutral, not negative. The user wants to receive notifications regularly.
 
 ## Sleep stats
 ${computeSleepStats(recentEntries)}
@@ -221,7 +233,7 @@ Beyond these — if you notice something surprising, a weird anomaly, an emergin
 - Celebrate good nights genuinely. Don't nag about bad ones — people already know.
 - Skip the clinical framing. "Your body's probably craving an early night" beats "you have accumulated 3.2 hours of sleep debt."
 - Surprise and delight over lecture and guilt. A notification should feel like a gift, not a chore.
-- Keep it brief. Titles: 3-5 words. Bodies: 1-2 short sentences. Emojis welcome.
+- Think push notification, not paragraph. Titles: 3-5 words. Bodies: 1 sentence (2 max), under ~30 words. Emojis welcome.
 
 ## Decision
 If the guardrails rule it out, return sendNotification: false. Otherwise, look at the data and ask: is there something worth saying right now? Something interesting, timely, or kind? If yes, say it well.${options?.force ? "\n\nIMPORTANT: This is a forced check. You MUST send a notification this time. Ignore all guardrails and always set sendNotification to true." : ""}`;

@@ -6,7 +6,8 @@
       "suspicious": "off",
       "style": {
         "useNamingConvention": "off",
-        "useConsistentTypeDefinitions": "off"
+        "useConsistentTypeDefinitions": "off",
+        "noNonNullAssertion": "off"
       }
     }
   }
