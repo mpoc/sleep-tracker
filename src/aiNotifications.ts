@@ -1,5 +1,5 @@
 import { appendFile } from "node:fs/promises";
-import { createAnthropic } from "@ai-sdk/anthropic";
+import { createOpenRouter } from "@openrouter/ai-sdk-provider";
 import { generateObject } from "ai";
 import { randomUUIDv7 } from "bun";
 import ms from "ms";
@@ -51,9 +51,8 @@ const getModel = () => {
   if (!env.AI_API_KEY) {
     throw new Error("AI_API_KEY not configured");
   }
-  const provider = createAnthropic({
+  const provider = createOpenRouter({
     apiKey: env.AI_API_KEY,
-    baseURL: env.AI_BASE_URL,
   });
   return provider(env.AI_MODEL);
 };

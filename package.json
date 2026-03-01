@@ -20,9 +20,9 @@
     "ultracite": "^7.2.3"
   },
   "dependencies": {
-    "@ai-sdk/anthropic": "^3.0.46",
     "@elysiajs/bearer": "^1.4.3",
     "@elysiajs/static": "^1.4.7",
+    "@openrouter/ai-sdk-provider": "^2.2.3",
     "ai": "^6.0.97",
     "elysia": "^1.4.25",
     "geo-tz": "^8.1.5",

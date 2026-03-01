@@ -5,9 +5,9 @@
     "": {
       "name": "sleep-tracker",
       "dependencies": {
-        "@ai-sdk/anthropic": "^3.0.46",
         "@elysiajs/bearer": "^1.4.3",
         "@elysiajs/static": "^1.4.7",
+        "@openrouter/ai-sdk-provider": "^2.2.3",
         "ai": "^6.0.97",
         "elysia": "^1.4.25",
         "geo-tz": "^8.1.5",
@@ -39,8 +39,6 @@
     },
   },
   "packages": {
-    "@ai-sdk/anthropic": ["@ai-sdk/anthropic@3.0.46", "", { "dependencies": { "@ai-sdk/provider": "3.0.8", "@ai-sdk/provider-utils": "4.0.15" }, "peerDependencies": { "zod": "^3.25.76 || ^4.1.8" } }, "sha512-zXJPiNHaIiQ6XUqLeSYZ3ZbSzjqt1pNWEUf2hlkXlmmw8IF8KI0ruuGaDwKCExmtuNRf0E4TDxhsc9wRgWTzpw=="],
-
     "@ai-sdk/gateway": ["@ai-sdk/gateway@3.0.53", "", { "dependencies": { "@ai-sdk/provider": "3.0.8", "@ai-sdk/provider-utils": "4.0.15", "@vercel/oidc": "3.1.0" }, "peerDependencies": { "zod": "^3.25.76 || ^4.1.8" } }, "sha512-QT3FEoNARMRlk8JJVR7L98exiK9C8AGfrEJVbRxBT1yIXKs/N19o/+PsjTRVsARgDJNcy9JbJp1FspKucEat0Q=="],
 
     "@ai-sdk/provider": ["@ai-sdk/provider@3.0.8", "", { "dependencies": { "json-schema": "^0.4.0" } }, "sha512-oGMAgGoQdBXbZqNG0Ze56CHjDZ1IDYOwGYxYjO5KLSlz5HiNQ9udIXsPZ61VWaHGZ5XW/jyjmr6t2xz2jGVwbQ=="],
@@ -74,6 +72,8 @@
     "@elysiajs/bearer": ["@elysiajs/bearer@1.4.3", "", { "peerDependencies": { "elysia": ">= 1.4.3" } }, "sha512-UWJ94jGGOzSlD3CCspC11/vFGKwy6RI9QvaZVPzlSu1Wxp/pKmOhKA+R2ppfbluMHXfxcc2xgK3x4+uuCML7GA=="],
 
     "@elysiajs/static": ["@elysiajs/static@1.4.7", "", { "peerDependencies": { "elysia": ">= 1.4.0" } }, "sha512-Go4kIXZ0G3iWfkAld07HmLglqIDMVXdyRKBQK/sVEjtpDdjHNb+rUIje73aDTWpZYg4PEVHUpi9v4AlNEwrQug=="],
+
+    "@openrouter/ai-sdk-provider": ["@openrouter/ai-sdk-provider@2.2.3", "", { "peerDependencies": { "ai": "^6.0.0", "zod": "^3.25.0 || ^4.0.0" } }, "sha512-NovC+BaCfEeJwhToDrs8JeDYXXlJdEyz7lcxkjtyePSE4eoAKik872SyDK0MzXKcz8MRkv7XlNhPI6zz4TQp0g=="],
 
     "@opentelemetry/api": ["@opentelemetry/api@1.9.0", "", {}, "sha512-3giAOQvZiH5F9bMlMiv8+GSPMeqg0dbaeo58/0SlA9sxSqZhnUtxzX9/2FzyhS9sWQf5S0GJE0AKBrFqjpeYcg=="],
 
