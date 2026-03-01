@@ -3,6 +3,7 @@ import { timingSafeEqual } from "node:crypto";
 import moment from "moment-timezone";
 import { env } from "./config";
 import { UnauthorizedError } from "./error";
+import { findNotificationById, updateNotification } from "./notificationDb";
 import { sendEntryNotification } from "./notifications";
 import { addSubscription, removeSubscription } from "./pushSubscriptions";
 import {
@@ -17,7 +18,6 @@ import {
 } from "./sheets";
 import {
   type GeolocationPosition,
-  jsonlToSentNotifications,
   type NotificationFeedbackRequest,
   type PushSubscription,
   SheetsSleepEntry,
@@ -265,16 +265,11 @@ export const unsubscribeRoute = async (body: { endpoint: string }) => {
   return {};
 };
 
-const NOTIFICATIONS_PATH = "./data/sent-notifications.jsonl";
-
 export const notificationFeedbackRoute = async (
   body: NotificationFeedbackRequest
 ) => {
   console.log("Notification feedback received:", JSON.stringify(body));
-  const data = await Bun.file(NOTIFICATIONS_PATH).text();
-  const all = jsonlToSentNotifications.decode(data);
-
-  const entry = all.find((n) => n.id === body.id);
+  const entry = await findNotificationById(body.id);
   if (!entry) {
     throw new Error("Notification not found");
   }
@@ -283,18 +278,16 @@ export const notificationFeedbackRoute = async (
     return {};
   }
 
-  entry.feedback = body.feedback;
-  entry.feedbackGivenAt = new Date();
-
-  await Bun.write(NOTIFICATIONS_PATH, jsonlToSentNotifications.encode(all));
+  await updateNotification(body.id, {
+    feedback: body.feedback,
+    feedbackGivenAt: new Date(),
+  });
 
   return {};
 };
 
 export const getNotificationRoute = async (id: string) => {
-  const data = await Bun.file(NOTIFICATIONS_PATH).text();
-  const all = jsonlToSentNotifications.decode(data);
-  const entry = all.find((n) => n.id === id);
+  const entry = await findNotificationById(id);
   if (!entry) {
     throw new Error("Notification not found");
   }

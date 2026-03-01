@@ -1,50 +1,30 @@
-import { appendFile } from "node:fs/promises";
 import { createOpenRouter } from "@openrouter/ai-sdk-provider";
 import { generateText, Output } from "ai";
 import { randomUUIDv7 } from "bun";
 import { Cron } from "croner";
+import ms from "ms";
 import { z } from "zod";
 import { env } from "./config";
 import { getLastSleep, getRecentSleepEntries } from "./controller";
+import { appendNotification, getRecentNotifications } from "./notificationDb";
 import { sendNotification } from "./notifications";
 import type { Notification, SentNotification, SheetsSleepEntry } from "./types";
-import { jsonlToSentNotifications } from "./types";
 import {
   circularStatsHours,
   millisecondsSinceSleepEntry,
   sheetsSleepEntryIsStop,
 } from "./utils";
 
-const NOTIFICATIONS_PATH = "./data/sent-notifications.jsonl";
-
-const AiNotificationResponse = z.object({
-  sendNotification: z
-    .boolean()
-    .describe("Whether to send a notification right now"),
-  title: z
-    .string()
-    .optional()
-    .describe("Short notification title (if sending)"),
-  body: z
-    .string()
-    .optional()
-    .describe("Notification body message (if sending)"),
-});
-
-const loadRecentNotifications = async (): Promise<SentNotification[]> => {
-  const cutoff = Date.now() - 7 * 24 * 60 * 60 * 1000;
-  try {
-    const data = await Bun.file(NOTIFICATIONS_PATH).text();
-    const all = jsonlToSentNotifications.decode(data);
-    return all.filter((n) => n.sentAt.valueOf() >= cutoff);
-  } catch {
-    return [];
-  }
-};
-
-const appendNotification = async (n: SentNotification): Promise<void> => {
-  await appendFile(NOTIFICATIONS_PATH, jsonlToSentNotifications.encode([n]));
-};
+const AiNotificationResponse = z.discriminatedUnion("sendNotification", [
+  z.object({
+    sendNotification: z.literal(true),
+    title: z.string().describe("Short notification title"),
+    body: z.string().describe("Notification body message"),
+  }),
+  z.object({
+    sendNotification: z.literal(false),
+  }),
+]);
 
 const getModel = () => {
   if (!env.AI_API_KEY) {
@@ -80,7 +60,7 @@ const computeSleepStats = (entries: SheetsSleepEntry[]): string => {
     }
     const startTime = parseUtcTime(entries[i]);
     const endTime = parseUtcTime(entries[i + 1]);
-    const hours = (endTime.valueOf() - startTime.valueOf()) / (1000 * 60 * 60);
+    const hours = (endTime.valueOf() - startTime.valueOf()) / ms("1 hour");
     if (hours > 0 && hours < 24) {
       sleepSessions.push({
         localTime: entries[i]["Timezone local time"],
@@ -145,18 +125,16 @@ export const checkAiNotification = async (options?: { force?: boolean }) => {
     const lastEntry = lastSleepData.lastSleepEntry;
     const isAwake = sheetsSleepEntryIsStop(lastEntry);
 
-    const recentNotifications = await loadRecentNotifications();
+    const recentNotifications = await getRecentNotifications(ms("7 days"));
     const last24h = recentNotifications.filter(
-      (n) => n.sentAt.valueOf() >= Date.now() - 24 * 60 * 60 * 1000
+      (n) => n.sentAt.valueOf() >= Date.now() - ms("24 hours")
     );
 
     const recentEntries = await getRecentSleepEntries(20);
     const sleepHistory = formatSleepHistory(recentEntries);
 
     const msSinceLastEntry = millisecondsSinceSleepEntry(lastEntry);
-    const hoursSinceLastEntry = (msSinceLastEntry / (1000 * 60 * 60)).toFixed(
-      1
-    );
+    const hoursSinceLastEntry = (msSinceLastEntry / ms("1 hour")).toFixed(1);
     const currentState = isAwake
       ? `Awake for ${hoursSinceLastEntry} hours`
       : `Asleep for ${hoursSinceLastEntry} hours`;
@@ -166,7 +144,7 @@ export const checkAiNotification = async (options?: { force?: boolean }) => {
       ? Date.now() - lastNotification.sentAt.valueOf()
       : null;
     const timeSinceLastNotification = msSinceLastNotification
-      ? `${(msSinceLastNotification / (1000 * 60)).toFixed(0)} minutes ago`
+      ? `${(msSinceLastNotification / ms("1 minute")).toFixed(0)} minutes ago`
       : "No recent notifications";
 
     const now = new Date();
@@ -263,11 +241,7 @@ If the guardrails rule it out, return sendNotification: false. Otherwise, look a
 
     console.log(`${now.toISOString()}: AI response: ${JSON.stringify(result)}`);
 
-    if (
-      (result.sendNotification || options?.force) &&
-      result.title &&
-      result.body
-    ) {
+    if (result.sendNotification && result.title && result.body) {
       const id = randomUUIDv7();
       const notification: Notification = {
         title: result.title,
