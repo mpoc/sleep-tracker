@@ -118,3 +118,6 @@ secret/*
 !secret/.env.example
 build/
 data/
+
+CLAUDE.md
+.claude
