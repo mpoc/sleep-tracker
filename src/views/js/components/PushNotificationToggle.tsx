@@ -27,9 +27,7 @@ export const PushNotificationToggle: React.FC = () => {
 
   if (status === "error") {
     return (
-      <div className="small text-danger">
-        Failed to enable notifications.
-      </div>
+      <div className="small text-danger">Failed to enable notifications.</div>
     );
   }
 

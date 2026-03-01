@@ -4,7 +4,8 @@
   "scripts": {
     "build": "bun build --target=bun --production --outdir=dist --sourcemap ./src/index.ts ./src/static/*",
     "start": "bun src/index.ts",
-    "dev": "bun --watch src/index.ts"
+    "dev": "bun --watch src/index.ts",
+    "format": "biome format --write ."
   },
   "devDependencies": {
     "@biomejs/biome": "^2.4.4",

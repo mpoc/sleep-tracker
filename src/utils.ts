@@ -36,7 +36,7 @@ export const circularStatsHours = (hoursArray: number[]) => {
   const R = Math.sqrt(meanSin ** 2 + meanCos ** 2);
 
   const meanAngle = Math.atan2(meanSin, meanCos);
-  const meanHours = (((meanAngle * 24) / (2 * Math.PI)) % 24 + 24) % 24;
+  const meanHours = ((((meanAngle * 24) / (2 * Math.PI)) % 24) + 24) % 24;
 
   const stdHours = (Math.sqrt(-2 * Math.log(R)) * 24) / (2 * Math.PI);
 
