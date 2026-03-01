@@ -2,6 +2,7 @@
   "extends": "@tsconfig/bun/tsconfig.json",
   "compilerOptions": {
     "lib": ["ESNext", "DOM"],
-    "strictNullChecks": true
+    "strictNullChecks": true,
+    "noUncheckedIndexedAccess": false
   }
 }
