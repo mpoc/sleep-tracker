@@ -41,7 +41,7 @@ export const NotificationFeedback = () => {
   };
 
   return (
-    <div className="d-flex justify-content-center vh-100 flex-column gap-3 px-3">
+    <div className="d-flex justify-content-center flex-column gap-3 px-3" style={{ minHeight: "100dvh" }}>
       {notification && (
         <div className="card mb-2">
           <div className="card-body">
