@@ -291,5 +291,5 @@ export const getNotificationRoute = async (id: string) => {
   if (!entry) {
     throw new Error("Notification not found");
   }
-  return { title: entry.title, body: entry.body };
+  return { title: entry.title, body: entry.body, feedback: entry.feedback };
 };

@@ -1,9 +1,8 @@
 import { useEffect, useState } from "react";
 
-type NotificationData = { title: string; body: string };
+type NotificationData = { title: string; body: string; feedback?: string };
 
 export const NotificationFeedback = () => {
-  const [sent, setSent] = useState(false);
   const [notification, setNotification] = useState<NotificationData | null>(
     null
   );
@@ -29,7 +28,7 @@ export const NotificationFeedback = () => {
   }
 
   const sendFeedback = async (feedback: string) => {
-    setSent(true);
+    setNotification((prev) => (prev ? { ...prev, feedback } : prev));
     try {
       await fetch("/api/notifications/feedback", {
         method: "POST",
@@ -40,14 +39,6 @@ export const NotificationFeedback = () => {
       console.error("Failed to send feedback:", e);
     }
   };
-
-  if (sent) {
-    return (
-      <div className="d-flex justify-content-center vh-100 px-3 align-items-center">
-        <h4 className="text-body-secondary">Thanks for the feedback!</h4>
-      </div>
-    );
-  }
 
   return (
     <div className="d-flex justify-content-center vh-100 flex-column gap-3 px-3">
@@ -64,22 +55,31 @@ export const NotificationFeedback = () => {
           </div>
         </div>
       )}
-      <button
-        className="btn btn-success w-100 py-4"
-        onClick={() => sendFeedback("useful")}
-        style={{ fontSize: "1.75rem" }}
-        type="button"
-      >
-        👍 Useful
-      </button>
-      <button
-        className="btn btn-danger w-100 py-4"
-        onClick={() => sendFeedback("not-useful")}
-        style={{ fontSize: "1.75rem" }}
-        type="button"
-      >
-        👎 Not useful
-      </button>
+      {notification?.feedback ? (
+        <div className="text-center text-body-secondary">
+          You rated this{" "}
+          {notification.feedback === "useful" ? "👍 useful" : "👎 not useful"}
+        </div>
+      ) : (
+        <>
+          <button
+            className="btn btn-success w-100 py-4"
+            onClick={() => sendFeedback("useful")}
+            style={{ fontSize: "1.75rem" }}
+            type="button"
+          >
+            👍 Useful
+          </button>
+          <button
+            className="btn btn-danger w-100 py-4"
+            onClick={() => sendFeedback("not-useful")}
+            style={{ fontSize: "1.75rem" }}
+            type="button"
+          >
+            👎 Not useful
+          </button>
+        </>
+      )}
     </div>
   );
 };
