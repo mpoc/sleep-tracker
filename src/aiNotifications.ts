@@ -1,6 +1,6 @@
 import { appendFile } from "node:fs/promises";
 import { createOpenRouter } from "@openrouter/ai-sdk-provider";
-import { generateObject } from "ai";
+import { generateText, Output } from "ai";
 import { randomUUIDv7 } from "bun";
 import { Cron } from "croner";
 import { z } from "zod";
@@ -252,10 +252,12 @@ If the guardrails rule it out, return sendNotification: false. Otherwise, look a
       `${now.toISOString()}: AI notification check\nPrompt:\n${prompt}`
     );
 
-    const { object: result } = await generateObject({
+    const { output: result } = await generateText({
       model: getModel(),
-      maxTokens: 300,
-      schema: AiNotificationResponse,
+      maxOutputTokens: 300,
+      output: Output.object({
+        schema: AiNotificationResponse,
+      }),
       prompt,
     });
 
