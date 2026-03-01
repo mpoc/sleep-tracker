@@ -1,8 +1,9 @@
 import { Low } from "lowdb";
 import { JSONLFile } from "lowdb-jsonl-adapter";
+import { DATA_DIR } from "./ensureDataDir";
 import { SentNotification } from "./types";
 
-const NOTIFICATIONS_PATH = "./data/sent-notifications.jsonl";
+const NOTIFICATIONS_PATH = `${DATA_DIR}/sent-notifications.jsonl`;
 
 const adapter = new JSONLFile<SentNotification>(NOTIFICATIONS_PATH);
 const db = new Low(adapter, []);

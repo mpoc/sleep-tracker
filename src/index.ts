@@ -1,3 +1,4 @@
+import "./ensureDataDir";
 import { bearer } from "@elysiajs/bearer";
 import { staticPlugin } from "@elysiajs/static";
 import { Elysia } from "elysia";
