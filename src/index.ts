@@ -2,7 +2,7 @@ import { bearer } from "@elysiajs/bearer";
 import { staticPlugin } from "@elysiajs/static";
 import { Elysia } from "elysia";
 import logixlysia from "logixlysia";
-import { aiNotificationLoop } from "./aiNotifications";
+import { startAiNotificationCron } from "./aiNotifications";
 import { checkReminderLoop } from "./checkReminderLoop";
 import {
   checkRequestApiKey,
@@ -85,4 +85,4 @@ new Elysia()
   .listen(PORT);
 
 checkReminderLoop();
-aiNotificationLoop();
+startAiNotificationCron();

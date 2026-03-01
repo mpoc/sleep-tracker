@@ -2,7 +2,7 @@ import { appendFile } from "node:fs/promises";
 import { createOpenRouter } from "@openrouter/ai-sdk-provider";
 import { generateObject } from "ai";
 import { randomUUIDv7 } from "bun";
-import ms from "ms";
+import { Cron } from "croner";
 import { z } from "zod";
 import { env } from "./config";
 import { getLastSleep, getRecentSleepEntries } from "./controller";
@@ -15,7 +15,6 @@ import {
   sheetsSleepEntryIsStop,
 } from "./utils";
 
-const AI_CHECK_INTERVAL = env.AI_CHECK_INTERVAL;
 const NOTIFICATIONS_PATH = "./data/sent-notifications.jsonl";
 
 const AiNotificationResponse = z.object({
@@ -76,18 +75,23 @@ const computeSleepStats = (entries: SheetsSleepEntry[]): string => {
   // Find pairs: fell asleep (no Duration) followed by woke up (has Duration)
   const sleepSessions: { localTime: string; hours: number }[] = [];
   for (let i = 0; i < entries.length - 1; i++) {
-    if (entries[i].Duration || !entries[i + 1].Duration) continue;
+    if (entries[i].Duration || !entries[i + 1].Duration) {
+      continue;
+    }
     const startTime = parseUtcTime(entries[i]);
     const endTime = parseUtcTime(entries[i + 1]);
     const hours = (endTime.valueOf() - startTime.valueOf()) / (1000 * 60 * 60);
-    if (hours > 0 && hours < 24)
+    if (hours > 0 && hours < 24) {
       sleepSessions.push({
         localTime: entries[i]["Timezone local time"],
         hours,
       });
+    }
   }
 
-  if (sleepSessions.length === 0) return "Not enough data to compute stats.";
+  if (sleepSessions.length === 0) {
+    return "Not enough data to compute stats.";
+  }
 
   const durations = sleepSessions.map((s) => s.hours);
   const avg = durations.reduce((a, b) => a + b, 0) / durations.length;
@@ -282,12 +286,12 @@ If the guardrails rule it out, return sendNotification: false. Otherwise, look a
   }
 };
 
-export const aiNotificationLoop = () => {
+export const startAiNotificationCron = () => {
   if (!env.AI_NOTIFICATIONS_ENABLED) {
     return;
   }
 
-  console.log(`Starting AI notification loop (interval: ${AI_CHECK_INTERVAL})`);
-  checkAiNotification();
-  setTimeout(aiNotificationLoop, ms(AI_CHECK_INTERVAL));
+  const schedule = env.AI_CRON_SCHEDULE;
+  console.log(`Starting AI notification cron (schedule: ${schedule})`);
+  new Cron(schedule, () => checkAiNotification());
 };
