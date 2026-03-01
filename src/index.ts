@@ -2,6 +2,7 @@ import { bearer } from "@elysiajs/bearer";
 import { staticPlugin } from "@elysiajs/static";
 import { Elysia } from "elysia";
 import logixlysia from "logixlysia";
+import ms from "ms";
 import { startAiNotificationCron } from "./aiNotifications";
 import { checkReminderLoop } from "./checkReminderLoop";
 import {
@@ -17,6 +18,7 @@ import {
   unsubscribeRoute,
 } from "./controller";
 import { UnauthorizedError } from "./error";
+import { getRecentNotifications } from "./notificationDb";
 import {
   GeolocationPositionSchema,
   NotificationFeedbackRequest,
@@ -71,6 +73,14 @@ new Elysia()
         body: UnsubscribeRequest,
       })
   )
+  .get("/api/notifications/all", ({ query }) => {
+    checkRequestApiKey(query.apiKey);
+    return getRecentNotifications(Number.POSITIVE_INFINITY);
+  })
+  .get("/api/notifications/recent", ({ query }) => {
+    checkRequestApiKey(query.apiKey);
+    return getRecentNotifications(ms("7 days"));
+  })
   .get("/api/notifications/:id", ({ params }) =>
     getNotificationRoute(params.id)
   )
