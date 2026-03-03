@@ -244,7 +244,7 @@ If the guardrails rule it out, return sendNotification: false. Otherwise, look a
 
     const { output: result } = await generateText({
       model: getModel(),
-      maxOutputTokens: 500,
+      maxOutputTokens: 1500,
       output: Output.object({
         schema: AiNotificationResponse,
       }),
