@@ -2,6 +2,7 @@ services:
   sleep-tracker:
     image: mpoc/sleep-tracker:latest
     container_name: sleep-tracker
+    init: true
     restart: always
     ports:
       - 8002:8000
