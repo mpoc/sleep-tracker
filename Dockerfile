@@ -6,6 +6,7 @@ COPY . .
 RUN bun build --compile src/index.ts --outfile server
 
 FROM alpine
+RUN apk add --no-cache libgcc libstdc++
 LABEL org.opencontainers.image.source=https://github.com/mpoc/sleep-tracker
 WORKDIR /usr/src/sleep-tracker
 COPY --from=build /usr/src/sleep-tracker/server ./server
