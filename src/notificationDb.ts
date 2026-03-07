@@ -36,7 +36,7 @@ export const findNotificationById = async (
 
 export const updateNotification = async (
   id: string,
-  updates: Partial<Pick<SentNotification, "feedback" | "feedbackGivenAt">>
+  updates: Partial<Pick<SentNotification, "feedback" | "feedbackMessage" | "feedbackGivenAt">>
 ): Promise<void> => {
   await db.read();
   const raw = db.data.find((n) => n.id === id);

@@ -1,11 +1,12 @@
 import { useEffect, useState } from "react";
 
-type NotificationData = { title: string; body: string; feedback?: string };
+type NotificationData = { title: string; body: string; feedback?: string; feedbackMessage?: string };
 
 export const NotificationFeedback = () => {
   const [notification, setNotification] = useState<NotificationData | null>(
     null
   );
+  const [feedbackMessage, setFeedbackMessage] = useState("");
 
   const id = new URLSearchParams(window.location.search).get("id");
 
@@ -28,12 +29,12 @@ export const NotificationFeedback = () => {
   }
 
   const sendFeedback = async (feedback: string) => {
-    setNotification((prev) => (prev ? { ...prev, feedback } : prev));
+    setNotification((prev) => (prev ? { ...prev, feedback, feedbackMessage: feedbackMessage || undefined } : prev));
     try {
       await fetch("/api/notifications/feedback", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id, feedback }),
+        body: JSON.stringify({ id, feedback, feedbackMessage: feedbackMessage || undefined }),
       });
     } catch (e) {
       console.error("Failed to send feedback:", e);
@@ -57,11 +58,23 @@ export const NotificationFeedback = () => {
       )}
       {notification?.feedback ? (
         <div className="text-center text-body-secondary">
-          You rated this{" "}
-          {notification.feedback === "useful" ? "👍 useful" : "👎 not useful"}
+          <div>
+            You rated this{" "}
+            {notification.feedback === "useful" ? "👍 useful" : "👎 not useful"}
+          </div>
+          {notification.feedbackMessage && (
+            <div className="mt-1 fst-italic">"{notification.feedbackMessage}"</div>
+          )}
         </div>
       ) : (
         <>
+          <textarea
+            className="form-control"
+            placeholder="Why? (optional)"
+            rows={2}
+            value={feedbackMessage}
+            onChange={(e) => setFeedbackMessage(e.target.value)}
+          />
           <button
             className="btn btn-success w-100 py-4"
             onClick={() => sendFeedback("useful")}

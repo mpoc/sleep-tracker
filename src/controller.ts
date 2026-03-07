@@ -280,6 +280,7 @@ export const notificationFeedbackRoute = async (
 
   await updateNotification(body.id, {
     feedback: body.feedback,
+    feedbackMessage: body.feedbackMessage,
     feedbackGivenAt: new Date(),
   });
 
@@ -291,5 +292,5 @@ export const getNotificationRoute = async (id: string) => {
   if (!entry) {
     throw new Error("Notification not found");
   }
-  return { title: entry.title, body: entry.body, feedback: entry.feedback };
+  return { title: entry.title, body: entry.body, feedback: entry.feedback, feedbackMessage: entry.feedbackMessage };
 };

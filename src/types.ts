@@ -114,12 +114,14 @@ export const SentNotification = z.object({
   body: z.string(),
   sentAt: z.coerce.date(),
   feedback: NotificationFeedback.optional(),
+  feedbackMessage: z.string().optional(),
   feedbackGivenAt: z.coerce.date().optional(),
 });
 export type SentNotification = z.infer<typeof SentNotification>;
 export const NotificationFeedbackRequest = z.object({
   id: z.string(),
   feedback: NotificationFeedback,
+  feedbackMessage: z.string().optional(),
 });
 export type NotificationFeedbackRequest = z.infer<
   typeof NotificationFeedbackRequest
