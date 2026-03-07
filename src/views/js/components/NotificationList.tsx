@@ -6,6 +6,7 @@ type Notification = {
   body: string;
   sentAt: string;
   feedback?: string;
+  feedbackMessage?: string;
   feedbackGivenAt?: string;
 };
 
@@ -115,6 +116,14 @@ export const NotificationList = () => {
                   >
                     {n.body}
                   </p>
+                  {n.feedbackMessage && (
+                    <p
+                      className="card-text mb-1 fst-italic text-body-tertiary"
+                      style={{ fontSize: "0.8rem" }}
+                    >
+                      "{n.feedbackMessage}"
+                    </p>
+                  )}
                   <small
                     className="text-body-tertiary"
                     style={{ fontSize: "0.75rem" }}
