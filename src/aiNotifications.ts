@@ -107,8 +107,12 @@ const formatSentNotifications = (recent: SentNotification[]): string => {
   }
   return recent
     .map((n) => {
-      const fb = n.feedback
-        ? ` [${n.feedback === "useful" ? "👍 useful" : "👎 not useful"}${n.feedbackMessage ? ` — "${n.feedbackMessage}"` : ""}]`
+      const rating = n.feedback
+        ? (n.feedback === "useful" ? "👍 useful" : "👎 not useful")
+        : null;
+      const msg = n.feedbackMessage ? `"${n.feedbackMessage}"` : null;
+      const fb = rating || msg
+        ? ` [${[rating, msg].filter(Boolean).join(" — ")}]`
         : " [no feedback]";
       return `[${n.sentAt.toISOString()}] "${n.title}": ${n.body}${fb}`;
     })
