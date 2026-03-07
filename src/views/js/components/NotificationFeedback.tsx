@@ -7,6 +7,7 @@ export const NotificationFeedback = () => {
     null
   );
   const [feedbackMessage, setFeedbackMessage] = useState("");
+  const [messageSaved, setMessageSaved] = useState(false);
 
   const id = new URLSearchParams(window.location.search).get("id");
 
@@ -19,6 +20,9 @@ export const NotificationFeedback = () => {
       .then((data) => {
         if (data) {
           setNotification(data);
+          if (data.feedbackMessage) {
+            setFeedbackMessage(data.feedbackMessage);
+          }
         }
       })
       .catch(() => {});
@@ -41,6 +45,20 @@ export const NotificationFeedback = () => {
     }
   };
 
+  const saveMessage = async () => {
+    setNotification((prev) => (prev ? { ...prev, feedbackMessage: feedbackMessage || undefined } : prev));
+    setMessageSaved(true);
+    try {
+      await fetch("/api/notifications/feedback", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id, feedbackMessage: feedbackMessage || undefined }),
+      });
+    } catch (e) {
+      console.error("Failed to save feedback message:", e);
+    }
+  };
+
   return (
     <div className="d-flex justify-content-center flex-column gap-3 px-3" style={{ minHeight: "100dvh" }}>
       {notification && (
@@ -56,25 +74,14 @@ export const NotificationFeedback = () => {
           </div>
         </div>
       )}
-      {notification?.feedback ? (
+      {notification?.feedback && (
         <div className="text-center text-body-secondary">
-          <div>
-            You rated this{" "}
-            {notification.feedback === "useful" ? "👍 useful" : "👎 not useful"}
-          </div>
-          {notification.feedbackMessage && (
-            <div className="mt-1 fst-italic">"{notification.feedbackMessage}"</div>
-          )}
+          You rated this{" "}
+          {notification.feedback === "useful" ? "👍 useful" : "👎 not useful"}
         </div>
-      ) : (
+      )}
+      {!notification?.feedback && (
         <>
-          <textarea
-            className="form-control"
-            placeholder="Why? (optional)"
-            rows={2}
-            value={feedbackMessage}
-            onChange={(e) => setFeedbackMessage(e.target.value)}
-          />
           <button
             className="btn btn-success w-100 py-4"
             onClick={() => sendFeedback("useful")}
@@ -92,6 +99,23 @@ export const NotificationFeedback = () => {
             👎 Not useful
           </button>
         </>
+      )}
+      <textarea
+        className="form-control"
+        placeholder="Why? (optional)"
+        rows={2}
+        value={feedbackMessage}
+        onChange={(e) => { setFeedbackMessage(e.target.value); setMessageSaved(false); }}
+      />
+      {notification?.feedback && (
+        <button
+          className="btn btn-primary w-100"
+          onClick={saveMessage}
+          disabled={messageSaved}
+          type="button"
+        >
+          {messageSaved ? "Saved" : "Save message"}
+        </button>
       )}
     </div>
   );

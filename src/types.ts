@@ -120,7 +120,7 @@ export const SentNotification = z.object({
 export type SentNotification = z.infer<typeof SentNotification>;
 export const NotificationFeedbackRequest = z.object({
   id: z.string(),
-  feedback: NotificationFeedback,
+  feedback: NotificationFeedback.optional(),
   feedbackMessage: z.string().optional(),
 });
 export type NotificationFeedbackRequest = z.infer<

@@ -20,6 +20,7 @@ import {
   type GeolocationPosition,
   type NotificationFeedbackRequest,
   type PushSubscription,
+  type SentNotification,
   SheetsSleepEntry,
   SheetsSleepEntryHeaders,
   type SleepEntry,
@@ -274,15 +275,20 @@ export const notificationFeedbackRoute = async (
     throw new Error("Notification not found");
   }
 
-  if (entry.feedback) {
-    return {};
+  const updates: Partial<Pick<SentNotification, "feedback" | "feedbackMessage" | "feedbackGivenAt">> = {};
+
+  if (body.feedback && !entry.feedback) {
+    updates.feedback = body.feedback;
+    updates.feedbackGivenAt = new Date();
   }
 
-  await updateNotification(body.id, {
-    feedback: body.feedback,
-    feedbackMessage: body.feedbackMessage,
-    feedbackGivenAt: new Date(),
-  });
+  if (body.feedbackMessage !== undefined) {
+    updates.feedbackMessage = body.feedbackMessage;
+  }
+
+  if (Object.keys(updates).length > 0) {
+    await updateNotification(body.id, updates);
+  }
 
   return {};
 };
