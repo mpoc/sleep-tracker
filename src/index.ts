@@ -1,8 +1,8 @@
 import "./ensureDataDir";
 import { bearer } from "@elysiajs/bearer";
-import { staticPlugin } from "@elysiajs/static";
 import { Elysia } from "elysia";
 import logixlysia from "logixlysia";
+import swJs from "./static/sw.js" with { type: "file" };
 import ms from "ms";
 import { startAiNotificationCron } from "./aiNotifications";
 import { checkReminderLoop } from "./checkReminderLoop";
@@ -93,7 +93,24 @@ new Elysia()
   .get("/notifications", sleepReactHtml)
   .get("/notification-feedback", sleepReactHtml)
   .get("/", sleepReactHtml)
-  .use(staticPlugin({ assets: "./src/static/", prefix: "/" }))
+  .get("/*", async ({ params, set }) => {
+    const name = params["*"];
+    for (const blob of Bun.embeddedFiles) {
+      if (blob.name === name) {
+        return new Response(blob);
+      }
+    }
+    const embeddedByImport: Record<string, string> = { "sw.js": swJs };
+    if (name in embeddedByImport) {
+      return new Response(Bun.file(embeddedByImport[name]));
+    }
+    const file = Bun.file(`./src/static/${name}`);
+    if (await file.exists()) {
+      return new Response(file);
+    }
+    set.status = 404;
+    return "Not found";
+  })
   .listen(PORT);
 
 checkReminderLoop();

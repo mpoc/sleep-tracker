@@ -36,6 +36,8 @@ const checkReminderNotification = async () => {
 };
 
 export const checkReminderLoop = () => {
-  checkReminderNotification();
+  checkReminderNotification().catch((e) =>
+    console.error("checkReminderNotification failed:", e)
+  );
   setTimeout(checkReminderLoop, ms(REMINDER_CHECK_INTERVAL));
 };

@@ -8,6 +8,16 @@ if ("serviceWorker" in navigator) {
   navigator.serviceWorker.register("/sw.js");
 }
 
+for (const [rel, href] of [
+  ["manifest", "/manifest.webmanifest"],
+  ["apple-touch-icon", "/apple-touch-icon.png"],
+] as const) {
+  const link = document.createElement("link");
+  link.rel = rel;
+  link.href = href;
+  document.head.appendChild(link);
+}
+
 const getPage = () => {
   if (window.location.pathname === "/notifications") {
     return <NotificationList />;
