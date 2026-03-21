@@ -241,7 +241,7 @@ If the guardrails rule it out, return sendNotification: false. Otherwise, look a
       `${now.toISOString()}: AI notification check\nPrompt:\n${prompt}`
     );
 
-    const { output: result, reasoning } = await generateText({
+    const { output: result, reasoningText } = await generateText({
       model: getModel(),
       maxOutputTokens: 1500,
       output: Output.object({
@@ -250,7 +250,7 @@ If the guardrails rule it out, return sendNotification: false. Otherwise, look a
       prompt,
     });
 
-    console.log(`${now.toISOString()}: AI reasoning: ${reasoning?.text}`);
+    console.log(`${now.toISOString()}: AI reasoning: ${reasoningText}`);
     console.log(`${now.toISOString()}: AI response: ${JSON.stringify(result)}`);
 
     if (result.sendNotification && result.title && result.body) {
