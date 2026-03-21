@@ -15,16 +15,11 @@ import {
   sheetsSleepEntryIsStop,
 } from "./utils";
 
-const AiNotificationResponse = z.discriminatedUnion("sendNotification", [
-  z.object({
-    sendNotification: z.literal(true),
-    title: z.string().describe("Short notification title"),
-    body: z.string().describe("Notification body message"),
-  }),
-  z.object({
-    sendNotification: z.literal(false),
-  }),
-]);
+const AiNotificationResponse = z.object({
+  sendNotification: z.boolean(),
+  title: z.string().describe("Short notification title, required if sendNotification").optional(),
+  body: z.string().describe("Notification body, required if sendNotification").optional(),
+});
 
 const getModel = () => {
   if (!env.AI_API_KEY) {
