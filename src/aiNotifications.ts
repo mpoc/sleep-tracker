@@ -17,8 +17,8 @@ import {
 
 const AiNotificationResponse = z.object({
   sendNotification: z.boolean(),
-  title: z.string().describe("Short notification title, required if sendNotification").optional(),
-  body: z.string().describe("Notification body, required if sendNotification").optional(),
+  title: z.string().describe("Short notification title, null if not sending").nullable(),
+  body: z.string().describe("Notification body, null if not sending").nullable(),
 });
 
 const getModel = () => {
